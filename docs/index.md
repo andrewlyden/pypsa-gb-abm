@@ -5,7 +5,7 @@ title: pypsa-gb-abm
 
 **What:** a Mesa + PyPSA agent-based model of the GB electricity market (operation + investment + policy),
 linked to [PyPSA-GB](https://github.com/andrewlyden/PyPSA-GB), with heat, gas, EV and hydrogen coupling.
-**Status:** workshop prototype — illustrative, uncalibrated.
+**Status:** prototype — 2025 operation calibrated against GB outturn ([assumptions](assumptions.md#2025-calibration-vs-outturn)); 2026-2050 pathway illustrative.
 
 ## 1. Research
 * [Literature & framework survey](research/literature_review.md) — AMIRIS, EMLab-Generation, ASSUME, PowerACE, ElecSim, AMES, Mesa, CNZ heat ABM, EV & H2 ABMs, PyPSA-GB.

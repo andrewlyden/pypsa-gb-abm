@@ -23,7 +23,11 @@
 1. Commission pipeline / retire (end of life, 2 consecutive loss years without CM contract).
 2. Demand = ESPENI-2024 shape × growth + heat-pump load (temperature-shaped) + EVs + electrolysers.
 3. Market: pass 1 clears inflexible demand → storage arbitrage, smart EV valley-filling and electrolysers
-   respond → pass 2 → pass 3 withdraws exports/electrolysers above their willingness-to-pay.
+   respond → pass 2 → pass 3 withdraws electrolysers above their willingness-to-pay. Interconnectors
+   trade inside every pass: per neighbour market (FR, NL, BE, NO2, DK1, DE, SEM) an import offer at
+   foreign price + spread and an export bid at foreign price − spread (a "buy-back" block, so exports
+   are curtailed exactly when the GB price is above the bid). Foreign prices = existing-CCGT SRMC ×
+   market level × the observed 2024 hourly price shape of that neighbour.
 4. Settlement per plant: energy, CfD difference (strike – price), RO, CM; emissions; gas burn.
 5. Every *k* years: PyPSA zonal redispatch on sampled hours → constraint cost, zonal prices.
 6. Retail tariffs (wholesale + network + levies) → household heating decisions; gas throughput (homes +
