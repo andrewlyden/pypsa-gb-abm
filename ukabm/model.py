@@ -487,6 +487,9 @@ class GBMarketModel(ModelBase):
             rec[f"cap_{tech}"] = sum(p.mw for p in plants if p.tech == tech) / 1e3
             rec[f"gen_{tech}"] = gen.get(tech, 0.0) / 1e6
         rec["gen_imports"] = gen.get("imports", 0.0) / 1e6
+        rec["gen_total"] = sum(gen.values()) / 1e6
+        for q in (5, 50, 95):
+            rec[f"price_p{q:02d}"] = float(np.percentile(price, q))
         rec["cap_interconnector"] = res["ic_cap"] / 1e3
         self.records.append(rec)
         self.hourly[y] = pd.DataFrame({"price": price, "demand": res["demand"], "heat": res["heat"],
