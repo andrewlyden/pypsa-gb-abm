@@ -69,9 +69,12 @@ def elexon_mid(year: int) -> dict:
     m = pd.DataFrame(recs).drop_duplicates("startTime")
     m = m[pd.to_datetime(m.startTime).dt.year == year]
     m = m[m.volume > 0]   # MID periods with no trades are reported as price 0
+    q = m.price.quantile([0.05, 0.25, 0.5, 0.75, 0.95])
     return dict(price_mid_mean=m.price.mean(),
                 price_mid_volume_weighted=(m.price * m.volume).sum() / m.volume.sum(),
-                price_mid_negative_hours=(m.price < 0).sum() / 2, price_mid_max=m.price.max())
+                price_mid_negative_hours=(m.price < 0).sum() / 2, price_mid_max=m.price.max(),
+                price_mid_p05=q[0.05], price_mid_p25=q[0.25], price_mid_p50=q[0.5],
+                price_mid_p75=q[0.75], price_mid_p95=q[0.95])
 
 
 def elexon_fuelhh(year: int) -> dict:
