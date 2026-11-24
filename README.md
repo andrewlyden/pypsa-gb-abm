@@ -57,8 +57,8 @@ missing-money scarcity episode before merchant entry responds (classic ABM inves
 prices and levy rebalancing both accelerate heat-pump uptake, which raises winter peak and carbon intensity
 until the fleet catches up.
 
-![scenarios](docs/figures/scenario_comparison.png)
-![capacity](docs/figures/capacity_mix.png)
+![scenarios](docs/figures/scenario_comparison.svg)
+![capacity](docs/figures/capacity_mix.svg)
 
 ## STATUS / roadmap (workshop: Tuesday)
 
