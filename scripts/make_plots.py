@@ -108,4 +108,39 @@ if det_p.exists():
         plt.colorbar(sc, label="mean zonal price GBP/MWh (sample hours)")
         ax.set_title(f"PyPSA-GB zonal redispatch, {net.get('year')}\n(line width = mean flow)")
         fig.tight_layout(); fig.savefig(FIG / "zonal_network.png", dpi=130); plt.close(fig)
+
+ens = {p.stem.replace("ensemble_", ""): pd.read_csv(p, index_col=0) for p in sorted(RES.glob("ensemble_*.csv"))}
+if ens:  # multi-seed bands: median line, shaded min-max across seeds
+    from ukabm import bands
+    for df in ens.values():
+        df["policy_cost_bn"] = df.cfd_cost_bn + df.cm_cost_bn + df.ro_cost_bn
+        df["lole_cum_h"] = df.groupby("seed").lole_h.cumsum()
+    panels = [("price_twa", "Demand-weighted wholesale price (GBP/MWh)"), ("intensity_g_kwh", "Carbon intensity (gCO2/kWh)"),
+              ("policy_cost_bn", "Policy cost CfD+RO+CM (GBP bn/yr)"), ("hp_homes_m", "Homes with heat pumps (million)"),
+              ("cap_wind_offshore", "Offshore wind capacity (GW)"), ("lole_cum_h", "Cumulative loss-of-load hours")]
+    fig, axs = plt.subplots(2, 3, figsize=(14, 7))
+    for k, (name, df) in enumerate(ens.items()):
+        b = bands(df, [c for c, _ in panels])
+        n = df.seed.nunique()
+        for ax, (c, _) in zip(axs.flat, panels):
+            ax.fill_between(b.index, b[(c, "min")], b[(c, "max")], color=f"C{k}", alpha=.2, lw=0)
+            ax.plot(b.index, b[(c, "median")], color=f"C{k}", label=f"{name} (median, min-max of {n} seeds)")
+    for ax, (_, title) in zip(axs.flat, panels):
+        ax.set_title(title, fontsize=10); ax.grid(alpha=.3)
+    axs[0, 0].legend(fontsize=7)
+    fig.tight_layout(); fig.savefig(FIG / "ensemble_bands.png", dpi=130); plt.close(fig)
+
+    def cell(s, fmt="{:.0f}"):
+        return f"{fmt.format(s.median())} [{fmt.format(s.min())}–{fmt.format(s.max())}]"
+    rows = ["| scenario | seeds | price 2030 (£/MWh) | price 2050 (£/MWh) | CI 2025 (g/kWh) | CI 2050 (g/kWh) "
+            "| LOLE total (h) | HP homes 2050 (m) | offshore wind 2050 (GW) |", "|---" * 9 + "|"]
+    for name, df in ens.items():
+        y0, y1 = df.index.min(), df.index.max()
+        at = lambda y, c: df.loc[df.index == y, c]  # noqa: E731
+        rows.append(f"| {name} | {df.seed.nunique()} | {cell(at(2030, 'price_twa'))} | {cell(at(y1, 'price_twa'))} "
+                    f"| {cell(at(y0, 'intensity_g_kwh'))} | {cell(at(y1, 'intensity_g_kwh'))} "
+                    f"| {cell(df.groupby('seed').lole_h.sum())} | {cell(at(y1, 'hp_homes_m'), '{:.1f}')} "
+                    f"| {cell(at(y1, 'cap_wind_offshore'))} |")
+    (RES / "ensemble_summary.md").write_text("median [min–max] across seeds\n\n" + "\n".join(rows) + "\n")
+    print("\n".join(rows))
 print("figures:", sorted(p.name for p in FIG.glob("*.png")))
