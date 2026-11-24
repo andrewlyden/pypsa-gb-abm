@@ -1,0 +1,3 @@
+title: pypsa-gb-abm
+description: Agent-based GB electricity market model linked to PyPSA-GB, with multi-energy coupling
+theme: jekyll-theme-cayman
