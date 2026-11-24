@@ -16,10 +16,11 @@ and hydrogen.
 ## Quick start
 ```bash
 pip install -e .            # numpy pandas scipy matplotlib mesa pypsa highspy
-pytest -q                   # 6 tests, ~30 s
+pytest -q                   # 8 tests, ~35 s
 python scripts/run_scenarios.py baseline --end 2030      # ~40 s
 python scripts/run_scenarios.py                          # all 6 scenarios 2025-2050 (~4 min each)
-python scripts/make_plots.py                             # -> docs/figures/
+python scripts/run_ensemble.py                           # baseline, no_cfd, heat_push x 5 seeds (~15 min on 4 cores)
+python scripts/make_plots.py                             # -> docs/figures/ (+ results/ensemble_summary.md)
 # optional: rebuild the PyPSA-GB snapshot / run on a live clone
 python scripts/extract_pypsagb_snapshot.py /path/to/PyPSA-GB
 python scripts/run_scenarios.py baseline --pypsa-gb /path/to/PyPSA-GB
@@ -28,6 +29,10 @@ python scripts/run_scenarios.py baseline --pypsa-gb /path/to/PyPSA-GB
 from ukabm import GBMarketModel, get_scenario
 m = GBMarketModel(get_scenario("heat_push"), end=2040, seed=1)
 df = m.run()            # annual metrics: prices, mix, emissions, policy costs, HP/EV stock, gas tariffs
+
+from ukabm import run_ensemble, bands
+ens = run_ensemble("baseline", seeds=[1, 2, 3, 4, 5], jobs=4, end=2050)   # long format, column `seed`
+b = bands(ens, ["price_twa", "intensity_g_kwh"])                        # per-year min/median/max/mean
 ```
 
 ## Layout
@@ -40,9 +45,28 @@ ukabm/multienergy.py   HeatModule (household agents), GasNetworkModule, EVModule
 ukabm/network.py       PyPSA zonal redispatch on the PyPSA-GB zonal network
 ukabm/data/pypsagb.py  PyPSA-GB adapter (raw clone or bundled snapshot)
 ukabm/scenarios.py     baseline, high_carbon, no_cfd, heat_push, no_capacity_market, high_gas
+ukabm/ensemble.py      multi-seed runs (run_ensemble, parallel) and per-year bands
 ```
 
-## Headline results (single seed, illustrative)
+## Headline results — multi-seed ensembles (illustrative)
+Median [min–max] across seeds 1–5 (`results/ensemble_summary.md`). The seed varies initial-fleet vintages
+and CfD/RO split, CfD bid noise, siting draws, merchant decision order and household-agent attributes; it
+does **not** vary weather, demand, fuel or carbon paths, so bands are agent/path uncertainty only.
+
+| scenario | price 2030 (£/MWh) | price 2050 (£/MWh) | CI 2025 (g/kWh) | CI 2050 (g/kWh) | LOLE total 2025-50 (h) | HP homes 2050 (m) | offshore wind 2050 (GW) |
+|---|---|---|---|---|---|---|---|
+| baseline | 77 [76–80] | 31 [30–34] | 47 [47–47] | 9 [9–10] | 0 [0–0] | 6.4 [5.6–7.0] | 87 [84–89] |
+| heat_push | 84 [81–85] | 48 [45–51] | 47 [47–47] | 22 [17–24] | 1 [0–21] | 27.2 [27.0–27.3] | 87 [84–89] |
+| no_cfd | 83 [80–85] | 81 [73–90] | 47 [47–47] | 22 [21–25] | 3 [0–17] | 4.5 [4.1–4.7] | 3 [0–5] |
+
+Robust across seeds: CfDs lower long-run prices (no_cfd vs baseline bands separate from ~2032) and
+heat_push raises prices and carbon intensity relative to baseline (bands separate after ~2032). **Not robust:** loss-of-load hours
+(0–21 h depending on seed in heat_push and no_cfd) — single-seed LOLE figures should not be quoted.
+2025 is identical across seeds (the seed changes vintages, not the 2025 aggregate fleet).
+
+![ensemble bands](docs/figures/ensemble_bands.svg)
+
+### All scenarios, single seed (seed 42)
 | scenario | price 2030 / 2050 (£/MWh) | CI 2050 (g/kWh) | LOLE total 2025-50 (h) | HP homes 2050 |
 |---|---|---|---|---|
 | baseline | 77 / 31 | 9 | 0 | 6.7 m |
@@ -60,7 +84,7 @@ until the fleet catches up.
 ![scenarios](docs/figures/scenario_comparison.svg)
 ![capacity](docs/figures/capacity_mix.svg)
 
-## STATUS / roadmap (workshop: Tuesday)
+## STATUS / roadmap
 
 | area | status |
 |---|---|
@@ -76,14 +100,15 @@ until the fleet catches up.
 | Hydrogen: electrolysers + H2 turbine tech | ⚠️ stub-level: exogenous H2 price, no H2 storage/network |
 | Batteries | ⚠️ no new merchant batteries: flat price duration under OCGT-led CM; needs BM/ancillary revenue stack |
 | Strategic BM bidding, nodal/ETYS network in loop, RL agents | ❌ not started |
-| Calibration/validation vs 2020–24 outturn, multi-seed Monte-Carlo, weather years | ❌ not started |
+| Multi-seed Monte-Carlo (`run_ensemble`, `scripts/run_ensemble.py`, band plots) | ✅ works; 5 seeds run for baseline, no_cfd, heat_push. Other 3 scenarios still single-seed |
+| Calibration/validation vs 2020–24 outturn, weather years | ❌ not started (seeds do not vary weather) |
 
-**Before Tuesday (priority order)**
-1. Multi-seed runs (5 seeds) for baseline + 2 policy scenarios; show bands not lines.
-2. Sanity-check 2025 against outturn (price ~£75–80/MWh ✅, CI ~ 47 g/kWh vs ~125 actual ❌ — imports & biomass too high, CCGT too low).
-3. Fix network stage: use PyPSA-GB Reduced 32-bus network & zonal wind profiles (Scottish vs English wind) — constraint costs should rise.
-4. Add battery ancillary/BM revenue; check CM over-procurement of OCGT (CM clears at cap every year: target too high with unmanaged EV peak).
-5. Present heat_push vs baseline loop (HP uptake ↔ prices ↔ gas tariffs) as the multi-energy headline.
+**Priority order**
+1. Sanity-check 2025 against outturn (price ~£75/MWh ✅, CI 47 g/kWh in every seed vs ~125 actual ❌ — 2025 gen: imports 54 TWh, biomass 20 TWh, CCGT only 39 TWh; CCGT too low).
+2. Fix network stage: use PyPSA-GB Reduced 32-bus network & zonal wind profiles (Scottish vs English wind) — constraint costs should rise.
+3. Add battery ancillary/BM revenue; check CM over-procurement of OCGT (CM clears at the £75/kW cap in every year and every baseline seed: target too high with unmanaged EV peak).
+4. Present heat_push vs baseline loop (HP uptake ↔ prices ↔ gas tariffs) as the multi-energy headline — use the ensemble bands.
+5. Extend ensembles to high_carbon, high_gas, no_capacity_market (`python scripts/run_ensemble.py <names>`); add weather-year variation so bands include weather uncertainty.
 
 ## Credits
 Data extracts from PyPSA-GB (MIT), which in turn uses ESPENI, DUKES, NESO and LCCC data. Framework: Mesa, PyPSA, HiGHS.

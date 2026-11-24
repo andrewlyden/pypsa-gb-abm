@@ -12,4 +12,4 @@
 * Network stage: zonal transport model (no KVL), 96 random hours scaled to a year; cost vs. copperplate offer cost; storage and interconnectors held at market positions.
 * Gas network: allowed revenue £5.5bn/yr, –1 %/yr after 2030; non-domestic demand –1.5 %/yr.
 * Retail: electricity = HP-weighted wholesale + £70 network + levies + £25 supplier; gas = wholesale + network tariff + £12.
-* Single seed in the published results; ABM outcomes are path-dependent — run several seeds.
+* Ensembles (`ukabm.ensemble`): 5 seeds for baseline, no_cfd, heat_push; other scenarios single seed (42). Seeds vary agent/path draws (vintages, CfD/RO split, bid noise, siting, merchant order, households), not weather, demand, fuel or carbon paths. Bands are min–max of 5 seeds, not confidence intervals.
