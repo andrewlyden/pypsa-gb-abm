@@ -24,6 +24,17 @@ import pandas as pd
 
 SNAPSHOT = Path(__file__).resolve().parents[2] / "data" / "pypsagb_snapshot"
 
+# Corrections to commissioning years in the PyPSA-GB interconnector register (links_future.csv),
+# which lists several projects as operating by 2024/25 that were not (GB peak import in 2025 was
+# 9.2 GW per Elexon FUELHH vs 16.1 GW in the register). None = not expected to be built.
+#   NeuConnect (DE, 1.4 GW): under construction, operation 2028 (NeuConnect; Ofgem IC cap & floor
+#     handbook, Dec 2024).  GridLink (FR): "under development", 2030 (same Ofgem handbook).
+#   FAB Link (FR): connection date end-2030 (Ofgem needs-case reassessment, Nov 2022).
+#   NorthConnect (NO): Ofgem withdrew cap & floor in Dec 2022; Norway not approving new links.
+#   Greenlink (IE): opened January 2025 (DESNZ Energy Trends, Dec 2025).
+IC_COMMISSIONING_OVERRIDES = {"NeuConnect": 2028, "GridLink": 2030, "FAB Link": 2031,
+                              "NorthConnect": None, "Greenlink": 2025}
+
 DUKES_TO_TECH = {"Fossil Fuel": "ccgt", "Nuclear": "nuclear", "Bioenergy": "biomass", "Hydro": "hydro",
                  "Pumped Hydro": "pumped_hydro", "Pumped hydro": "pumped_hydro", "Solar": "solar",
                  "Wind": "wind"}
@@ -116,7 +127,9 @@ class PyPSAGBData:
 
     # -------------------------------------------------------------- helpers
     def interconnector_mw(self, year: int) -> float:
-        return float(self.interconnectors.loc[self.interconnectors.year <= year, "p_nom"].sum())
+        ic = self.interconnectors
+        first = ic.name.map(IC_COMMISSIONING_OVERRIDES).where(ic.name.isin(list(IC_COMMISSIONING_OVERRIDES)), ic.year)
+        return float(ic.loc[first.notna() & (first <= year), "p_nom"].sum())
 
     def zone_share(self, tech: str) -> pd.Series:
         key = "wind" if tech.startswith("wind") else tech
