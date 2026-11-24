@@ -1,0 +1,14 @@
+[project]
+name = "ukabm"
+version = "0.1.0"
+description = "Agent-based model of the GB electricity market linked to PyPSA-GB, with multi-energy hooks"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = ["numpy", "pandas", "scipy", "matplotlib", "mesa>=3", "pypsa>=0.30", "highspy"]
+
+[project.optional-dependencies]
+raw = ["pyproj", "openpyxl"]   # only needed to rebuild the PyPSA-GB snapshot
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+include = ["ukabm*"]
