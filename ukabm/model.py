@@ -19,7 +19,8 @@ import numpy as np
 import pandas as pd
 
 from .agents import GenCo, Plant
-from .config import TECHS, VRE_TECHS, STORAGE_TECHS, INITIAL_FLEET_MW, Policy, Fuels
+from .config import (TECHS, VRE_TECHS, STORAGE_TECHS, INITIAL_FLEET_MW, EXISTING_FLEET_EFFICIENCY,
+                     NESO_CI_FACTORS, Policy, Fuels)
 from .data import PyPSAGBData
 from .market import Block, clear, storage_arbitrage
 from .multienergy import HeatModule, GasNetworkModule, EVModule, HydrogenModule
@@ -35,10 +36,27 @@ except Exception:  # pragma: no cover
         def __init__(self, seed=None):
             pass
 
-# Existing / committed nuclear: (mw, online, retire, zone). Indicative public dates.
-NUCLEAR_UNITS = [(2300, 1983, 2027, "Z9"), (2400, 1988, 2030, "Z5"), (1200, 1995, 2035, "Z12"),
-                 (1630, 2030, 2089, "Z17"), (1630, 2031, 2090, "Z17"),      # Hinkley Point C
-                 (1600, 2038, 2097, "Z12"), (1600, 2039, 2098, "Z12")]      # Sizewell C
+# Interconnector trade (see interconnector_blocks). Price levels are foreign mean price / SRMC of an
+# existing GB CCGT, calibrated to 2025: capacity-weighted FR/NL/BE/NO2/DK1 day-ahead averaged
+# 0.74 x the GB price (EUR 70.3 vs 94.4/MWh; Energy-Charts/SMARD, Ember) and SEM 1.21 x GB
+# (EUR 114.4/MWh, Ember), with the GB price at 0.91 x the modelled CCGT SRMC in 2025 (MID
+# GBP 80.9/MWh vs 89.1). The spread is calibrated so that 2025 gross flows match outturn (imports
+# 44.0 TWh, exports 14.8 TWh; Elexon FUELHH): it stands for losses, post-Brexit explicit capacity
+# allocation (flows respond sluggishly to day-ahead spreads) and GB internal constraints that keep
+# Scottish surplus from reaching the southern links.
+IC_PRICE_LEVEL = {"continent": 0.68, "SEM": 1.10}
+IC_SPREAD = 12.0         # GBP/MWh
+IC_AVAILABILITY = 0.9    # GB peak import 2025 was 9.2 GW on 10.5 GW (Elexon FUELHH)
+
+# Existing / committed nuclear: (mw, online, retire, zone, availability). Indicative public dates.
+# Availability of the legacy fleet calibrated to outturn: GB nuclear 38.4 TWh (2024) and 34.2 TWh
+# (2025, NESO); Sizewell B ran at 99 % in 2025 (10.4 TWh) while the AGRs averaged ~58 % with an
+# extended Hartlepool outage (EDF UK nuclear fleet update, Jan 2026; EDF plans ~36-37 TWh in
+# 2026-27). AGRs 0.62, Sizewell B 0.88 (18-month refuelling cycle); new EPRs use Tech default.
+NUCLEAR_UNITS = [(2300, 1983, 2027, "Z9", 0.62), (2400, 1988, 2030, "Z5", 0.62),   # AGRs
+                 (1200, 1995, 2035, "Z12", 0.88),                                   # Sizewell B
+                 (1630, 2030, 2089, "Z17", None), (1630, 2031, 2090, "Z17", None),  # Hinkley Point C
+                 (1600, 2038, 2097, "Z12", None), (1600, 2039, 2098, "Z12", None)]  # Sizewell C
 
 GENCO_SPECS = [
     dict(name="IntegratedUtility", wacc=0.07, expectation="adaptive", markup=0.03, risk_aversion=0.10, budget_gbp=4e9),
@@ -111,10 +129,13 @@ class GBMarketModel(ModelBase):
                         else:
                             kw = dict(support="cfd", strike=mean_strike.get(tech, 80.0), cfd_end=online + 15)
                     retire = 2100 if tech in ("hydro", "pumped_hydro") else online + life - 1
+                    if tech in EXISTING_FLEET_EFFICIENCY:
+                        new, old = EXISTING_FLEET_EFFICIENCY[tech]
+                        kw["efficiency"] = new + (old - new) * age / (life - 1)
                     self.new_plant(owner, tech, zone, total * s / 2, online, retire, **kw)
-        for i, (mw, on, ret, zone) in enumerate(NUCLEAR_UNITS):
+        for i, (mw, on, ret, zone, av) in enumerate(NUCLEAR_UNITS):
             kw = dict(support="cfd", strike=128.0, cfd_end=on + 35) if on >= 2030 else {}
-            self.new_plant(self.gencos[i % 2], "nuclear", zone, mw, on, ret, **kw)
+            self.new_plant(self.gencos[i % 2], "nuclear", zone, mw, on, ret, availability=av, **kw)
 
     def active(self, year):
         return [p for p in self.plants if p.active(year)]
@@ -134,22 +155,40 @@ class GBMarketModel(ModelBase):
         cf = self.cf_profile(tech)
         return float(cf.mean()) if cf is not None else TECHS[tech].availability
 
-    def srmc(self, tech, year, carbon=None):
+    def srmc(self, tech, year, carbon=None, efficiency=None):
         t = TECHS[tech]
         c = self.policy.carbon_price(year) if carbon is None else carbon
         if t.fuel is None:
             return t.vom
-        return (self.fuels.price(t.fuel, year) + t.co2_t_per_mwh_fuel * c) / t.efficiency + t.vom
+        eff = efficiency or t.efficiency
+        return (self.fuels.price(t.fuel, year) + t.co2_t_per_mwh_fuel * c) / eff + t.vom
+
+    def plant_srmc(self, p, year, carbon=None):
+        return self.srmc(p.tech, year, carbon, p.efficiency)
 
     def interconnector_blocks(self, year):
-        cap = self.data.interconnector_mw(year) * self.scenario.get("ic_growth", 1.0) ** max(year - 2025, 0)
-        ref = self.srmc("ccgt", year)
-        # ASSUMPTION: continental price follows GB-correlated wind (windy hours cheap), anchored
-        # on GB CCGT cost; continental decarbonisation lowers it over time. Three tranches.
+        """Interconnector trade, one import offer and one export bid per neighbouring market.
+
+        Foreign price per market = reference CCGT SRMC x level x hourly shape (observed 2024
+        day-ahead prices for continental borders, same weather year as the GB profile; wind proxy for
+        SEM). Imports are offered at foreign price + spread. Exports are bids at foreign price - spread,
+        modelled as "buy-back" blocks: the export volume is added to demand and offered back at the
+        bid price, so it is curtailed exactly when the GB price exceeds the bid (uniform-price
+        equivalent of a price-responsive export bid). Returns (imports, exports, cap, ref).
+        """
+        g = self.scenario.get("ic_growth", 1.0) ** max(year - 2025, 0)
+        caps = {k: v * g for k, v in self.data.interconnector_mw_by_market(year).items()}
+        # ASSUMPTION: foreign prices are anchored on the SRMC of an existing-fleet GB CCGT and fall
+        # 25 % relative to it by 2050 (continental decarbonisation).
+        ref = self.srmc("ccgt", year, efficiency=float(np.mean(EXISTING_FLEET_EFFICIENCY["ccgt"])))
         decarb = 1 - 0.25 * min(max((year - 2025) / 25, 0), 1)
-        fp = ref * decarb * (1.25 - 0.75 * self.prof.wind_cf.values)
-        self._foreign_price = fp
-        return [Block(-1, 0.85 * fp, 0.3 * cap), Block(-2, 1.0 * fp, 0.3 * cap), Block(-3, 1.2 * fp, 0.3 * cap)], cap, ref
+        shape = self.data.neighbour_price_shape
+        imports, exports = [], []
+        for k, (mkt, mw) in enumerate(sorted(caps.items())):
+            fp = ref * decarb * IC_PRICE_LEVEL[mkt if mkt in IC_PRICE_LEVEL else "continent"] * shape[mkt].values
+            imports.append(Block(-1 - k, fp + IC_SPREAD, IC_AVAILABILITY * mw))
+            exports.append(Block(-11 - k, fp - IC_SPREAD, IC_AVAILABILITY * mw))
+        return imports, exports, sum(caps.values()), ref
 
     def blocks(self, plants, year, carbon=None):
         out = []
@@ -158,8 +197,8 @@ class GBMarketModel(ModelBase):
                 continue
             t = TECHS[p.tech]
             prof = self.cf_profile(p.tech)
-            avail = p.mw * (prof if prof is not None else t.availability)
-            out.append(Block(p.pid, p.owner.offer_price(p, self.srmc(p.tech, year, carbon), year), avail))
+            avail = p.mw * (prof if prof is not None else (p.availability or t.availability))
+            out.append(Block(p.pid, p.owner.offer_price(p, self.plant_srmc(p, year, carbon), year), avail))
         return out
 
     def demand(self, year, price_forecast=None, residual=None):
@@ -174,11 +213,12 @@ class GBMarketModel(ModelBase):
     def run_market(self, year, plants, record=True):
         self._tech_of = {p.pid: p.tech for p in plants}
         blocks = self.blocks(plants, year)
-        ic_blocks, ic_cap, ref = self.interconnector_blocks(year)
-        allb = blocks + ic_blocks
+        ic_blocks, x_blocks, ic_cap, ref = self.interconnector_blocks(year)
+        allb = blocks + ic_blocks + x_blocks
+        x_max = sum(b.avail for b in x_blocks)          # export bids enter demand at full volume
         base, heat, ev0, _ = self.demand(year)
         d1 = base + heat + ev0
-        p1, _, _ = clear(d1, allb, self.policy.voll)
+        p1, _, _ = clear(d1 + x_max, allb, self.policy.voll)
         # flexibility reacts to pass-1 prices
         vre = sum(np.broadcast_to(b.avail, (self.H,)) for b in blocks
                   if self._tech_of.get(b.key) in VRE_TECHS)
@@ -190,19 +230,18 @@ class GBMarketModel(ModelBase):
             if mw > 0:
                 stor[tech] = storage_arbitrage(p1, mw, hrs, TECHS[tech].efficiency)
                 net_st += stor[tech]
-        export = np.where(p1 < 0.85 * self._foreign_price - 3, 0.8 * ic_cap, 0.0)
-        d2 = base + heat + ev + h2 - net_st + export
-        price, disp, uns = clear(d2, allb, self.policy.voll)
-        # pass 3: price-responsive exports and electrolysers withdraw where pass-2 price is above
-        # their willingness to pay (avoids flexibility-induced scarcity from one-shot response)
-        bad_x = price > 0.85 * self._foreign_price
+        d2 = base + heat + ev + h2 - net_st
+        price, disp, uns = clear(d2 + x_max, allb, self.policy.voll)
+        # pass 3: electrolysers withdraw where the pass-2 price is above their willingness to pay
+        # (avoids flexibility-induced scarcity from a one-shot response)
         bad_h = price > self.h2.wtp()
-        if np.any(bad_x & (export > 0)) or np.any(bad_h & (h2 > 0)):
-            export = np.where(bad_x, 0.0, export)
+        if np.any(bad_h & (h2 > 0)):
             h2 = np.where(bad_h, 0.0, h2)
-            d2 = base + heat + ev + h2 - net_st + export
-            price, disp, uns = clear(d2, allb, self.policy.voll)
-        return dict(price=price, disp=disp, unserved=uns, blocks=allb, demand=d2, export=export,
+            d2 = base + heat + ev + h2 - net_st
+            price, disp, uns = clear(d2 + x_max, allb, self.policy.voll)
+        xj = [j for j, b in enumerate(allb) if b.key <= -11]
+        export = x_max - disp[:, xj].sum(1)              # bought-back volume = export not taken
+        return dict(price=price, disp=disp, unserved=uns, blocks=allb, demand=d2 + export, export=export,
                     base=base, heat=heat, ev=ev, h2=h2, storage=stor, ic_cap=ic_cap)
 
     # ------------------------------------------------------------ settlement
@@ -216,13 +255,14 @@ class GBMarketModel(ModelBase):
         for j, b in enumerate(res["blocks"]):
             q = res["disp"][:, j]
             if b.key < 0:
-                gen_by_tech["imports"] = gen_by_tech.get("imports", 0) + q.sum()
+                if b.key > -10:   # import tranches; export buy-back blocks (<= -11) are not generation
+                    gen_by_tech["imports"] = gen_by_tech.get("imports", 0) + q.sum()
                 continue
             p = pmap[b.key]
             t = TECHS[p.tech]
             e = q.sum()
             rev = float((price * q).sum())
-            var = self.srmc(p.tech, year) * e
+            var = self.plant_srmc(p, year) * e
             extra = 0.0
             if p.support == "cfd" and year <= p.cfd_end:
                 diff = float(((p.strike - price) * q).sum())
@@ -237,7 +277,7 @@ class GBMarketModel(ModelBase):
             acc.append((p, profit, rev, e))
             gen_by_tech[p.tech] = gen_by_tech.get(p.tech, 0) + e
             if t.fuel is not None:
-                fuel_mwh = e / t.efficiency
+                fuel_mwh = e / (p.efficiency or t.efficiency)
                 em += fuel_mwh * t.co2_t_per_mwh_fuel
                 if t.fuel == "gas":
                     gas_burn += fuel_mwh
@@ -257,6 +297,15 @@ class GBMarketModel(ModelBase):
             p.loss_years = p.loss_years + 1 if profit < 0 else 0
         return dict(cfd_cost=cfd_cost, ro_cost=ro_cost, cm_cost=cm_cost, gen=gen_by_tech,
                     emissions_t=em, gas_burn_twh=gas_burn / 1e6)
+
+    def neso_basis_ci(self, gen, st):
+        """Carbon intensity (g/kWh) on NESO's accounting basis: NESO factors for CCGT/OCGT/biomass/
+        imports, model direct emissions for gas_ccs, zero otherwise. Denominator = generation incl.
+        imports and storage discharge, as in NESO's historic generation mix."""
+        g = sum(NESO_CI_FACTORS.get(k, 0.0) * v for k, v in gen.items())   # MWh * g/kWh = kg
+        ccs = gen.get("gas_ccs", 0.0)
+        g += ccs / TECHS["gas_ccs"].efficiency * TECHS["gas_ccs"].co2_t_per_mwh_fuel * 1e3
+        return g / max(sum(gen.values()), 1)
 
     # ------------------------------------------------------------- forecasts
     def forecast(self, target_year, extra=()):
@@ -324,7 +373,7 @@ class GBMarketModel(ModelBase):
         target -= sum(p.mw * TECHS[p.tech].derating for p in self.plants
                       if p.active(dy) and p.support in ("cfd", "ro"))
         offers = []   # (price, derated_mw, plant or (genco, tech))
-        _, ic_cap, _ = self.interconnector_blocks(dy)
+        _, _, ic_cap, _ = self.interconnector_blocks(dy)
         offers.append((0.0, 0.45 * ic_cap, None))
         for p in self.plants:
             if p.active(dy) and p.support not in ("cfd", "ro"):
@@ -425,7 +474,8 @@ class GBMarketModel(ModelBase):
                    demand_twh=dem / 1e6, heat_twh=res["heat"].sum() / 1e6, ev_twh=res["ev"].sum() / 1e6,
                    h2_twh=float(np.sum(res["h2"])) / 1e6, export_twh=res["export"].sum() / 1e6,
                    emissions_mt=st["emissions_t"] / 1e6,
-                   intensity_g_kwh=st["emissions_t"] / max(sum(v for k, v in gen.items()), 1) * 1e3,
+                   intensity_g_kwh=st["emissions_t"] / max(sum(gen.values()), 1) * 1e3,
+                   intensity_neso_g_kwh=self.neso_basis_ci(gen, st),
                    cfd_cost_bn=st["cfd_cost"] / 1e9, ro_cost_bn=st["ro_cost"] / 1e9, cm_cost_bn=st["cm_cost"] / 1e9,
                    levy_gbp_mwh=self.levy, cm_clearing=self.cm_clearing, constraint_cost_bn=constraint_cost,
                    carbon_price=self.policy.carbon_price(y), gas_price=self.fuels.price("gas", y),
@@ -473,7 +523,7 @@ class GBMarketModel(ModelBase):
         hours = np.sort(rng.choice(self.H, self.network_hours, replace=False))
         # interconnector & storage handled as fixed injections folded into zonal demand
         blocks = [b for b in res["blocks"] if b.key > 0]
-        ic_disp = res["disp"][:, [j for j, b in enumerate(res["blocks"]) if b.key < 0]].sum(1)
+        ic_disp = res["disp"][:, [j for j, b in enumerate(res["blocks"]) if -10 < b.key < 0]].sum(1)
         net_demand = res["demand"] - ic_disp
         try:
             out = netmod.redispatch(self.data, plants, blocks, net_demand, hours)

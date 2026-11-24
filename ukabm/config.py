@@ -33,7 +33,9 @@ TECHS: dict[str, Tech] = {t.name: t for t in [
     Tech("ocgt", 550, 12, 5, 0.38, "gas", GAS_T_PER_MWH, 25, 2, 0.92, 0.94, chunk_mw=300),
     Tech("gas_ccs", 1800, 45, 6, 0.48, "gas", GAS_T_PER_MWH * 0.1, 25, 6, 0.88, 0.88, chunk_mw=800),
     Tech("h2_turbine", 650, 15, 5, 0.40, "hydrogen", 0.0, 25, 3, 0.92, 0.94, chunk_mw=300),
-    Tech("biomass", 2500, 90, 6, 0.38, "biomass", 0.0, 25, 4, 0.85, 0.84, investable=False),
+    # biomass availability 0.70: GB biomass output 19.9 TWh in 2025 (NESO) = 60 % load factor on the
+    # 3.8 GW fleet; Drax flexes its RO units seasonally and has long outages (Drax FY2025 results)
+    Tech("biomass", 2500, 90, 6, 0.38, "biomass", 0.0, 25, 4, 0.70, 0.84, investable=False),
     Tech("wind_onshore", 1400, 30, 0, 1.0, None, 0.0, 25, 3, 1.0, 0.08, profile="wind_onshore", chunk_mw=500),
     Tech("wind_offshore", 2500, 60, 0, 1.0, None, 0.0, 30, 5, 1.0, 0.10, profile="wind_offshore", chunk_mw=1000),
     Tech("solar", 600, 10, 0, 1.0, None, 0.0, 30, 1, 1.0, 0.03, profile="solar", chunk_mw=500),
@@ -51,6 +53,21 @@ INITIAL_FLEET_MW = {
     "wind_onshore": 15000, "wind_offshore": 15500, "solar": 18000, "hydro": 1500,
     "battery": 5000, "pumped_hydro": 2900,
 }
+# Existing-fleet performance that differs from new-build Tech values (calibration to 2025 outturn).
+# CCGT: GB fleet thermal efficiency ~50 % (GCV) — DUKES Table 5.10 (CCGT stations, 2023-24); the
+# 0.55 in TECHS is new-build. Initial-fleet CCGTs get an efficiency that falls linearly with age
+# from 0.54 (new) to 0.46 (end of life), fleet mean ~0.50, which gives the merit order a realistic
+# slope instead of one cost step. (newest, oldest) per tech:
+EXISTING_FLEET_EFFICIENCY = {"ccgt": (0.54, 0.46)}
+
+# Emission factors (gCO2/kWh) used by NESO's carbon-intensity methodology, so that model output can
+# be compared like-for-like with NESO's published CI (which counts biomass at 120 and imports at
+# per-country factors). Source: NESO Carbon Intensity API methodology (CCGT 394, OCGT 651, biomass
+# 120). Imports: 65 = average implied by NESO's 2024-25 half-hourly CI after removing gas, biomass
+# and "other" (57 in 2024, 74 in 2025; computed from data/outturn source data). Technologies not
+# listed count as zero (gas_ccs uses its direct factor in the model).
+NESO_CI_FACTORS = {"ccgt": 394.0, "ocgt": 651.0, "biomass": 120.0, "imports": 65.0}
+
 # Existing nuclear retirements (MW, year) - indicative AGR closures; Hinkley C first unit
 NUCLEAR_SCHEDULE = [(2028, -2300), (2030, -1200), (2030, 1600), (2031, 1600), (2035, -1200)]
 
