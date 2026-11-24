@@ -112,14 +112,14 @@ The daily agent takes the highest unfinished item it can complete in one run. It
    every seed vs ~125 actual ❌: 2025 generation has imports at 54 TWh, biomass 20 TWh and CCGT only 39 TWh.
    Diagnose (interconnector tranche prices, biomass costs/availability, CCGT offers), fix, and report 2025
    price, CI and generation mix vs outturn in a table.
-2. Network stage: switch to the PyPSA-GB Reduced 32-bus network with zonal wind profiles (Scottish vs
+2. Validation check: a script and test comparing the 2025 run with outturn (price, CI, generation mix)
+   within tolerance bands documented in `docs/assumptions.md`, so regressions show up in CI.
+3. Network stage: switch to the PyPSA-GB Reduced 32-bus network with zonal wind profiles (Scottish vs
    English wind) and representative rather than random hours. Constraint costs (~£0.1bn now) should move
    towards the £1–2bn/yr outturn.
-3. Battery revenues: add a stylised BM/ancillary revenue stack so merchant batteries can enter. Then check
+4. Battery revenues: add a stylised BM/ancillary revenue stack so merchant batteries can enter. Then check
    Capacity Market over-procurement of OCGT (CM clears at the £75/kW cap in every year and every baseline
    seed; the target is likely too high with an unmanaged EV peak).
-4. Validation check: a script and test comparing the 2025 run with outturn (price, CI, generation mix)
-   within tolerance bands documented in `docs/assumptions.md`, so regressions show up in CI.
 5. Extend ensembles to high_carbon, high_gas and no_capacity_market
    (`python scripts/run_ensemble.py <names>`) and add them to the headline table.
 6. Write up the heat_push vs baseline loop (HP uptake ↔ prices ↔ gas tariffs) as a docs page, using the
