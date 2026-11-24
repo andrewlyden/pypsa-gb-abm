@@ -23,6 +23,12 @@ import numpy as np
 import pandas as pd
 
 SNAPSHOT = Path(__file__).resolve().parents[2] / "data" / "pypsagb_snapshot"
+EXTERNAL = Path(__file__).resolve().parents[2] / "data" / "external"
+
+# Interconnector register country -> neighbour price zone (data/external/neighbour_prices_<y>.csv).
+# Ireland (SEM) has no openly licensed hourly series there; it gets a GB-wind-shaped proxy.
+IC_MARKET = {"France1": "FR", "France2": "FR", "Netherlands": "NL", "Belgium": "BE", "Norway": "NO2",
+             "Denmark": "DK1", "Germany": "DE_LU", "Ireland": "SEM", "Ireland2": "SEM", "N. Ireland": "SEM"}
 
 # Corrections to commissioning years in the PyPSA-GB interconnector register (links_future.csv),
 # which lists several projects as operating by 2024/25 that were not (GB peak import in 2025 was
@@ -48,6 +54,7 @@ class PyPSAGBData:
             self._load_snapshot()
         else:
             self._load_raw()
+        self.neighbour_price_shape = self._neighbour_shapes()
 
     # ------------------------------------------------------------------ raw
     def _load_raw(self):
@@ -125,11 +132,32 @@ class PyPSAGBData:
         self.cfd_strikes = pd.read_csv(path / "cfd_strike_prices_by_round.csv")
         self.emissions = pd.read_csv(path / "emissions_intensity.csv")
 
+    def _neighbour_shapes(self) -> pd.DataFrame:
+        """Hourly neighbour price shapes, dimensionless. Continental zones are divided by the
+        capacity-weighted continental mean of the profile year (so relative levels between borders
+        are kept); the SEM proxy is (1.25 - 0.75 * GB wind CF) normalised to mean 1, since Irish
+        and GB wind are strongly correlated and SEM is gas-marginal most hours."""
+        prices = pd.read_csv(EXTERNAL / f"neighbour_prices_{self.profile_year}.csv").iloc[:len(self.profiles)]
+        caps = self.interconnector_mw_by_market(self.profile_year)
+        w = pd.Series({k: v for k, v in caps.items() if k in prices.columns})
+        mean = float((prices[w.index].mean() * w).sum() / w.sum())
+        shape = prices / mean
+        sem = 1.25 - 0.75 * self.profiles.wind_cf.values
+        shape["SEM"] = sem / sem.mean()
+        return shape
+
     # -------------------------------------------------------------- helpers
-    def interconnector_mw(self, year: int) -> float:
+    def _ic_in_service(self, year: int) -> pd.DataFrame:
         ic = self.interconnectors
         first = ic.name.map(IC_COMMISSIONING_OVERRIDES).where(ic.name.isin(list(IC_COMMISSIONING_OVERRIDES)), ic.year)
-        return float(ic.loc[first.notna() & (first <= year), "p_nom"].sum())
+        return ic[first.notna() & (first <= year)]
+
+    def interconnector_mw(self, year: int) -> float:
+        return float(self._ic_in_service(year).p_nom.sum())
+
+    def interconnector_mw_by_market(self, year: int) -> dict:
+        ic = self._ic_in_service(year)
+        return ic.groupby(ic.country.map(IC_MARKET)).p_nom.sum().astype(float).to_dict()
 
     def zone_share(self, tech: str) -> pd.Series:
         key = "wind" if tech.startswith("wind") else tech
