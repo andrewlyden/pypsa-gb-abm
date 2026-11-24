@@ -30,7 +30,7 @@ base = runs.get("baseline", next(iter(runs.values())))
 
 
 def stack(df, prefix, title, ylabel, fname):
-    cols = [c for c in df.columns if c.startswith(prefix) and df[c].abs().sum() > 0]
+    cols = [c for c in df.columns if c.startswith(prefix) and c != "gen_total" and df[c].abs().sum() > 0]
     names = [c[len(prefix):] for c in cols]
     fig, ax = plt.subplots(figsize=(9, 4.8))
     ax.stackplot(df.index, df[cols].T.values, labels=names, colors=[COL.get(n, None) for n in names])
@@ -53,7 +53,10 @@ for ax, t in zip(axs.flat, ["Demand-weighted wholesale price (GBP/MWh)", "Carbon
     ax.set_title(t, fontsize=10); ax.grid(alpha=.3)
 axs[0, 0].legend(fontsize=7)
 axs[0, 0].set_ylim(0, 200)
-axs[0, 0].text(0.02, 0.92, "no_capacity_market peaks >GBP3000/MWh (clipped)", transform=axs[0, 0].transAxes, fontsize=7)
+clipped = {n: d.price_twa.max() for n, d in runs.items() if d.price_twa.max() > 200}
+if clipped:
+    axs[0, 0].text(0.02, 0.92, "; ".join(f"{n} peaks at GBP{v:,.0f}/MWh (clipped)" for n, v in clipped.items()),
+                   transform=axs[0, 0].transAxes, fontsize=7)
 axs[1, 0].set_ylim(-5, 25)
 fig.tight_layout(); fig.savefig(FIG / "scenario_comparison.png", dpi=130); plt.close(fig)
 
