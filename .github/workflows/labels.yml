@@ -1,0 +1,83 @@
+name: labels
+# Applies pipeline labels automatically from conventions the agents follow
+# (title prefixes, branch names, "Proposal: #N", reviewer "Verdict:" lines).
+# Only acts on activity by the repository owner (the agents use the owner's tokens).
+on:
+  issues:
+    types: [opened, edited, reopened]
+  pull_request_target:
+    types: [opened, edited, reopened, ready_for_review, synchronize]
+  issue_comment:
+    types: [created, edited]
+  pull_request_review:
+    types: [submitted, edited]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  label:
+    if: github.actor == github.repository_owner
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const LABELS = {
+              'proposal': '1d76db',
+              'approved': '0e8a16',
+              'planned': 'c5def5',
+              'design': 'bfd4f2',
+              'agent': '5319e7',
+              'review: pass': '0e8a16',
+              'review: changes needed': 'd93f0b',
+            };
+            const { owner, repo } = context.repo;
+            const existing = new Set(
+              (await github.paginate(github.rest.issues.listLabelsForRepo, { owner, repo })).map(l => l.name));
+            for (const [name, color] of Object.entries(LABELS)) {
+              if (!existing.has(name)) await github.rest.issues.createLabel({ owner, repo, name, color });
+            }
+            const add = (n, labels) => github.rest.issues.addLabels({ owner, repo, issue_number: n, labels });
+            const remove = async (n, name) => {
+              try { await github.rest.issues.removeLabel({ owner, repo, issue_number: n, name }); }
+              catch (e) { if (e.status !== 404) throw e; }
+            };
+            const ev = context.eventName;
+            const p = context.payload;
+
+            if (ev === 'issues') {
+              if (/^\s*\[proposal\]/i.test(p.issue.title)) await add(p.issue.number, ['proposal']);
+              return;
+            }
+
+            if (ev === 'pull_request_target') {
+              const pr = p.pull_request;
+              const title = pr.title || '';
+              const branch = pr.head.ref || '';
+              const isDesign = /^\s*\[design\]/i.test(title) || branch.startsWith('plan/');
+              const isAgent = isDesign || /^\s*\[agent\]/i.test(title) || branch.startsWith('agent/');
+              if (isAgent) await add(pr.number, isDesign ? ['agent', 'design'] : ['agent']);
+              if (isDesign) {
+                const m = (pr.body || '').match(/Proposal:\s*#(\d+)/i);
+                if (m) await add(Number(m[1]), ['planned']);
+              }
+              return;
+            }
+
+            // Review verdicts, from a PR comment or a PR review
+            let body, num;
+            if (ev === 'issue_comment') {
+              if (!p.issue.pull_request) return;
+              body = p.comment.body; num = p.issue.number;
+            } else {
+              body = p.review.body; num = p.pull_request.number;
+            }
+            body = body || '';
+            if (!/Reviewed at\s+`?[0-9a-f]{7,40}/i.test(body)) return;
+            const v = body.match(/Verdict[*_\s]*:[*_\s]*`?(PASS WITH NOTES|PASS|CHANGES NEEDED)/i);
+            if (!v) return;
+            const pass = !/CHANGES NEEDED/i.test(v[1]);
+            await add(num, [pass ? 'review: pass' : 'review: changes needed']);
+            await remove(num, pass ? 'review: changes needed' : 'review: pass');
