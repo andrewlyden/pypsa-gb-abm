@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 
 OUTTURN = Path(__file__).resolve().parents[1] / "data" / "outturn" / "gb_annual_outturn.csv"
+CONSTRAINTS = OUTTURN.with_name("gb_constraints.csv")   # hand-entered from cited reports
 
 # (label, model column or callable on the annual record, outturn column)
 METRICS = [
@@ -22,10 +23,19 @@ METRICS = [
     ("price p95 (GBP/MWh)", "price_p95", "price_mid_p95"),
     ("negative-price hours", "hours_negative", "price_mid_negative_hours"),
     ("carbon intensity, NESO basis (g/kWh)", "intensity_neso_g_kwh", "ci_neso_genweighted"),
+    ("carbon intensity, NESO basis, after BM redispatch (g/kWh)", "intensity_neso_post_bm_g_kwh", "ci_neso_genweighted"),
     ("carbon intensity, direct combustion (g/kWh)", "intensity_g_kwh", None),
+    ("constraint cost (GBP bn)", "constraint_cost_bn", "constraint_cost_bn"),
+    ("constraint cost excl. BM premia (GBP bn)", "constraint_cost_bn",
+     lambda o: o["constraint_cost_bn"] - o["constraint_premia_bn"]),
+    ("renewable curtailment in BM (TWh)", "curtailment_twh", "renewable_turndown_twh"),
     ("gas (CCGT+OCGT) (TWh)", lambda r: r["gen_ccgt"] + r["gen_ocgt"] + r.get("gen_gas_ccs", 0.0), "gen_gas"),
     ("nuclear (TWh)", "gen_nuclear", "gen_nuclear"),
     ("wind incl. embedded (TWh)", lambda r: r["gen_wind_onshore"] + r["gen_wind_offshore"], "gen_wind"),
+    ("gas after BM redispatch (TWh)", lambda r: r["gen_ccgt"] + r["gen_ocgt"] + r["bm_net_ccgt"] + r["bm_net_ocgt"],
+     "gen_gas"),
+    ("wind after BM redispatch (TWh)", lambda r: r["gen_wind_onshore"] + r["gen_wind_offshore"]
+     + r["bm_net_wind_onshore"] + r["bm_net_wind_offshore"], "gen_wind"),
     ("solar (TWh)", "gen_solar", "gen_solar"),
     ("biomass (TWh)", "gen_biomass", "gen_biomass"),
     ("hydro (TWh)", "gen_hydro", "gen_hydro"),
@@ -39,7 +49,9 @@ METRICS = [
 
 
 def load_outturn() -> pd.DataFrame:
-    return pd.read_csv(OUTTURN, index_col="year")
+    out = pd.read_csv(OUTTURN, index_col="year")
+    con = pd.read_csv(CONSTRAINTS, index_col="year").drop(columns="source")
+    return out.join(con, how="left")
 
 
 def compare(record: pd.Series | dict, year: int) -> pd.DataFrame:
@@ -49,6 +61,6 @@ def compare(record: pd.Series | dict, year: int) -> pd.DataFrame:
     rows = []
     for label, mcol, ocol in METRICS:
         mv = mcol(r) if callable(mcol) else r.get(mcol, np.nan)
-        ov = out[ocol] if ocol else np.nan
+        ov = ocol(out) if callable(ocol) else out[ocol] if ocol else np.nan
         rows.append(dict(metric=label, model=float(mv), outturn=float(ov), diff=float(mv - ov)))
     return pd.DataFrame(rows).set_index("metric")

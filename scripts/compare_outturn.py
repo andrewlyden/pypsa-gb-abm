@@ -16,7 +16,7 @@ OUT = Path(__file__).resolve().parents[1] / "results" / "calibration_2025.md"
 
 
 def main(year=2025, seed=42):
-    m = GBMarketModel(get_scenario("baseline"), start=year, end=year, seed=seed, network_every=0)
+    m = GBMarketModel(get_scenario("baseline"), start=year, end=year, seed=seed, network_every=1)
     tab = compare(m.run().loc[year], year)
     md = ["| metric | model | outturn | model - outturn |", "|---|---|---|---|"]
     for k, r in tab.iterrows():
@@ -25,7 +25,9 @@ def main(year=2025, seed=42):
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(f"# Model {year} (baseline, seed {seed}) vs GB outturn\n\n" + "\n".join(md) + "\n\n"
                    "Outturn: NESO historic generation mix and carbon intensity (GB, incl. embedded wind/solar);\n"
-                   "Elexon MID price (APXMIDP) and FUELHH interconnector flows. See scripts/fetch_outturn.py.\n")
+                   "Elexon MID price (APXMIDP) and FUELHH interconnector flows (scripts/fetch_outturn.py);\n"
+                   "constraint cost and curtailment: data/outturn/gb_constraints.csv (LCP Delta 2026, from NESO data).\n"
+                   "Rows 'after BM redispatch' add the network stage's annualised redispatch to the wholesale result.\n")
     print("\n".join(md))
 
 

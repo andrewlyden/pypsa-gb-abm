@@ -1,0 +1,2 @@
+year,constraint_cost_bn,renewable_turndown_twh,constraint_premia_bn,source
+2025,1.83,10.4,0.54,"LCP Delta (Mar 2026) 'From Bottlenecks to Balance' pp.16-19 and 45, from NESO constraint cost and BM data: thermal constraint cost GBP 1.83bn (2025 real), renewable turn-down 10.4 TWh; of the cost, ~GBP 0.44bn thermal offer multipliers/adders and ~0.10bn renewable bid adders above SRMC (BM premia)"

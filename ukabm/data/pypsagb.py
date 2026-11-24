@@ -41,6 +41,41 @@ IC_MARKET = {"France1": "FR", "France2": "FR", "Netherlands": "NL", "Belgium": "
 IC_COMMISSIONING_OVERRIDES = {"NeuConnect": 2028, "GridLink": 2030, "FAB Link": 2031,
                               "NorthConnect": None, "Greenlink": 2025}
 
+# Inter-zonal capacities. The PyPSA-GB zonal network carries future (HND-era) values, e.g. 22 GW
+# across the Scotland-England boundary, so the Scottish boundaries are rebuilt from boundary
+# capabilities (MW, incl. HVDC) under NESO's Holistic Transition network build-out as tabulated by
+# LCP Delta, "From Bottlenecks to Balance" (Mar 2026, p.58), linearly interpolated between
+# 2025/2030/2035 and held after. Each boundary's AC part is carried by one zonal link = boundary
+# minus the HVDC links that cross it (floor 500 MW); HVDC links are steps at target energisation:
+# Caithness-Moray 1.2 GW (2019), Shetland 0.6 GW (2024), Western Isles 1.8 GW (2030), Western
+# HVDC Hunterston-Deeside 2.25 GW (2018), EGL1 Torness-Hawthorn Pit 2 GW (2027), EGL2
+# Peterhead-Drax 2 GW (2029), EGL3/4 to Lincolnshire 2 x 2 GW (2031) (SSEN Transmission 2022;
+# Ofgem ASTI 2024). EGL2-4 use the PyPSA-GB Z2-Z7 DC corridor. The Western HVDC is moved from the
+# PyPSA-GB Z3-Z9 corridor (north of B4) to a new Z5-Z9 link (Hunterston maps to Z5 with the
+# nearest-bus rule used for DUKES sites). English links keep their PyPSA-GB capacities.
+BOUNDARY_MW = {"B0": [(2025, 1800), (2030, 4700), (2035, 4600)],
+               "B2": [(2025, 3500), (2030, 6000), (2035, 12000)],
+               "B4": [(2025, 4000), (2030, 7300), (2035, 12000)],
+               "B5": [(2025, 4300), (2030, 8300), (2035, 11700)],
+               "B6": [(2025, 7000), (2030, 10200), (2035, 16800)]}
+BOUNDARY_LINKS = {"B0": ("Z1_4-Z1_3", ["Z2-Z1_3"]), "B2": ("Z3-Z2", ["Z7-Z2"]), "B4": ("Z5-Z3", ["Z7-Z2"]),
+                  "B5": ("Z6-Z5", ["Z7-Z2"]), "B6": ("Z7-Z6", ["Z7-Z2", "EGL1", "WesternHVDC"])}
+HVDC_STEPS = {"Z2-Z1_3": [(2019, 1200)], "Z1_3-Z1_1": [(2024, 600)], "Z1_3-Z1_2": [(2025, 0), (2030, 1800)],
+              "WesternHVDC": [(2018, 2250)], "EGL1": [(2025, 0), (2027, 2000)],
+              "Z7-Z2": [(2025, 0), (2029, 2000), (2031, 6000)], "Z9-Z3": [(2018, 0)]}
+NEW_LINKS = [dict(name="EGL1", bus0="Z5", bus1="Z7", carrier="DC", p_nom=0.0, p_min_pu=-1),
+             dict(name="WesternHVDC", bus0="Z5", bus1="Z9", carrier="DC", p_nom=0.0, p_min_pu=-1)]
+# Average available share of boundary capability by month (planned outages/maintenance), read from
+# LCP Delta (2026, p.59; NESO day-ahead constraint flows & limits 2019-24): Scottish boundaries
+# (B5 separately, it runs much lower) and English & Welsh links.
+AVAIL_SCOT = [0.85, 0.86, 0.82, 0.77, 0.69, 0.67, 0.65, 0.63, 0.69, 0.77, 0.74, 0.86]
+AVAIL_B5 = [0.55, 0.65, 0.54, 0.51, 0.50, 0.48, 0.52, 0.43, 0.62, 0.47, 0.48, 0.54]
+AVAIL_EW = [0.93, 0.92, 0.85, 0.80, 0.80, 0.70, 0.70, 0.62, 0.83, 0.85, 0.83, 0.92]
+# Year-specific extra derating of Scottish boundaries: in 2025 average availability on B2, B4 and B6
+# was ~25 % below 2023 because of upgrade outages (LCP Delta 2026, p.18; NESO 2025 Annual
+# Balancing Costs Report). Other years: normal availability.
+SCOT_OUTAGE_DERATE = {2025: 0.76}
+
 DUKES_TO_TECH = {"Fossil Fuel": "ccgt", "Nuclear": "nuclear", "Bioenergy": "biomass", "Hydro": "hydro",
                  "Pumped Hydro": "pumped_hydro", "Pumped hydro": "pumped_hydro", "Solar": "solar",
                  "Wind": "wind"}
@@ -151,6 +186,32 @@ class PyPSAGBData:
         ic = self.interconnectors
         first = ic.name.map(IC_COMMISSIONING_OVERRIDES).where(ic.name.isin(list(IC_COMMISSIONING_OVERRIDES)), ic.year)
         return ic[first.notna() & (first <= year)]
+
+    def links_for_year(self, year: int) -> pd.DataFrame:
+        """Inter-zonal links with capacities for *year* (see BOUNDARY_MW, HVDC_STEPS)."""
+        links = pd.concat([self.links, pd.DataFrame(NEW_LINKS)], ignore_index=True).set_index("name")
+        step = lambda pts, t=year: float(([m for y, m in pts if y <= t] or [0.0])[-1])
+        for name, pts in HVDC_STEPS.items():
+            links.loc[name, "p_nom"] = step(pts)
+        for bnd, pts in BOUNDARY_MW.items():
+            ac, hvdc = BOUNDARY_LINKS[bnd]
+            ys, mw = zip(*pts)
+            # AC part never shrinks when a new HVDC link energises ahead of the interpolated boundary
+            links.loc[ac, "p_nom"] = max(max(float(np.interp(t, ys, mw)) - sum(step(HVDC_STEPS[h], t) for h in hvdc)
+                                             for t in range(min(ys), max(year, min(ys)) + 1)), 500.0)
+        return links.reset_index()
+
+    def link_availability(self, year: int, links: pd.DataFrame, hours) -> pd.DataFrame:
+        """Available share of each link's capacity in the given hours (rows) of the profile year."""
+        month = (pd.Timestamp(f"{self.profile_year}-01-01")
+                 + pd.to_timedelta(self.profiles.doy.values[hours] - 1, unit="D")).month.values - 1
+        scot = {ac for ac, _ in BOUNDARY_LINKS.values()} | {h for _, hv in BOUNDARY_LINKS.values() for h in hv}
+        out = {}
+        for name in links.name:
+            prof = AVAIL_B5 if name == BOUNDARY_LINKS["B5"][0] else AVAIL_SCOT if name in scot else AVAIL_EW
+            f = np.asarray(prof)[month]
+            out[name] = f * SCOT_OUTAGE_DERATE.get(year, 1.0) if name in scot else f
+        return pd.DataFrame(out)
 
     def interconnector_mw(self, year: int) -> float:
         return float(self._ic_in_service(year).p_nom.sum())

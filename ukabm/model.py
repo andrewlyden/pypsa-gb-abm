@@ -48,6 +48,10 @@ IC_PRICE_LEVEL = {"continent": 0.68, "SEM": 1.10}
 IC_SPREAD = 12.0         # GBP/MWh
 IC_AVAILABILITY = 0.9    # GB peak import 2025 was 9.2 GW on 10.5 GW (Elexon FUELHH)
 
+# Network stage: wind-CF strata for representative hours; nuclear BM bid (inflexible plant).
+NET_STRATA = 8
+NUCLEAR_BM_BID = -300.0
+
 # Existing / committed nuclear: (mw, online, retire, zone, availability). Indicative public dates.
 # Availability of the legacy fleet calibrated to outturn: GB nuclear 38.4 TWh (2024) and 34.2 TWh
 # (2025, NESO); Sizewell B ran at 99 % in 2025 (10.4 TWh) while the AGRs averaged ~58 % with an
@@ -65,6 +69,12 @@ GENCO_SPECS = [
     dict(name="InfraFund", wacc=0.06, expectation="adaptive", markup=0.0, risk_aversion=0.20, budget_gbp=3e9),
     dict(name="GreenDeveloper", wacc=0.075, expectation="carbon_optimist", markup=0.0, risk_aversion=0.10, budget_gbp=2e9),
 ]
+
+
+def _weighted_median(x, w):
+    o = np.argsort(x)
+    c = np.cumsum(w[o])
+    return float(x[o][np.searchsorted(c, 0.5 * c[-1])])
 
 
 class GBMarketModel(ModelBase):
@@ -447,9 +457,10 @@ class GBMarketModel(ModelBase):
         # policy cost pass-through to consumers (GBP/MWh)
         self.levy = (st["cfd_cost"] + st["ro_cost"] + st["cm_cost"]) / dem
         # network stage
-        constraint_cost = np.nan
+        net = {}
         if self.network_every and (y - self.start) % self.network_every == 0:
-            constraint_cost = self.network_stage(y, plants, res)
+            net = self.network_stage(y, plants, res)
+        constraint_cost = net.get("constraint_cost_bn", np.nan)
         # multi-energy feedbacks
         twavg = float((price * res["demand"]).sum() / dem)
         hp_price = float((price * self.heat.heat_shape(self.prof)).sum())
@@ -488,6 +499,13 @@ class GBMarketModel(ModelBase):
             rec[f"gen_{tech}"] = gen.get(tech, 0.0) / 1e6
         rec["gen_imports"] = gen.get("imports", 0.0) / 1e6
         rec["gen_total"] = sum(gen.values()) / 1e6
+        # Balancing Mechanism redispatch from the network stage (NaN in years without it):
+        # net change by technology (TWh, + = turned up) and the post-redispatch NESO-basis CI
+        rec["curtailment_twh"] = net.get("curtailment_twh", np.nan)
+        for tech in TECHS:
+            rec[f"bm_net_{tech}"] = net["bm_net"].get(tech, 0.0) / 1e6 if net else np.nan
+        post = {k: gen.get(k, 0.0) + (net["bm_net"].get(k, 0.0) if net else 0.0) for k in set(gen) | set(TECHS)}
+        rec["intensity_neso_post_bm_g_kwh"] = self.neso_basis_ci(post, st) if net else np.nan
         for q in (5, 50, 95):
             rec[f"price_p{q:02d}"] = float(np.percentile(price, q))
         rec["cap_interconnector"] = res["ic_cap"] / 1e3
@@ -521,28 +539,76 @@ class GBMarketModel(ModelBase):
                 break
         return sum(p.mw for p in self.plants if p.online > y) - before
 
-    def network_stage(self, y, plants, res):
+    def network_sample(self, y):
+        """Representative hours for the network stage: stratified by GB wind CF (constraint costs
+        are driven by wind), equal hours per stratum, with weights = stratum size / sampled hours."""
         rng = np.random.default_rng(y)
-        hours = np.sort(rng.choice(self.H, self.network_hours, replace=False))
-        # interconnector & storage handled as fixed injections folded into zonal demand
-        blocks = [b for b in res["blocks"] if b.key > 0]
-        ic_disp = res["disp"][:, [j for j, b in enumerate(res["blocks"]) if -10 < b.key < 0]].sum(1)
-        net_demand = res["demand"] - ic_disp
+        w = self.prof.wind_cf.values
+        edges = np.quantile(w, np.linspace(0, 1, NET_STRATA + 1))
+        strata = np.clip(np.searchsorted(edges, w, side="right") - 1, 0, NET_STRATA - 1)
+        per = max(self.network_hours // NET_STRATA, 1)
+        hours, weights = [], []
+        for s in range(NET_STRATA):
+            idx = np.flatnonzero(strata == s)
+            k = min(per, len(idx))
+            hours += list(rng.choice(idx, k, replace=False))
+            weights += [len(idx) / k] * k
+        order = np.argsort(hours)
+        return np.asarray(hours)[order], np.asarray(weights)[order]
+
+    def bm_bids(self, plants, blocks, price, year):
+        """Balancing Mechanism bid prices (GBP/MWh paid by the plant to be turned down; negative =
+        the system pays it). Thermal: SRMC (fuel saved). RO renewables: -ROC value. CfD renewables:
+        -(strike - market price), the top-up lost on curtailed output. Merchant VRE/hydro: 0.
+        Nuclear: NUCLEAR_BM_BID (inflexible, effectively never turned down)."""
+        pmap = {p.pid: p for p in plants}
+        bids = np.zeros((len(price), len(blocks)))
+        for j, b in enumerate(blocks):
+            p = pmap[b.key]
+            if p.tech == "nuclear":
+                bids[:, j] = NUCLEAR_BM_BID
+            elif p.tech in VRE_TECHS or p.tech == "hydro":
+                if p.support == "ro":
+                    bids[:, j] = -self.policy.ro_value
+                elif p.support == "cfd" and year <= p.cfd_end:
+                    bids[:, j] = -np.maximum(p.strike - price, 0.0)
+            else:
+                bids[:, j] = self.plant_srmc(p, year)
+        return bids
+
+    def network_stage(self, y, plants, res):
+        """BM-style zonal redispatch on representative hours. Returns annualised constraint cost,
+        curtailment and net redispatch volume by technology (empty dict if the stage fails)."""
+        hours, wts = self.network_sample(y)
+        cols = [j for j, b in enumerate(res["blocks"]) if b.key > 0]
+        blocks = [res["blocks"][j] for j in cols]
+        imports = res["disp"][:, [j for j, b in enumerate(res["blocks"]) if -10 < b.key < 0]].sum(1)
+        bc = lambda v: np.broadcast_to(v, (self.H,))[hours]
+        sched = res["disp"][np.ix_(hours, cols)]
+        avail = np.stack([bc(b.avail) for b in blocks], 1)
+        offers = np.stack([bc(b.price) for b in blocks], 1)
+        bids = self.bm_bids(plants, blocks, res["price"][hours], y)
+        links = self.data.links_for_year(y)
         try:
-            out = netmod.redispatch(self.data, plants, blocks, net_demand, hours)
-        except Exception as e:  # keep the annual loop robust for the workshop
+            out = netmod.redispatch(self.data, plants, blocks, (res["demand"] - imports)[hours], sched, avail,
+                                    offers, bids, links, self.data.link_availability(y, links, hours))
+        except Exception as e:  # keep the annual loop robust
             log.warning("network stage failed: %s", e)
-            return np.nan
+            return {}
         if out is None:
-            return np.nan
-        self.network_results = {"zonal_price": out["zonal_price_mean"], "flows": out["flows"], "year": y}
-        cost_cu = 0.0
-        for j, b in enumerate(res["blocks"]):
-            if b.key > 0:
-                cost_cu += float((res["disp"][hours, j] * b.price).sum())
-        cc = max(out["cost_constrained"] - cost_cu, 0.0)
-        self.network_results["constraint_cost_sample"] = cc
-        return cc * self.H / len(hours) / 1e9
+            return {}
+        tech = {p.pid: p.tech for p in plants}
+        up, down = wts @ out["up"], wts @ out["down"]          # MWh/yr per block
+        bm_net, curtail = {}, 0.0
+        for j, b in enumerate(blocks):
+            t = tech[b.key]
+            bm_net[t] = bm_net.get(t, 0.0) + up[j] - down[j]
+            curtail += down[j] if t in VRE_TECHS else 0.0
+        zp = out["zonal_price"].apply(lambda c: _weighted_median(c.values, wts))   # robust to shedding hours
+        self.network_results = {"zonal_price": zp, "flows": out["flows"], "year": y,
+                                "hours": hours, "weights": wts}
+        return dict(constraint_cost_bn=float(wts @ out["cost_h"]) / 1e9, curtailment_twh=curtail / 1e6,
+                    shed_twh=float(wts @ out["shed"]) / 1e6, bm_net=bm_net)
 
     def run(self):
         while self.year <= self.end:

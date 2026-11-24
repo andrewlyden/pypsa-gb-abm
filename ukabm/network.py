@@ -1,10 +1,13 @@
 """Network-constrained redispatch on the PyPSA-GB zonal network (PyPSA + HiGHS).
 
 Given the copperplate market outcome for a sample of hours, build a zonal PyPSA network
-(20 zones, 31 inter-zonal transfer links from PyPSA-GB data/network/zonal), place each plant's
-availability and offer at its zone, and solve a least-cost dispatch. The cost difference to the
-unconstrained dispatch approximates balancing-mechanism constraint costs; zonal shadow prices
-give a locational signal used by investors (hook for REMA-style locational pricing).
+(20 zones, inter-zonal transfer links from PyPSA-GB data/network/zonal with year-dependent
+capacities, see PyPSAGBData.links_for_year) and re-dispatch it at least balancing cost, in the
+style of the Balancing Mechanism: each plant's market schedule can be turned down at its *bid*
+price and its remaining headroom turned up at its *offer* price. Implemented with two PyPSA
+generators per plant: "s" (capacity = market schedule, cost = bid) and "h" (capacity = available
+minus schedule, cost = offer). Redispatch cost = objective - sum(bid * schedule). Zonal shadow
+prices give a locational signal used by investors (hook for REMA-style locational pricing).
 """
 from __future__ import annotations
 
@@ -18,7 +21,14 @@ import pandas as pd
 log = logging.getLogger(__name__)
 
 
-def redispatch(data, plants, blocks, demand_h, hours, ic_mw=0.0):
+def redispatch(data, plants, blocks, demand_h, schedule, avail, offers, bids, links, link_pu=None):
+    """Least-cost BM-style redispatch for the sample hours.
+
+    demand_h: (S,) GB demand net of interconnector imports, MW. schedule, avail, offers, bids: (S, B)
+    arrays for *blocks* (plant blocks only). links: inter-zonal links for the year; link_pu: optional
+    (S, links) DataFrame of available capacity share per hour (outages/maintenance).
+    Returns dict with per-hour redispatch cost (GBP), up/down volumes (S, B), flows, zonal prices.
+    """
     try:
         import pypsa
     except ImportError:  # pragma: no cover
@@ -26,35 +36,47 @@ def redispatch(data, plants, blocks, demand_h, hours, ic_mw=0.0):
         return None
     logging.getLogger("pypsa").setLevel(logging.ERROR)
     logging.getLogger("linopy").setLevel(logging.ERROR)
+    S = len(demand_h)
     n = pypsa.Network()
-    n.set_snapshots(pd.RangeIndex(len(hours)))
+    n.set_snapshots(pd.RangeIndex(S))
     for _, b in data.buses.iterrows():
         n.add("Bus", b["name"], x=b.x, y=b.y, carrier="AC")
-    for _, l in data.links.iterrows():
-        n.add("Link", l["name"], bus0=l.bus0, bus1=l.bus1, p_nom=l.p_nom, p_min_pu=-1, efficiency=1.0)
-    zshare = data.zone_demand_share
-    for z, s in zshare.items():
+    for _, l in links.iterrows():
+        if l.p_nom > 0:
+            pu = link_pu[l["name"]].values if link_pu is not None else 1.0
+            n.add("Link", l["name"], bus0=l.bus0, bus1=l.bus1, p_nom=l.p_nom, p_max_pu=pu, p_min_pu=-pu,
+                  efficiency=1.0)
+    for z, s in data.zone_demand_share.items():
         if s > 0:
-            n.add("Load", f"load_{z}", bus=z, p_set=demand_h[hours] * s)
+            n.add("Load", f"load_{z}", bus=z, p_set=demand_h * s)
             n.add("Generator", f"shed_{z}", bus=z, p_nom=1e5, marginal_cost=6000.0)
     pmap = {p.pid: p for p in plants}
-    for b in blocks:
+    head = np.clip(avail - schedule, 0.0, None)
+    names = []
+    for j, b in enumerate(blocks):
         p = pmap.get(b.key)
         if p is None:
             continue
-        av = np.broadcast_to(b.avail, demand_h.shape)[hours]
-        if av.max() <= 0:
-            continue
-        n.add("Generator", f"g{b.key}", bus=p.zone, p_nom=float(av.max()),
-              p_max_pu=av / av.max(), marginal_cost=np.broadcast_to(b.price, demand_h.shape)[hours] if np.ndim(b.price) else float(b.price))
+        for tag, cap, cost in (("s", schedule[:, j], bids[:, j]), ("h", head[:, j], offers[:, j])):
+            if cap.max() <= 1e-6:
+                continue
+            n.add("Generator", f"{tag}{b.key}", bus=p.zone, p_nom=float(cap.max()),
+                  p_max_pu=cap / cap.max(), marginal_cost=cost)
+            names.append((f"{tag}{b.key}", tag, j))
     n.optimize(solver_name="highs", solver_options={"output_flag": False}, progress=False,
                include_objective_constant=False)
-    zp = n.buses_t.marginal_price
     gen = n.generators_t.p
-    out = {
-        "cost_constrained": float(n.objective),
-        "zonal_price_mean": zp.mean(),
-        "flows": n.links_t.p0,
-        "gen": gen,
-    }
-    return out
+    up, down = np.zeros_like(schedule), np.zeros_like(schedule)
+    cost_h = np.zeros(S)
+    for name, tag, j in names:
+        g = gen[name].values
+        if tag == "s":
+            down[:, j] = schedule[:, j] - g
+            cost_h -= bids[:, j] * down[:, j]
+        else:
+            up[:, j] = g
+            cost_h += offers[:, j] * g
+    shed = gen[[c for c in gen.columns if c.startswith("shed_")]].sum(axis=1).values
+    cost_h += 6000.0 * shed
+    return {"cost_h": cost_h, "up": up, "down": down, "shed": shed,
+            "zonal_price": n.buses_t.marginal_price, "flows": n.links_t.p0}
