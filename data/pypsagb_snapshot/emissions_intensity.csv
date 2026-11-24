@@ -1,0 +1,50 @@
+Type,Emissions Intensity [gCO2/kWh]
+AGR,0.0
+Anaerobic Digestion,354.0
+Battery,0.0
+Biomass (co-firing),120.0
+Biomass (dedicated),120.0
+CCGT,394.0
+CCS Biomass,57.0
+CCS Gas,57.0
+Coal,937.0
+Compressed Air,0.0
+Conventional Steam,300.0
+Diesel,935.0
+EfW Incineration,300.0
+Floating Wind,0.0
+Hydro,0.0
+Hydrogen,30.0
+Interconnectors Import,171.0
+Landfill Gas,300.0
+Large Hydro,0.0
+Liquid Air,0.0
+Nuclear,0.0
+OCGT,800.0
+Pumped Storage Hydroelectric,0.0
+PWR,0.0
+Sewage Sludge Digestion,300.0
+Shoreline Wave,0.0
+Small Hydro,0.0
+Solar Photovoltaics,0.0
+Tidal Barrage and Tidal Stream,0.0
+Tidal lagoon,0.0
+Tidal stream,0.0
+Unmet Load,0.0
+Wave power,0.0
+Wind Offshore,0.0
+Wind Onshore,0.0
+BritNed,513.0
+EastWest,426.0
+Moyle,426.0
+Nemo,132.0
+IFA,48.0
+IFA2,48.0
+NSL,9.0
+ElecLink,48.0
+Viking Link,226.1
+Greenlink,426.0
+GridLink,48.0
+NeuConnect,335.2
+NorthConnect,9.0
+FAB Link,48.0

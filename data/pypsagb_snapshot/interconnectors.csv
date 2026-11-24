@@ -1,0 +1,15 @@
+name,country,zone,p_nom,year,marginal_cost
+BritNed,Netherlands,Z15,1000,2020,20
+EastWest,Ireland,Z9,600,2020,7
+Moyle,N. Ireland,Z5,600,2020,7
+Nemo,Belgium,Z15,1000,2020,20
+IFA,France1,Z15,2000,2020,15
+IFA2,France2,Z16,1000,2020,15
+NSL,Norway,Z7,1400,2021,1
+ElecLink,France1,Z15,1000,2022,15
+Viking Link,Denmark,Z12,1400,2023,7
+Greenlink,Ireland2,Z13,500,2023,7
+GridLink,France1,Z15,1400,2024,15
+NeuConnect,Germany,Z15,1400,2024,20
+NorthConnect,Norway,Z2,1400,2025,1
+FAB Link,France2,Z17,1400,2025,15
