@@ -1,0 +1,16 @@
+challenge,AMIRIS,EMLab-Generation,ASSUME,PowerACE,ElecSim,AMES,CNZ_heat_ABM,PyPSA-GB,ukabm_v0.1
+wholesale_bidding,full,partial,full,full,partial,full,none,partial,full
+long_term_investment,partial,full,partial,full,full,none,none,full,full
+cfd_auctions,partial,partial,none,none,partial,none,none,partial,full
+capacity_market,none,full,partial,partial,partial,none,none,partial,full
+carbon_policy,full,full,partial,full,full,none,none,full,full
+network_constraints,none,none,partial,partial,none,full,none,full,partial
+storage_flexibility,full,partial,full,full,partial,none,none,full,partial
+interconnectors,partial,full,partial,full,none,none,none,full,partial
+heat_pumps,none,none,none,none,none,none,full,partial,full
+gas_networks,none,none,none,none,none,none,partial,none,partial
+hydrogen,partial,none,partial,partial,none,none,none,full,partial
+ev_charging,partial,none,partial,none,none,none,none,partial,partial
+consumer_behaviour_bills,none,none,none,none,none,none,full,partial,partial
+decarbonisation_pathways,partial,full,partial,full,full,none,partial,full,partial
+open_python_pypsa_linkable,partial,none,full,none,full,partial,full,full,full
