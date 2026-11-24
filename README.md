@@ -60,7 +60,7 @@ until the fleet catches up.
 ![scenarios](docs/figures/scenario_comparison.svg)
 ![capacity](docs/figures/capacity_mix.svg)
 
-## STATUS / roadmap (workshop: Tuesday)
+## STATUS / roadmap
 
 | area | status |
 |---|---|
@@ -78,12 +78,31 @@ until the fleet catches up.
 | Strategic BM bidding, nodal/ETYS network in loop, RL agents | ❌ not started |
 | Calibration/validation vs 2020–24 outturn, multi-seed Monte-Carlo, weather years | ❌ not started |
 
-**Before Tuesday (priority order)**
-1. Multi-seed runs (5 seeds) for baseline + 2 policy scenarios; show bands not lines.
-2. Sanity-check 2025 against outturn (price ~£75–80/MWh ✅, CI ~ 47 g/kWh vs ~125 actual ❌ — imports & biomass too high, CCGT too low).
-3. Fix network stage: use PyPSA-GB Reduced 32-bus network & zonal wind profiles (Scottish vs English wind) — constraint costs should rise.
-4. Add battery ancillary/BM revenue; check CM over-procurement of OCGT (CM clears at cap every year: target too high with unmanaged EV peak).
-5. Present heat_push vs baseline loop (HP uptake ↔ prices ↔ gas tariffs) as the multi-energy headline.
+**Next (priority order)**
+
+The daily agent takes the highest unfinished item it can complete in one run. Items marked
+*needs human* are decisions for the maintainer and are skipped by the agent.
+
+1. Multi-seed runs (5 seeds) for baseline + 2 policy scenarios; show uncertainty bands, not single lines,
+   in the plots and the headline table.
+2. Calibrate 2025 against outturn. Price is plausible (~£75–80/MWh ✅) but carbon intensity is ~47 g/kWh
+   vs ~125 actual ❌: imports and biomass run too much, CCGT too little. Diagnose (interconnector tranche
+   prices, biomass costs/availability, CCGT offers), fix, and report 2025 price, CI and generation mix vs
+   outturn in a table.
+3. Network stage: switch to the PyPSA-GB Reduced 32-bus network with zonal wind profiles (Scottish vs
+   English wind) and representative rather than random hours. Constraint costs (~£0.1bn now) should move
+   towards the £1–2bn/yr outturn.
+4. Battery revenues: add a stylised BM/ancillary revenue stack so merchant batteries can enter. Then check
+   Capacity Market over-procurement of OCGT (CM clears at the cap every year; the target is likely too high
+   with an unmanaged EV peak).
+5. Validation check: a script and test comparing the 2025 run with outturn (price, CI, generation mix)
+   within tolerance bands documented in `docs/assumptions.md`, so regressions show up in CI.
+6. Write up the heat_push vs baseline loop (HP uptake ↔ prices ↔ gas tariffs) as a docs page: the
+   multi-energy headline result.
+7. *needs human*: decide whether to extend validation to 2020–24 back-casts and multiple weather years,
+   and which outturn data sources to treat as the reference.
+8. *needs human*: choose what to pursue next among hydrogen (H2 storage/network vs exogenous price),
+   strategic BM bidding, nodal/ETYS network in the loop, and RL agents.
 
 ## Credits
 Data extracts from PyPSA-GB (MIT), which in turn uses ESPENI, DUKES, NESO and LCCC data. Framework: Mesa, PyPSA, HiGHS.
