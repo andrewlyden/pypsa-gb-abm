@@ -40,6 +40,20 @@ def test_redispatch_toy_constrained_boundary():
     assert zp["S"] > zp["N"]                                         # locational signal
 
 
+def test_redispatch_toy_shedding_reported_not_costed():
+    # southern gas only 50 MW: 100 MW over the link + 50 MW gas < 300 MW demand -> 150 MW shed
+    from ukabm import network
+    data = SimpleNamespace(buses=pd.DataFrame({"name": ["N", "S"], "x": [0.0, 0.0], "y": [1.0, 0.0]}),
+                           zone_demand_share=pd.Series({"N": 0.0, "S": 1.0}))
+    plants = [SimpleNamespace(pid=1, zone="N"), SimpleNamespace(pid=2, zone="S")]
+    blocks = [SimpleNamespace(key=1), SimpleNamespace(key=2)]
+    out = network.redispatch(data, plants, blocks, np.array([300.0]), np.array([[300.0, 0.0]]),
+                             np.array([[300.0, 50.0]]), np.array([[0.0, 80.0]]), np.array([[-40.0, 40.0]]),
+                             pd.DataFrame([dict(name="NS", bus0="N", bus1="S", p_nom=100.0)]))
+    assert np.allclose(out["shed"], 150.0)
+    assert np.allclose(out["cost_h"], 80.0 * 50 + 40.0 * 200)        # VoLL not in the redispatch cost
+
+
 def test_redispatch_toy_unconstrained_costs_nothing():
     out = _toy(1000.0)
     assert np.allclose(out["cost_h"], 0.0) and np.allclose(out["up"], 0.0) and np.allclose(out["down"], 0.0)
@@ -110,6 +124,7 @@ def test_network_stage_2025_constraint_cost_and_post_bm_mix():
     # outturn 2025: GBP 1.83bn incl. ~0.54bn BM premia, 10.4 TWh renewable turn-down (LCP Delta 2026)
     assert 0.8 < r.constraint_cost_bn < 2.5
     assert 5.0 < r.curtailment_twh < 15.0
+    assert r.network_shed_twh < 0.05
     # redispatch turns wind down and gas up, so post-BM CI is higher
     assert r.bm_net_wind_onshore + r.bm_net_wind_offshore < 0 < r.bm_net_ccgt + r.bm_net_ocgt
     assert r.intensity_neso_post_bm_g_kwh > r.intensity_neso_g_kwh

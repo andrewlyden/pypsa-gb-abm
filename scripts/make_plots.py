@@ -76,7 +76,7 @@ fig, ax = plt.subplots(figsize=(9, 4))
 for c, l in [("cfd_cost_bn", "CfD"), ("ro_cost_bn", "RO"), ("cm_cost_bn", "Capacity Market")]:
     ax.plot(base.index, base[c], label=l)
 nc = base.constraint_cost_bn.dropna()
-ax.plot(nc.index, nc.values, "ko--", label="network constraint cost (PyPSA-GB zonal)")
+ax.plot(nc.index, nc.values, "ko--", label="network constraint cost (BM redispatch, PyPSA-GB zones)")
 ax.set_title("Baseline policy and network costs (GBP bn/yr)"); ax.legend(fontsize=8); ax.grid(alpha=.3)
 fig.tight_layout(); fig.savefig(FIG / "policy_costs.png", dpi=130); plt.close(fig)
 

@@ -502,6 +502,7 @@ class GBMarketModel(ModelBase):
         # Balancing Mechanism redispatch from the network stage (NaN in years without it):
         # net change by technology (TWh, + = turned up) and the post-redispatch NESO-basis CI
         rec["curtailment_twh"] = net.get("curtailment_twh", np.nan)
+        rec["network_shed_twh"] = net.get("shed_twh", np.nan)   # demand behind constraints not met
         for tech in TECHS:
             rec[f"bm_net_{tech}"] = net["bm_net"].get(tech, 0.0) / 1e6 if net else np.nan
         post = {k: gen.get(k, 0.0) + (net["bm_net"].get(k, 0.0) if net else 0.0) for k in set(gen) | set(TECHS)}

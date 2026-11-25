@@ -27,7 +27,8 @@ def redispatch(data, plants, blocks, demand_h, schedule, avail, offers, bids, li
     demand_h: (S,) GB demand net of interconnector imports, MW. schedule, avail, offers, bids: (S, B)
     arrays for *blocks* (plant blocks only). links: inter-zonal links for the year; link_pu: optional
     (S, links) DataFrame of available capacity share per hour (outages/maintenance).
-    Returns dict with per-hour redispatch cost (GBP), up/down volumes (S, B), flows, zonal prices.
+    Returns dict with per-hour redispatch cost (GBP, bids/offers only), up/down volumes (S, B), load
+    shed behind constraints (S,), flows, zonal prices.
     """
     try:
         import pypsa
@@ -76,7 +77,9 @@ def redispatch(data, plants, blocks, demand_h, schedule, avail, offers, bids, li
         else:
             up[:, j] = g
             cost_h += offers[:, j] * g
+    # Load the network cannot serve (shed at 6000 GBP/MWh in the LP) is reported separately and
+    # left out of the redispatch cost: in the BM it would be resolved by actions this stage holds
+    # fixed (interconnector counter-trades, storage), not by paying VoLL.
     shed = gen[[c for c in gen.columns if c.startswith("shed_")]].sum(axis=1).values
-    cost_h += 6000.0 * shed
     return {"cost_h": cost_h, "up": up, "down": down, "shed": shed,
             "zonal_price": n.buses_t.marginal_price, "flows": n.links_t.p0}
