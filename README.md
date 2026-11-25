@@ -50,12 +50,12 @@ ukabm/outturn.py       model-vs-outturn comparison (data/outturn: NESO generatio
 ## 2025 calibration (baseline, seed 42) vs GB outturn
 | | model | outturn 2025 |
 |---|---|---|
-| price, demand-weighted (£/MWh) | 85.6 | 80.9 (Elexon MID) |
-| carbon intensity, NESO basis: wholesale / after BM redispatch (g/kWh) | 112 / 125 | 130 (NESO, generation-weighted) |
+| price, demand-weighted (£/MWh) | 84.9 | 80.9 (Elexon MID) |
+| carbon intensity, NESO basis: wholesale / after BM redispatch (g/kWh) | 113 / 126 | 130 (NESO, generation-weighted) |
 | gas / wind after BM redispatch (TWh) | 78 / 85 | 77 / 86 |
 | nuclear / biomass (TWh) | 35 / 20 | 34 / 20 |
 | imports / exports (TWh) | 45 / 15 | 44 / 15 (Elexon FUELHH) |
-| constraint cost (£bn) | 1.23 | 1.83, of which ~0.54 BM premia not modelled (LCP Delta 2026, NESO data) |
+| constraint cost (£bn) | 1.22 | 1.83, of which ~0.54 BM premia not modelled (LCP Delta 2026, NESO data) |
 | renewable turn-down in the BM (TWh) | 9.5 | 10.4 |
 
 The network stage redispatches the copperplate schedule on the PyPSA-GB zones with dated ETYS boundary
@@ -64,17 +64,17 @@ Remaining residuals: the model has no CHP/waste "other" generation (4.7 TWh, ~+5
 distribution is too narrow (no negative hours). Full table: [results/calibration_2025.md](results/calibration_2025.md).
 
 ## Headline results (single seed, illustrative)
-| scenario | price 2030 / 2050 (£/MWh) | CI 2050 (g/kWh), direct (NESO basis) | LOLE total 2025-50 (h) | HP homes 2050 |
-|---|---|---|---|---|
-| baseline | 82 / 41 | 13 (20) | 0 | 5.9 m |
-| high_carbon (£300/t 2050) | 89 / 45 | 8 (12) | 0 | 5.3 m |
-| no_cfd | 86 / 79 | 25 (35) | 0 | 4.0 m |
-| no_capacity_market | 89 / 49 | 11 (18) | 558 | 5.0 m |
-| heat_push (£11.5k grant, £25/MWh levy rebalancing) | 86 / 55 | 20 (28) | 0 | 27.2 m |
-| high_gas (£45/MWh_th) | 105 / 60 | 17 (25) | 0 | 13.1 m |
+| scenario | price 2030 / 2050 (£/MWh) | CI 2050 (g/kWh), direct (NESO basis) | LOLE total 2025-50 (h) | HP homes 2050 | batteries 2030 / 2050 (GW) |
+|---|---|---|---|---|---|
+| baseline | 81 / 39 | 12 (18) | 0 | 6.0 m | 12 / 28 |
+| high_carbon (£300/t 2050) | 88 / 44 | 8 (12) | 0 | 5.2 m | 12 / 33 |
+| no_cfd | 86 / 81 | 26 (37) | 0 | 4.0 m | 9 / 7 |
+| no_capacity_market | 90 / 49 | 10 (16) | 468 | 5.1 m | 7 / 17 |
+| heat_push (£11.5k grant, £25/MWh levy rebalancing) | 85 / 50 | 14 (20) | 0 | 27.3 m | 12 / 26 |
+| high_gas (£45/MWh_th) | 104 / 58 | 16 (23) | 0 | 13.3 m | 13 / 42 |
 
 Qualitative messages: CfDs drive offshore wind and lower long-run prices; removing the CM produces a
-missing-money scarcity episode (2027-29, ~500 h, prices ~£340/MWh) before merchant entry responds (classic
+missing-money scarcity episode (2027-29, ~400 h, annual mean prices ~£320/MWh) before merchant entry responds (classic
 ABM investment cycle; much smaller than before the 2025 calibration, when cheap imports had driven all CCGTs
 to retire); high gas prices and levy rebalancing both accelerate heat-pump uptake, which raises winter peak
 and carbon intensity until the fleet catches up.
@@ -89,7 +89,7 @@ and carbon intensity until the fleet catches up.
 | Hourly GB market clearing (agent offers, ORDC scarcity) | ✅ works, unit-tested |
 | Interconnectors: per-market import offers + export bids on observed 2024 neighbour price shapes | ✅ works; calibrated to 2025 flows (45/15 TWh vs 44/15) |
 | 2025 calibration vs outturn (`scripts/compare_outturn.py`) | ✅ price +6 %, gas/imports/exports/nuclear/biomass within 10 %; CI (NESO basis) −13 % with explained residuals (curtailment, "other") |
-| Storage arbitrage (battery, pumped hydro), smart EV valley-filling, electrolysers | ✅ works (heuristic, perfect intra-day foresight) |
+| Storage arbitrage (battery, pumped hydro), smart EV valley-filling, electrolysers | ✅ works (heuristic, perfect intra-day foresight; storage fleet dispatched in price-aware tranches) |
 | Merchant investment (5 heterogeneous GenCos, NPV on re-forecast prices) | ✅ works |
 | CfD allocation rounds with pots; 2-way CfD settlement | ✅ works (simplified: no £ budget) |
 | T-4 Capacity Market with sloping demand curve | ✅ works (no T-1, no penalties) |
@@ -98,7 +98,7 @@ and carbon intensity until the fleet catches up.
 | Network stage: BM-style redispatch (bids/offers) on PyPSA-GB zones with dated ETYS boundary capabilities and monthly availability, 96 wind-stratified hours | ✅ 2025: £1.23bn vs £1.29bn outturn excl. BM premia; 9.5 vs 10.4 TWh turn-down; post-BM gas/wind/CI within 1 TWh / 4 g/kWh. ⚠️ Single GB wind shape for all zones; ~£0 in 2030–35 (see roadmap); redispatch is reported only, not settled |
 | Heat-pump household agents + gas network tariff feedback | ✅ works (stylised, synthetic temperature) |
 | Hydrogen: electrolysers + H2 turbine tech | ⚠️ stub-level: exogenous H2 price, no H2 storage/network |
-| Batteries | ⚠️ no new merchant batteries: flat price duration under OCGT-led CM; needs BM/ancillary revenue stack |
+| Batteries: revenue stack (day-ahead arbitrage + ancillary and intraday/BM pots shared across the fleet + CM) | ✅ 2025 stack £64k/MW/yr before CM (Modo index £73k incl. CM); batteries enter via CM and merchant NPV, 12 GW by 2030 and 26–42 GW by 2050. ⚠️ Stylised pots; low against Clean Power 2030 (23–27 GW by 2030) |
 | Strategic BM bidding, nodal/ETYS network in loop, RL agents | ❌ not started |
 | Price distribution | ⚠️ too narrow: no negative hours (244 in 2025), p05 £54 vs £9, p95 £100 vs £123 (no unit commitment / must-run, no scarcity tail) |
 | Back-casts 2020–24, multi-seed Monte-Carlo, weather years, CI tolerance test | ❌ not started (2025 only) |
@@ -122,10 +122,14 @@ The daily agent takes the highest unfinished item it can complete in one run. It
    `network_shed_twh` (0.01 TWh in 2025, 0.76 TWh in no_capacity_market 2050). Consider allowing
    interconnector counter-trades. (d) By 2050 redispatch adds 5–15 g/kWh to NESO-basis CI
    (`intensity_neso_post_bm_g_kwh`), which the headline CI does not include yet.
-3. Battery revenues: add a stylised BM/ancillary revenue stack so merchant batteries can enter. Then check
-   Capacity Market over-procurement of OCGT (CM clears at the cap every year; the target is likely too high
-   with an unmanaged EV peak). Related: the 2025 price distribution is too narrow (no negative hours, p95
-   £100 vs £123), which understates arbitrage spreads; consider must-run/min-stable generation and RO bidding.
+3. Capacity Market target (the battery revenue stack is done). The model's T-4 target for 2029/30 is
+   49.0 GW de-rated, against the published 39.4 GW. The published 2028/29 auction had a 43.7 GW target
+   and procured 43.0 GW (Modo Energy, Feb 2026 and Mar 2025). Most model auctions are under-subscribed and
+   clear at the £75/kW cap; GB's 2029/30 T-4 cleared at £27.10/kW. Reconcile the target (unmanaged HP/EV
+   peak, T-1 holdback, de-rating factors) and check the `cm_new_chunks` entry cap; OCGT still reaches
+   20–40 GW by 2050. Related: the 2025 price distribution is too narrow (no negative hours, p95 £100 vs
+   £123), which understates arbitrage spreads; consider must-run/min-stable generation and RO bidding.
+   Battery capex (£600/kW for 2 h) also looks high against 2025 project costs and needs a source.
 4. Validation check: tolerance bands (in `docs/assumptions.md`) on the `ukabm.outturn.compare` table for
    2025 (price, CI, generation mix, flows) and a test, so regressions show up in CI.
 5. Write up the heat_push vs baseline loop (HP uptake ↔ prices ↔ gas tariffs) as a docs page: the

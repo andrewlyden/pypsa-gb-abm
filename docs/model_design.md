@@ -23,13 +23,17 @@
 ## Annual loop (`GBMarketModel.step`)
 1. Commission pipeline / retire (end of life, 2 consecutive loss years without CM contract).
 2. Demand = ESPENI-2024 shape × growth + heat-pump load (temperature-shaped) + EVs + electrolysers.
-3. Market: pass 1 clears inflexible demand → storage arbitrage, smart EV valley-filling and electrolysers
-   respond → pass 2 → pass 3 withdraws electrolysers above their willingness-to-pay. Interconnectors
+3. Market: pass 1 clears inflexible demand → smart EV valley-filling and electrolysers respond → storage
+   is dispatched in tranches, each on the price left by the tranches before it, skipping days on which a
+   tranche's own trades lose money → pass 2 → pass 3 withdraws electrolysers above their willingness-to-pay.
+   The hourly merit order is built once per market run and reused across passes (`market.merit_order`). Interconnectors
    trade inside every pass: per neighbour market (FR, NL, BE, NO2, DK1, DE, SEM) an import offer at
    foreign price + spread and an export bid at foreign price − spread (a "buy-back" block, so exports
    are curtailed exactly when the GB price is above the bid). Foreign prices = existing-CCGT SRMC ×
    market level × the observed 2024 hourly price shape of that neighbour.
-4. Settlement per plant: energy, CfD difference (strike – price), RO, CM; emissions; gas burn.
+4. Settlement per plant: energy, CfD difference (strike – price), RO, CM; emissions; gas burn. Batteries
+   also earn `battery_services_per_mw`: ancillary and intraday/BM trading pots shared across the fleet.
+   The same function enters battery investment NPVs and CM bids, at the expected fleet size.
 5. Every *k* years: network stage (`network_stage`). 96 hours stratified by wind CF. Each plant's market
    schedule can be turned down at its BM bid (`bm_bids`: thermal SRMC, −ROC, −CfD top-up, nuclear −£300)
    and its headroom turned up at its offer, on the 20-zone network with year-dependent boundary
