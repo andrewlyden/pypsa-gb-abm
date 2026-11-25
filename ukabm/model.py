@@ -20,9 +20,10 @@ import pandas as pd
 
 from .agents import GenCo, Plant
 from .config import (TECHS, VRE_TECHS, STORAGE_TECHS, INITIAL_FLEET_MW, EXISTING_FLEET_EFFICIENCY,
-                     NESO_CI_FACTORS, Policy, Fuels)
+                     NESO_CI_FACTORS, Policy, Fuels, BATTERY_ANCILLARY_POT, BATTERY_TRADING_PER_MW_VRE,
+                     BATTERY_FLEET_FLOOR_MW)
 from .data import PyPSAGBData
-from .market import Block, clear, storage_arbitrage
+from .market import Block, clear, merit_order, storage_arbitrage
 from .multienergy import HeatModule, GasNetworkModule, EVModule, HydrogenModule
 from . import network as netmod
 
@@ -47,6 +48,9 @@ except Exception:  # pragma: no cover
 IC_PRICE_LEVEL = {"continent": 0.68, "SEM": 1.10}
 IC_SPREAD = 12.0         # GBP/MWh
 IC_AVAILABILITY = 0.9    # GB peak import 2025 was 9.2 GW on 10.5 GW (Elexon FUELHH)
+
+# Storage fleet dispatched in this many sequential tranches (price impact of the fleet's own trading)
+STORAGE_TRANCHES = {"battery": 3, "pumped_hydro": 1}
 
 # Network stage: wind-CF strata for representative hours; nuclear BM bid (inflexible plant).
 NET_STRATA = 8
@@ -226,29 +230,35 @@ class GBMarketModel(ModelBase):
         ic_blocks, x_blocks, ic_cap, ref = self.interconnector_blocks(year)
         allb = blocks + ic_blocks + x_blocks
         x_max = sum(b.avail for b in x_blocks)          # export bids enter demand at full volume
+        curve = merit_order(allb, self.H)                # offers are fixed within the year
         base, heat, ev0, _ = self.demand(year)
         d1 = base + heat + ev0
-        p1, _, _ = clear(d1 + x_max, allb, self.policy.voll)
+        p1, _, _ = clear(d1 + x_max, allb, self.policy.voll, curve=curve)
         # flexibility reacts to pass-1 prices
         vre = sum(np.broadcast_to(b.avail, (self.H,)) for b in blocks
                   if self._tech_of.get(b.key) in VRE_TECHS)
         base, heat, ev, h2 = self.demand(year, p1, residual=d1 - vre)
+        # storage: the fleet is dispatched in tranches, each a price-taker on the price left by the flexible
+        # demand and the tranches before it, so the fleet does not trade away its own spread
         stor = {}
         net_st = np.zeros(self.H)
         for tech, hrs in STORAGE_TECHS.items():
             mw = sum(p.mw for p in plants if p.tech == tech)
-            if mw > 0:
-                stor[tech] = storage_arbitrage(p1, mw, hrs, TECHS[tech].efficiency)
-                net_st += stor[tech]
+            k = STORAGE_TRANCHES.get(tech, 1)
+            for _ in range(k if mw > 0 else 0):
+                pk, _, _ = clear(base + heat + ev + h2 - net_st + x_max, allb, self.policy.voll, curve=curve)
+                nk = storage_arbitrage(pk, mw / k, hrs, TECHS[tech].efficiency)
+                stor[tech] = stor.get(tech, 0.0) + nk
+                net_st += nk
         d2 = base + heat + ev + h2 - net_st
-        price, disp, uns = clear(d2 + x_max, allb, self.policy.voll)
+        price, disp, uns = clear(d2 + x_max, allb, self.policy.voll, curve=curve)
         # pass 3: electrolysers withdraw where the pass-2 price is above their willingness to pay
         # (avoids flexibility-induced scarcity from a one-shot response)
         bad_h = price > self.h2.wtp()
         if np.any(bad_h & (h2 > 0)):
             h2 = np.where(bad_h, 0.0, h2)
             d2 = base + heat + ev + h2 - net_st
-            price, disp, uns = clear(d2 + x_max, allb, self.policy.voll)
+            price, disp, uns = clear(d2 + x_max, allb, self.policy.voll, curve=curve)
         xj = [j for j, b in enumerate(allb) if b.key <= -11]
         export = x_max - disp[:, xj].sum(1)              # bought-back volume = export not taken
         return dict(price=price, disp=disp, unserved=uns, blocks=allb, demand=d2 + export, export=export,
@@ -291,22 +301,37 @@ class GBMarketModel(ModelBase):
                 em += fuel_mwh * t.co2_t_per_mwh_fuel
                 if t.fuel == "gas":
                     gas_burn += fuel_mwh
+        batt = dict(arbitrage=0.0, services=0.0, cm=0.0)   # GBP/MW/yr, battery fleet average
         for tech, net in res["storage"].items():
             sp = [p for p in plants if p.tech == tech]
             tot = sum(p.mw for p in sp)
             rev = float((price * net).sum())
-            anc = 20000 * max(1 - (year - 2025) / 12, 0.25) if tech == "battery" else 0.0
+            svc = self.battery_services_per_mw(plants) if tech == "battery" else 0.0
+            cm_t = 0.0
             for p in sp:
-                rev_p = rev * p.mw / tot + anc * p.mw   # ASSUMPTION: ancillary-service revenue
+                rev_p = rev * p.mw / tot + svc * p.mw
                 cm = p.cm_price * 1000 * p.mw * TECHS[tech].derating if year <= p.cm_end else 0.0
                 cm_cost += cm
+                cm_t += cm
                 acc.append((p, rev_p + cm - TECHS[tech].fom * 1000 * p.mw, rev_p, 0))
             gen_by_tech[tech] = float(np.clip(net, 0, None).sum())
+            if tech == "battery" and tot > 0:
+                batt = dict(arbitrage=rev / tot, services=svc, cm=cm_t / tot)
         for p, profit, rev, e in acc:
             p.history.append((year, profit))
             p.loss_years = p.loss_years + 1 if profit < 0 else 0
         return dict(cfd_cost=cfd_cost, ro_cost=ro_cost, cm_cost=cm_cost, gen=gen_by_tech,
-                    emissions_t=em, gas_burn_twh=gas_burn / 1e6)
+                    emissions_t=em, gas_burn_twh=gas_burn / 1e6, battery=batt)
+
+    @staticmethod
+    def battery_services_per_mw(plants, extra_mw=0.0):
+        """Battery revenue (GBP/MW/yr) from ancillary services and intraday/BM trading that the hourly
+        day-ahead clearing does not capture: two pots (config.BATTERY_*) shared across the battery fleet
+        of *plants* plus *extra_mw* (a candidate project). The fleet is floored at its 2025 size."""
+        fleet = sum(p.mw for p in plants if p.tech == "battery") + extra_mw
+        vre = sum(p.mw for p in plants if p.tech in VRE_TECHS)
+        pot = BATTERY_ANCILLARY_POT + BATTERY_TRADING_PER_MW_VRE * vre
+        return pot / max(fleet, BATTERY_FLEET_FLOOR_MW)
 
     def neso_basis_ci(self, gen, st):
         """Carbon intensity (g/kWh) on NESO's accounting basis: NESO factors for CCGT/OCGT/biomass/
@@ -328,6 +353,8 @@ class GBMarketModel(ModelBase):
         if tech in STORAGE_TECHS:
             net = storage_arbitrage(price, 1.0, STORAGE_TECHS[tech], t.efficiency)
             m = float((price * net).sum()) - t.vom * np.clip(net, 0, None).sum()
+            if tech == "battery":   # services at the fleet expected when the project comes online
+                m += self.battery_services_per_mw([p for p in self.plants if p.active(yr)], t.chunk_mw)
         elif tech in VRE_TECHS:
             m = float((price * self.cf_profile(tech)).sum()) * 0.85   # capture-price haircut
         else:
@@ -494,6 +521,8 @@ class GBMarketModel(ModelBase):
                    gas_throughput_twh=gasr["gas_throughput_twh"], power_gas_twh=st["gas_burn_twh"],
                    hp_homes_m=hr["hp_homes"] / 1e6, ev_stock_m=self.ev.stock(y) / 1e6,
                    retired_mw=retired, invested_mw=invested)
+        for k, v in st["battery"].items():   # battery revenue stack, kGBP/MW/yr (fleet average)
+            rec[f"battery_{k}_k_per_mw"] = v / 1e3
         for tech in TECHS:
             rec[f"cap_{tech}"] = sum(p.mw for p in plants if p.tech == tech) / 1e3
             rec[f"gen_{tech}"] = gen.get(tech, 0.0) / 1e6

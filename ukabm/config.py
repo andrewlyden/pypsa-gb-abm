@@ -45,6 +45,21 @@ TECHS: dict[str, Tech] = {t.name: t for t in [
 ]}
 
 STORAGE_TECHS = {"battery": 2.0, "pumped_hydro": 8.0}   # duration hours
+
+# Battery revenues beyond the model's hourly day-ahead arbitrage (stylised; see docs/assumptions.md).
+# Each stream is a pot (GBP/yr) shared across the battery fleet, so revenue per MW falls as the fleet
+# grows (saturation). Calibrated to the 2025 GB 2-hour BESS revenue stack: Modo Energy ME BESS GB index
+# GBP 73k/MW/yr over the 12 months to April 2026, ~60 % from wholesale + Balancing Mechanism trading;
+# frequency response ~GBP 20-25k/MW/yr through 2025 (Modo monthly reports).
+# * ancillary (frequency response + reserve): fixed-size market. GBP 100m/yr = GBP 20k/MW on the
+#   model's 5 GW 2025 fleet.
+# * intraday + BM trading the hourly day-ahead clearing does not see: pot proportional to wind+solar
+#   capacity (forecast-error and balancing volume). 4100 GBP/yr per MW of VRE tops the fleet's modelled
+#   2025 day-ahead arbitrage (~GBP 4k/MW) up to ~GBP 44k/MW of trading revenue on 48.5 GW of VRE.
+# Per-MW revenue is not extrapolated above its 2025 level for fleets smaller than the 2025 fleet.
+BATTERY_ANCILLARY_POT = 100e6            # GBP/yr
+BATTERY_TRADING_PER_MW_VRE = 4100.0      # GBP/yr per MW of wind + solar capacity
+BATTERY_FLEET_FLOOR_MW = 5000.0          # 2025 fleet in INITIAL_FLEET_MW
 VRE_TECHS = {"wind_onshore", "wind_offshore", "solar"}
 
 # Initial GB fleet c. 2025 (MW). Indicative, consistent in magnitude with DUKES 2025 / NESO.

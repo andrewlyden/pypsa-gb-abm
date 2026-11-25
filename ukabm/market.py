@@ -20,23 +20,30 @@ class Block:
     avail: np.ndarray | float  # MW available, scalar or hourly array
 
 
-def clear(demand: np.ndarray, blocks: list[Block], voll: float = 6000.0,
-          scarcity_sigma: float = 2500.0, scarcity_on: bool = True):
-    """Uniform-price clearing for every hour (vectorised).
-
-    Returns price[h], dispatch[h, b] (ordered like *blocks*), unserved[h], spill[h].
-    Scarcity: an ORDC-style adder VOLL*LOLP(margin), LOLP ~ 0.5*erfc(margin/(sigma*sqrt2)).
-    """
-    H = len(demand)
+def merit_order(blocks: list[Block], H: int):
+    """Hourly merit order of *blocks*: (order, sorted prices, sorted quantities, cumulative quantity).
+    Can be passed to clear() to re-clear the same offers against different demand."""
     P0 = np.empty((H, len(blocks)))
     Q0 = np.empty((H, len(blocks)))
     for i, b in enumerate(blocks):
         P0[:, i] = np.broadcast_to(b.price, (H,))
         Q0[:, i] = np.broadcast_to(b.avail, (H,))
-    order = np.argsort(P0, axis=1, kind="stable")          # hourly merit order
+    order = np.argsort(P0, axis=1, kind="stable")
     P = np.take_along_axis(P0, order, axis=1)
     Q = np.take_along_axis(Q0, order, axis=1)
-    cum = np.cumsum(Q, axis=1)
+    return order, P, Q, np.cumsum(Q, axis=1)
+
+
+def clear(demand: np.ndarray, blocks: list[Block], voll: float = 6000.0,
+          scarcity_sigma: float = 2500.0, scarcity_on: bool = True, curve=None):
+    """Uniform-price clearing for every hour (vectorised).
+
+    Returns price[h], dispatch[h, b] (ordered like *blocks*), unserved[h].
+    Scarcity: an ORDC-style adder VOLL*LOLP(margin), LOLP ~ 0.5*erfc(margin/(sigma*sqrt2)).
+    *curve*: merit_order(blocks, H), to skip rebuilding it when only demand changes.
+    """
+    H = len(demand)
+    order, P, Q, cum = curve if curve is not None else merit_order(blocks, H)
     total = cum[:, -1]
     d = np.maximum(demand, 0.0)
     idx = (cum < d[:, None]).sum(axis=1)  # first block meeting demand
