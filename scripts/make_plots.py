@@ -108,7 +108,7 @@ if det_p.exists():
             ax.plot([b.x[l.bus0], b.x[l.bus1]], [b.y[l.bus0], b.y[l.bus1]], "k-",
                     lw=0.5 + 3 * fl.get(l["name"], 0) / max(fl.max(), 1), alpha=.6)
         sc = ax.scatter(b.x, b.y, c=zp, cmap="viridis", s=90, zorder=3)
-        plt.colorbar(sc, label="mean zonal price GBP/MWh (sample hours)")
+        plt.colorbar(sc, label="zonal price GBP/MWh (weighted median of sample hours)")
         ax.set_title(f"PyPSA-GB zonal redispatch, {net.get('year')}\n(line width = mean flow)")
         fig.tight_layout(); fig.savefig(FIG / "zonal_network.png", dpi=130); plt.close(fig)
 print("figures:", sorted(p.name for p in FIG.glob("*.png")))

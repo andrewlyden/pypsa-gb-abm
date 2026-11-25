@@ -41,7 +41,7 @@ ukabm/agents.py        GenCo agents (offers, CfD/CM bids, NPV investment), Plant
 ukabm/market.py        vectorised hourly clearing, storage arbitrage, valley-filling
 ukabm/model.py         GBMarketModel (Mesa): annual loop, auctions, settlement, investment
 ukabm/multienergy.py   HeatModule (household agents), GasNetworkModule, EVModule, HydrogenModule
-ukabm/network.py       PyPSA zonal redispatch on the PyPSA-GB zonal network
+ukabm/network.py       BM-style redispatch (bids/offers) on the PyPSA-GB zonal network, ETYS boundary limits
 ukabm/data/pypsagb.py  PyPSA-GB adapter (raw clone or bundled snapshot)
 ukabm/scenarios.py     baseline, high_carbon, no_cfd, heat_push, no_capacity_market, high_gas
 ukabm/outturn.py       model-vs-outturn comparison (data/outturn: NESO generation mix + CI, Elexon)
@@ -51,12 +51,16 @@ ukabm/outturn.py       model-vs-outturn comparison (data/outturn: NESO generatio
 | | model | outturn 2025 |
 |---|---|---|
 | price, demand-weighted (£/MWh) | 85.6 | 80.9 (Elexon MID) |
-| carbon intensity, NESO basis (g/kWh) | 112 | 130 (NESO, generation-weighted) |
-| gas / wind / nuclear / biomass (TWh) | 69 / 94 / 35 / 20 | 77 / 86 / 34 / 20 |
+| carbon intensity, NESO basis: wholesale / after BM redispatch (g/kWh) | 112 / 125 | 130 (NESO, generation-weighted) |
+| gas / wind after BM redispatch (TWh) | 78 / 85 | 77 / 86 |
+| nuclear / biomass (TWh) | 35 / 20 | 34 / 20 |
 | imports / exports (TWh) | 45 / 15 | 44 / 15 (Elexon FUELHH) |
+| constraint cost (£bn) | 1.23 | 1.83, of which ~0.54 BM premia not modelled (LCP Delta 2026, NESO data) |
+| renewable turn-down in the BM (TWh) | 9.5 | 10.4 |
 
-Residuals are explained: the copperplate market does not curtail Scottish wind (~9 TWh in 2025, replaced by
-gas in the Balancing Mechanism), the model has no CHP/waste "other" generation (4.7 TWh), and its price
+The network stage redispatches the copperplate schedule on the PyPSA-GB zones with dated ETYS boundary
+capabilities. It turns down Scottish wind behind B4/B6 and turns up gas in England, which closes most of the CI gap.
+Remaining residuals: the model has no CHP/waste "other" generation (4.7 TWh, ~+5 g/kWh) and its price
 distribution is too narrow (no negative hours). Full table: [results/calibration_2025.md](results/calibration_2025.md).
 
 ## Headline results (single seed, illustrative)
@@ -91,7 +95,7 @@ and carbon intensity until the fleet catches up.
 | T-4 Capacity Market with sloping demand curve | ✅ works (no T-1, no penalties) |
 | Retirement on persistent losses / end of life | ✅ works |
 | PyPSA-GB link: zonal network, ESPENI profiles, DUKES siting, IC register, CM/CfD data | ✅ works (bundled snapshot or live clone) |
-| PyPSA zonal redispatch → constraint cost, zonal price siting signal | ⚠️ runs; constraint costs look **too low** (~£0.1bn vs £1–2bn outturn) — zonal transport model, random 96 hours, single GB wind shape |
+| Network stage: BM-style redispatch (bids/offers) on PyPSA-GB zones with dated ETYS boundary capabilities and monthly availability, 96 wind-stratified hours | ✅ 2025: £1.23bn vs £1.29bn outturn excl. BM premia; 9.5 vs 10.4 TWh turn-down; post-BM gas/wind/CI within 1 TWh / 4 g/kWh. ⚠️ Single GB wind shape for all zones; ~£0 in 2030–35 (see roadmap); redispatch is reported only, not settled |
 | Heat-pump household agents + gas network tariff feedback | ✅ works (stylised, synthetic temperature) |
 | Hydrogen: electrolysers + H2 turbine tech | ⚠️ stub-level: exogenous H2 price, no H2 storage/network |
 | Batteries | ⚠️ no new merchant batteries: flat price duration under OCGT-led CM; needs BM/ancillary revenue stack |
@@ -106,11 +110,16 @@ The daily agent takes the highest unfinished item it can complete in one run. It
 
 1. Multi-seed runs (5 seeds) for baseline + 2 policy scenarios; show uncertainty bands, not single lines,
    in the plots and the headline table.
-2. Network stage: switch to the PyPSA-GB Reduced 32-bus network with zonal wind profiles (Scottish vs
-   English wind) and representative rather than random hours. Constraint costs (~£0.1bn now) should move
-   towards the £1–2bn/yr outturn. Also feed redispatch volumes back into the reported generation mix: the
-   2025 calibration shows wholesale wind 8.6 TWh above NESO outturn (≈ Scottish curtailment, ~8.8 TWh in
-   2025) and gas 8 TWh below, which is most of the remaining CI gap (112 vs 130 g/kWh, NESO basis).
+2. Network follow-ups (the 2025 constraint cost, curtailment and post-BM mix are now calibrated):
+   (a) constraint cost drops to ~£0 in 2030–35 in every scenario. The assumed Holistic Transition boundary
+   build-out (B6 10→17 GW, EGL1–4) arrives on time, while modelled offshore wind is only 17 GW in 2030.
+   Check the offshore build rate (CfD delivery and lead times) against the 2030 pipeline, and decide
+   whether to add a delayed-network sensitivity. (b) Zonal wind profiles: Scottish and English wind
+   currently share one GB shape. (c) Interconnector and storage positions are held fixed in the
+   redispatch. Where that leaves load unserved behind a constraint, the stage reports it as
+   `network_shed_twh` (0.01 TWh in 2025, 0.76 TWh in no_capacity_market 2050). Consider allowing
+   interconnector counter-trades. (d) By 2050 redispatch adds 5–15 g/kWh to NESO-basis CI
+   (`intensity_neso_post_bm_g_kwh`), which the headline CI does not include yet.
 3. Battery revenues: add a stylised BM/ancillary revenue stack so merchant batteries can enter. Then check
    Capacity Market over-procurement of OCGT (CM clears at the cap every year; the target is likely too high
    with an unmanaged EV peak). Related: the 2025 price distribution is too narrow (no negative hours, p95

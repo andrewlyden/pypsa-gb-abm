@@ -11,8 +11,8 @@
 | carbon intensity, NESO basis (g/kWh) | 112.3 | 129.7 | -17.3 |
 | carbon intensity, NESO basis, after BM redispatch (g/kWh) | 125.4 | 129.7 | -4.2 |
 | carbon intensity, direct combustion (g/kWh) | 85.1 | – | – |
-| constraint cost (GBP bn) | 1.3 | 1.8 | -0.5 |
-| constraint cost excl. BM premia (GBP bn) | 1.3 | 1.3 | 0.0 |
+| constraint cost (GBP bn) | 1.2 | 1.8 | -0.6 |
+| constraint cost excl. BM premia (GBP bn) | 1.2 | 1.3 | -0.1 |
 | renewable curtailment in BM (TWh) | 9.5 | 10.4 | -0.9 |
 | gas (CCGT+OCGT) (TWh) | 69.3 | 77.3 | -8.1 |
 | nuclear (TWh) | 34.8 | 34.2 | 0.6 |
