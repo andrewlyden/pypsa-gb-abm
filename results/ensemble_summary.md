@@ -1,6 +1,6 @@
 median [min–max] across seeds
 
-| scenario | seeds | price 2030 (£/MWh) | price 2050 (£/MWh) | CI 2025 (g/kWh) | CI 2050 (g/kWh) | LOLE total (h) | HP homes 2050 (m) | offshore wind 2050 (GW) |
+| scenario | seeds | price 2030 (£/MWh) | price 2050 (£/MWh) | CI 2025 (g/kWh) | CI 2050 (g/kWh) | LOLE total 2025-2050 (h) | HP homes 2050 (m) | offshore wind 2050 (GW) |
 |---|---|---|---|---|---|---|---|---|
 | baseline | 5 | 77 [76–80] | 31 [30–34] | 47 [47–47] | 9 [9–10] | 0 [0–0] | 6.4 [5.6–7.0] | 87 [84–89] |
 | heat_push | 5 | 84 [81–85] | 48 [45–51] | 47 [47–47] | 22 [17–24] | 1 [0–21] | 27.2 [27.0–27.3] | 87 [84–89] |

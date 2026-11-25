@@ -20,16 +20,26 @@ from .scenarios import get_scenario
 
 def _run_one(args):
     name, seed, kw = args
-    warnings.filterwarnings("ignore")
-    logging.disable(logging.INFO)
-    r = GBMarketModel(get_scenario(name), seed=seed, **kw).run()
+    # silence solver/pandas noise for this run only; restore the caller's settings afterwards
+    # (with jobs=1 this runs in the caller's process)
+    prev_disable = logging.root.manager.disable
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        logging.disable(logging.INFO)
+        try:
+            r = GBMarketModel(get_scenario(name), seed=seed, **kw).run()
+        finally:
+            logging.disable(prev_disable)
     r.insert(0, "seed", seed)
     return r
 
 
 def run_ensemble(scenario: str, seeds, jobs: int = 1, **model_kw) -> pd.DataFrame:
     """Run *scenario* once per seed; return annual results stacked in long format
-    (index = year, column `seed`). `model_kw` is passed to GBMarketModel (end, network_every, ...)."""
+    (index = year, column `seed`). `model_kw` is passed to GBMarketModel (end, network_every, ...).
+
+    With jobs > 1 the runs use a process pool; on spawn-start platforms the calling script needs an
+    `if __name__ == "__main__":` guard."""
     tasks = [(scenario, int(s), model_kw) for s in seeds]
     if jobs > 1:
         with ProcessPoolExecutor(max_workers=jobs) as ex:

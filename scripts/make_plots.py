@@ -132,15 +132,24 @@ if ens:  # multi-seed bands: median line, shaded min-max across seeds
 
     def cell(s, fmt="{:.0f}"):
         return f"{fmt.format(s.median())} [{fmt.format(s.min())}–{fmt.format(s.max())}]"
-    rows = ["| scenario | seeds | price 2030 (£/MWh) | price 2050 (£/MWh) | CI 2025 (g/kWh) | CI 2050 (g/kWh) "
-            "| LOLE total (h) | HP homes 2050 (m) | offshore wind 2050 (GW) |", "|---" * 9 + "|"]
+    # common reporting horizon so every row compares the same years; headers built from it
+    y0 = max(df.index.min() for df in ens.values())
+    y1 = min(df.index.max() for df in ens.values())
+    if any(df.index.min() != y0 or df.index.max() != y1 for df in ens.values()):
+        print(f"ensemble files cover different years; summary table restricted to {y0}-{y1}")
+    ymid = 2030 if y0 < 2030 < y1 else None
+    head = ["scenario", "seeds"] + ([f"price {ymid} (£/MWh)"] if ymid else []) + [
+        f"price {y1} (£/MWh)", f"CI {y0} (g/kWh)", f"CI {y1} (g/kWh)", f"LOLE total {y0}-{y1} (h)",
+        f"HP homes {y1} (m)", f"offshore wind {y1} (GW)"]
+    rows = ["| " + " | ".join(head) + " |", "|---" * len(head) + "|"]
     for name, df in ens.items():
-        y0, y1 = df.index.min(), df.index.max()
+        df = df.loc[(df.index >= y0) & (df.index <= y1)]
         at = lambda y, c: df.loc[df.index == y, c]  # noqa: E731
-        rows.append(f"| {name} | {df.seed.nunique()} | {cell(at(2030, 'price_twa'))} | {cell(at(y1, 'price_twa'))} "
-                    f"| {cell(at(y0, 'intensity_g_kwh'))} | {cell(at(y1, 'intensity_g_kwh'))} "
-                    f"| {cell(df.groupby('seed').lole_h.sum())} | {cell(at(y1, 'hp_homes_m'), '{:.1f}')} "
-                    f"| {cell(at(y1, 'cap_wind_offshore'))} |")
+        cells = [name, str(df.seed.nunique())] + ([cell(at(ymid, "price_twa"))] if ymid else []) + [
+            cell(at(y1, "price_twa")), cell(at(y0, "intensity_g_kwh")), cell(at(y1, "intensity_g_kwh")),
+            cell(df.groupby("seed").lole_h.sum()), cell(at(y1, "hp_homes_m"), "{:.1f}"),
+            cell(at(y1, "cap_wind_offshore"))]
+        rows.append("| " + " | ".join(cells) + " |")
     (RES / "ensemble_summary.md").write_text("median [min–max] across seeds\n\n" + "\n".join(rows) + "\n")
     print("\n".join(rows))
 print("figures:", sorted(p.name for p in FIG.glob("*.png")))
