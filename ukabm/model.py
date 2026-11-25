@@ -347,14 +347,17 @@ class GBMarketModel(ModelBase):
         plants = [p for p in self.plants if p.active(target_year)] + list(extra)
         return self.run_market(target_year, plants)["price"]
 
-    def expected_margin_per_mw(self, tech, price, agent, include_cm=True):
+    def expected_margin_per_mw(self, tech, price, agent, include_cm=True, fleet_year=None):
+        """Expected annual margin per MW. *fleet_year*: year whose (pipeline) battery fleet shares the
+        battery service pots; default = first operating year (CM new build passes its delivery year)."""
         t = TECHS[tech]
         yr = self.year + t.lead_time
         if tech in STORAGE_TECHS:
             net = storage_arbitrage(price, 1.0, STORAGE_TECHS[tech], t.efficiency)
             m = float((price * net).sum()) - t.vom * np.clip(net, 0, None).sum()
             if tech == "battery":   # services at the fleet expected when the project comes online
-                m += self.battery_services_per_mw([p for p in self.plants if p.active(yr)], t.chunk_mw)
+                fy = fleet_year or yr
+                m += self.battery_services_per_mw([p for p in self.plants if p.active(fy)], t.chunk_mw)
         elif tech in VRE_TECHS:
             m = float((price * self.cf_profile(tech)).sum()) * 0.85   # capture-price haircut
         else:
@@ -426,7 +429,7 @@ class GBMarketModel(ModelBase):
                 if tech in self.scenario.get("banned_techs", []) or TECHS[tech].lead_time > 4:
                     continue
                 t = TECHS[tech]
-                m = self.expected_margin_per_mw(tech, price_fc, g, include_cm=False) / 1000
+                m = self.expected_margin_per_mw(tech, price_fc, g, include_cm=False, fleet_year=dy) / 1000
                 bid = g.cm_bid(tech, m, new=True)
                 if bid <= self.policy.cm_price_cap:
                     for k in range(self.scenario.get("cm_new_chunks", 4)):   # up to 4 projects each
