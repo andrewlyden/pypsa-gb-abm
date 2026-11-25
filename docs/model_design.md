@@ -15,8 +15,9 @@
  └──────┬───────┘         └────────┬─────────┘       └──────────────────────────────┘
         │ invest/retire            │ sample hours
         ▼                          ▼
-  plant pipeline         PyPSA-GB zonal network (PyPSA + HiGHS): redispatch cost,
-  (lead times)           zonal prices → locational siting signal
+  plant pipeline         PyPSA-GB zonal network (PyPSA + HiGHS), ETYS boundary capabilities by year:
+  (lead times)           BM-style redispatch (bids/offers) → constraint cost, curtailment, post-BM mix/CI;
+                         zonal prices → locational siting signal
 ```
 
 ## Annual loop (`GBMarketModel.step`)
@@ -29,7 +30,12 @@
    are curtailed exactly when the GB price is above the bid). Foreign prices = existing-CCGT SRMC ×
    market level × the observed 2024 hourly price shape of that neighbour.
 4. Settlement per plant: energy, CfD difference (strike – price), RO, CM; emissions; gas burn.
-5. Every *k* years: PyPSA zonal redispatch on sampled hours → constraint cost, zonal prices.
+5. Every *k* years: network stage (`network_stage`). 96 hours stratified by wind CF. Each plant's market
+   schedule can be turned down at its BM bid (`bm_bids`: thermal SRMC, −ROC, −CfD top-up, nuclear −£300)
+   and its headroom turned up at its offer, on the 20-zone network with year-dependent boundary
+   capabilities and monthly availability (`PyPSAGBData.links_for_year`, `link_availability`). Outputs:
+   annualised constraint cost, curtailment, net redispatch by technology and post-BM NESO-basis CI
+   (reporting only), and zonal prices for siting.
 6. Retail tariffs (wholesale + network + levies) → household heating decisions; gas throughput (homes +
    industry + **power-sector gas burn**) → gas network tariff.
 7. Investment: forecast prices for *t+3* from the known pipeline; CfD round; T-4 CM; sequential merchant
@@ -47,5 +53,6 @@
 * `GasNetworkModule.update(h2_blend=…)` — hydrogen blending / network repurposing.
 * `HydrogenModule` — add H2 storage and endogenous H2 price feeding `Fuels.hydrogen` for h2_turbine.
 * `EVModule` — replace stock path with adoption agents; V2G as storage.
-* `network.redispatch` — switch to PyPSA-GB Reduced (32-bus) / ETYS network, or call PyPSA-GB's
-  `solve_balancing.py` stage directly with ABM bids.
+* `network.redispatch` — add zonal (Scottish vs English) wind profiles, KVL on the PyPSA-GB Reduced
+  (32-bus) network, or call PyPSA-GB's `solve_balancing.py` stage directly with ABM bids; feed
+  constraint costs into BSUoS in the retail tariff.
