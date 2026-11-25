@@ -239,15 +239,20 @@ class GBMarketModel(ModelBase):
                   if self._tech_of.get(b.key) in VRE_TECHS)
         base, heat, ev, h2 = self.demand(year, p1, residual=d1 - vre)
         # storage: the fleet is dispatched in tranches, each a price-taker on the price left by the flexible
-        # demand and the tranches before it, so the fleet does not trade away its own spread
+        # demand and the tranches before it; a tranche skips days on which its own trades would lose money
+        # at the price they produce, so the fleet does not trade away its own spread
         stor = {}
         net_st = np.zeros(self.H)
+        flex = base + heat + ev + h2 + x_max
         for tech, hrs in STORAGE_TECHS.items():
             mw = sum(p.mw for p in plants if p.tech == tech)
             k = STORAGE_TRANCHES.get(tech, 1)
             for _ in range(k if mw > 0 else 0):
-                pk, _, _ = clear(base + heat + ev + h2 - net_st + x_max, allb, self.policy.voll, curve=curve)
+                pk, _, _ = clear(flex - net_st, allb, self.policy.voll, curve=curve)
                 nk = storage_arbitrage(pk, mw / k, hrs, TECHS[tech].efficiency)
+                after, _, _ = clear(flex - net_st - nk, allb, self.policy.voll, curve=curve)
+                daily = (after * nk)[:self.H // 24 * 24].reshape(-1, 24).sum(1)
+                nk[:len(daily) * 24] *= np.repeat(daily > 0, 24)
                 stor[tech] = stor.get(tech, 0.0) + nk
                 net_st += nk
         d2 = base + heat + ev + h2 - net_st
