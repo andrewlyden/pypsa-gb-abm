@@ -111,10 +111,12 @@ The daily agent takes the highest unfinished item it can complete in one run. It
 1. Multi-seed runs (5 seeds) for baseline + 2 policy scenarios; show uncertainty bands, not single lines,
    in the plots and the headline table.
 2. Network follow-ups (the 2025 constraint cost, curtailment and post-BM mix are now calibrated):
-   (a) constraint cost drops to ~£0 in 2030–35 in every scenario. The assumed Holistic Transition boundary
-   build-out (B6 10→17 GW, EGL1–4) arrives on time, while modelled offshore wind is only 17 GW in 2030.
-   Check the offshore build rate (CfD delivery and lead times) against the 2030 pipeline, and decide
-   whether to add a delayed-network sensitivity. (b) Zonal wind profiles: Scottish and English wind
+   (a) constraint cost drops to ~£0 in 2030–35 in every scenario. LCP Delta (Mar 2026) projects £6.1bn in
+   2030 under FES25 Holistic Transition (47 GW offshore, 41 TWh turn-down) and a £4.2bn peak in its
+   slower-build Central case (36 GW). The model has only 17 GW offshore in 2030, and the Holistic
+   Transition boundary build-out (B6 10→17 GW, EGL1–4) arrives on time. It also has no East Anglia (EC5)
+   constraint, which drives LCP's 2030 peak. Check the offshore build rate (CfD delivery and lead times;
+   AR6/AR7 awards) against the 2030 pipeline, represent EC5, and consider a delayed-network sensitivity. (b) Zonal wind profiles: Scottish and English wind
    currently share one GB shape. (c) Interconnector and storage positions are held fixed in the
    redispatch. Where that leaves load unserved behind a constraint, the stage reports it as
    `network_shed_twh` (0.01 TWh in 2025, 0.76 TWh in no_capacity_market 2050). Consider allowing
