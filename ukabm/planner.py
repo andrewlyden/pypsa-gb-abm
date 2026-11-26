@@ -25,6 +25,8 @@ from .config import TECHS, STORAGE_TECHS, VRE_TECHS, SOCIAL_DISCOUNT_RATE, PLANN
 from .costs import COMPONENTS, Unit, crf, fixed_costs, variable_cost
 
 log = logging.getLogger(__name__)
+# one thread per solve: gap runs are parallelised across processes
+HIGHS_OPTIONS = {"output_flag": False, "threads": 1}
 NEW_TECHS = ("wind_offshore", "wind_onshore", "solar", "battery", "ccgt", "ocgt", "gas_ccs",
              "h2_turbine", "nuclear")
 
@@ -102,7 +104,7 @@ def evaluate(model, year: int, units, load: np.ndarray, hours=None) -> dict:
         trade[name] = price
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        status, cond = n.optimize(solver_name="highs", solver_options={"output_flag": False}, progress=False)
+        status, cond = n.optimize(solver_name="highs", solver_options=HIGHS_OPTIONS, progress=False)
     if status != "ok":
         raise RuntimeError(f"evaluator dispatch failed in {year}: {status} {cond}")
     gp, sp = n.generators_t.p, n.storage_units_t.p
@@ -208,7 +210,10 @@ def plan(model, loads: dict, rate: float = SOCIAL_DISCOUNT_RATE, build_limits: d
     for p in periods:
         for tech in NEW_TECHS:
             t = TECHS[tech]
-            cap = limits.get(tech, 0) * step
+            # years of decisions that can be online by period p: decisions from the start year onwards,
+            # online after the lead time, within this period's step (offshore: only 2025 decisions reach 2030)
+            years = min(step, p - start - t.lead_time + 1)
+            cap = limits.get(tech, 0) * years
             if p == start or p < start + t.lead_time or cap <= 0 or not t.investable:
                 continue
             if tech in model.scenario.get("banned_techs", []):
@@ -236,7 +241,7 @@ def plan(model, loads: dict, rate: float = SOCIAL_DISCOUNT_RATE, build_limits: d
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         status, cond = n.optimize(multi_investment_periods=True, solver_name="highs",
-                                  solver_options={"output_flag": False}, progress=False)
+                                  solver_options=HIGHS_OPTIONS, progress=False)
     if status != "ok":
         raise RuntimeError(f"planner failed: {status} {cond}")
     built = pd.DataFrame(0.0, index=periods, columns=list(NEW_TECHS))

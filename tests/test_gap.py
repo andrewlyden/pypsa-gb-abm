@@ -83,6 +83,10 @@ def test_planner_pathway_is_no_dearer_than_the_agents(run2030):
     p = plan(m, loads)
     assert p.built_mw.loc[2025].sum() == 0                            # no new build in the first period
     assert p.built_mw.loc[2030, "wind_offshore"] > 0
+    # lead times: offshore (5 y) can reach 2030 only from 2025 decisions, one year of build
+    from ukabm.config import PLANNER_BUILD_MW_PER_YEAR
+    assert p.built_mw.loc[2030, "wind_offshore"] <= PLANNER_BUILD_MW_PER_YEAR["wind_offshore"] + 1
+    assert p.built_mw.loc[2030, "wind_onshore"] <= 3 * PLANNER_BUILD_MW_PER_YEAR["wind_onshore"] + 1
     planner = total(evaluate(m, 2030, list(m.initial_fleet) + p.units, loads[2030])["costs"])
     agents = total(evaluate(m, 2030, m.plants, loads[2030])["costs"])
     assert planner <= agents
