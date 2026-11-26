@@ -22,6 +22,33 @@ def test_export_bid_as_buyback_block():
     assert np.allclose(export, [50.0, 0.0])
 
 
+def test_export_bid_curtailed_when_scarcity_price_exceeds_it():
+    # 10 GW domestic demand, 15 GW supply at 80, 500 MW export bid at 100. The merit price is 80,
+    # but the scarcity adder at a 5 GW margin is above 100, so the export must not be served.
+    x = 500.0
+    blocks = [Block(1, 80.0, 15000.0), Block(-11, 100.0, x, demand_bid=True)]
+    p, disp, uns = clear(np.array([10000.0 + x]), blocks, voll=6000.0)
+    assert p[0] > 100.0
+    assert np.isclose(x - disp[0, 1], 0.0)                     # export fully curtailed
+    assert np.isclose(disp[0, 0], 10000.0) and uns[0] == 0.0  # domestic demand still met
+    # without the adder the same export is served at the merit price
+    p0, disp0, _ = clear(np.array([10000.0 + x]), blocks, voll=6000.0, scarcity_on=False)
+    assert p0[0] == 80.0 and np.isclose(x - disp0[0, 1], x)
+    # a high export bid stays above the adder and is served; the adder itself is unchanged
+    hi = [Block(1, 80.0, 15000.0), Block(-11, 1000.0, x, demand_bid=True)]
+    p2, disp2, _ = clear(np.array([10000.0 + x]), hi, voll=6000.0)
+    assert np.isclose(p2[0], p[0]) and np.isclose(x - disp2[0, 1], x)
+    assert np.isclose(disp2[0, 0], 10000.0 + x)
+
+
+def test_zero_availability_override_is_honoured():
+    m = GBMarketModel(end=2025, network_every=0)
+    p = next(p for p in m.plants if p.tech == "nuclear" and p.active(2025))
+    p.availability = 0.0
+    b = next(b for b in m.blocks([p], 2025))
+    assert np.all(np.asarray(b.avail) == 0.0)
+
+
 def test_interconnector_register_corrections():
     d = PyPSAGBData()
     assert d.interconnector_mw(2025) == 10500.0          # 2025 GB peak import was 9.2 GW
