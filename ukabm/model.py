@@ -86,6 +86,20 @@ def _weighted_median(x, w):
 
 
 class GBMarketModel(ModelBase):
+    # Mesa >= 3.5 defines Model.scenario (a mesa Scenario object, set in Model.__init__). This model
+    # uses `scenario` for its own dict of overrides, so keep Mesa's object in `_scenario` and the
+    # dict in `_ukabm_scenario`.
+    @property
+    def scenario(self) -> dict:
+        return self.__dict__.get("_ukabm_scenario", {})
+
+    @scenario.setter
+    def scenario(self, value):
+        if isinstance(value, dict):
+            self._ukabm_scenario = value
+        else:
+            self._scenario = value
+
     def __init__(self, scenario: dict | None = None, data: PyPSAGBData | None = None,
                  start: int = 2025, end: int = 2050, seed: int = 42,
                  network_every: int = 5, network_hours: int = 96):
