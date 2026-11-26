@@ -23,7 +23,9 @@ from .config import (TECHS, VRE_TECHS, STORAGE_TECHS, INITIAL_FLEET_MW, EXISTING
                      NESO_CI_FACTORS, Policy, Fuels, BATTERY_ANCILLARY_POT, BATTERY_TRADING_PER_MW_VRE,
                      BATTERY_FLEET_FLOOR_MW)
 from .data import PyPSAGBData
+from .costs import COMPONENTS as COST_COMPONENTS, fixed_costs, variable_cost
 from .market import Block, clear, merit_order, storage_arbitrage
+from .scenarios import IDEAL_TRAITS
 from .multienergy import HeatModule, GasNetworkModule, EVModule, HydrogenModule
 from . import network as netmod
 
@@ -113,10 +115,17 @@ class GBMarketModel(ModelBase):
         self.fuels = Fuels(**self.scenario.get("fuels", {}))
         self.start, self.end, self.year = start, end, start
         self.network_every, self.network_hours = network_every, network_hours
-        self.gencos = [GenCo(self, **s) for s in GENCO_SPECS]
+        specs = [dict(s) for s in GENCO_SPECS]
+        for grp in self.scenario.get("agents_ideal", []):   # idealised trait groups (scenarios.IDEAL_TRAITS)
+            for s in specs:
+                s.update(IDEAL_TRAITS[grp])
+        self.gencos = [GenCo(self, **s) for s in specs]
         self.plants: list[Plant] = []
         self._pid = 0
         self._init_fleet()
+        # the fleet as it stood at the start (incl. committed nuclear), before any agent decision:
+        # the planner benchmark starts from the same fleet
+        self.initial_fleet = [copy.copy(p) for p in self.plants]
         me = self.scenario.get("multienergy", {})
         self.heat = HeatModule(self, rng=np.random.default_rng(seed + 1), **me.get("heat", {}))
         self.gas = GasNetworkModule(**me.get("gas", {}))
@@ -348,6 +357,28 @@ class GBMarketModel(ModelBase):
         return dict(cfd_cost=cfd_cost, ro_cost=ro_cost, cm_cost=cm_cost, gen=gen_by_tech,
                     emissions_t=em, gas_burn_twh=gas_burn / 1e6, battery=batt)
 
+    def system_cost(self, year, plants, res):
+        """Annual system cost (GBP) of the realised market outcome, by component (ukabm.costs)."""
+        c = dict.fromkeys(COST_COMPONENTS, 0.0)
+        c.update(fixed_costs(plants, year, self.start))
+        pmap = {p.pid: p for p in plants}
+        for j, b in enumerate(res["blocks"]):
+            q = res["disp"][:, j]
+            price = np.broadcast_to(b.price, q.shape)
+            if b.key > 0:
+                p = pmap[b.key]
+                for k, v in variable_cost(p.tech, p.efficiency, float(q.sum()), year, self.fuels, self.policy).items():
+                    c[k] += v
+            elif b.key > -10:                                   # import tranche
+                c["trade"] += float((price * q).sum())
+            else:                                               # export bid: exported = offered - bought back
+                c["trade"] -= float((price * (np.broadcast_to(b.avail, q.shape) - q)).sum())
+        for tech, net in res["storage"].items():
+            c["fuel"] += TECHS[tech].vom * float(np.clip(net, 0, None).sum())
+        c["unserved"] = float(res["unserved"].sum()) * self.policy.voll
+        c["h2_value"] = -float(np.sum(res["h2"])) * self.h2.wtp()
+        return c
+
     @staticmethod
     def battery_services_per_mw(plants, extra_mw=0.0):
         """Battery revenue (GBP/MW/yr) from ancillary services and intraday/BM trading that the hourly
@@ -427,7 +458,7 @@ class GBMarketModel(ModelBase):
         self.last_cfd = clearing
         return built
 
-    def cm_auction(self, year):
+    def cm_auction(self, year, price_fc=None):
         if not self.policy.cm_enabled:
             return []
         dy = year + 4
@@ -448,7 +479,11 @@ class GBMarketModel(ModelBase):
                 margin_kw = max(np.mean([h for _, h in p.history[-2:]]) / (p.mw * 1000), 0) if p.history else 0
                 bid = p.owner.cm_bid(p, margin_kw + t.fom, new=False)   # history is net of FOM
                 offers.append((min(bid, self.policy.cm_price_cap), p.mw * t.derating, p))
-        price_fc = self.last_price if self.last_price is not None else np.full(self.H, 60.0)
+        # new-build bids are priced on the investment forecast (t+3, known fuel and carbon paths) when
+        # given, not on the latest outturn year, which mis-prices plant delivered 4 years later after a
+        # fuel-price spike
+        if price_fc is None:
+            price_fc = self.last_price if self.last_price is not None else np.full(self.H, 60.0)
         for g in self.gencos:
             for tech in ("ocgt", "battery", "ccgt", "h2_turbine", "gas_ccs"):
                 if tech in self.scenario.get("banned_techs", []) or TECHS[tech].lead_time > 4:
@@ -466,7 +501,9 @@ class GBMarketModel(ModelBase):
             return float(np.clip(cap * (hi - q) / (hi - lo), 0, cap))
         q, clearing, accepted = 0.0, 0.0, []
         for pr, mw, who in offers:
-            if pr > demand_price(q + mw):
+            # stop at the first offer above the demand curve, and at the end of the curve: zero-priced
+            # offers are not accepted beyond the quantity at which the demand curve reaches zero
+            if pr > demand_price(q + mw) or q + mw > hi:
                 clearing = max(pr, demand_price(q)) if not accepted else max(clearing, min(demand_price(q), pr))
                 break
             q += mw
@@ -506,6 +543,7 @@ class GBMarketModel(ModelBase):
         plants = self.active(y)
         res = self.run_market(y, plants)
         st = self.settle(y, plants, res)
+        sc = self.system_cost(y, plants, res)
         price = res["price"]
         self.last_price = price
         dem = res["demand"].sum()
@@ -549,6 +587,9 @@ class GBMarketModel(ModelBase):
                    gas_throughput_twh=gasr["gas_throughput_twh"], power_gas_twh=st["gas_burn_twh"],
                    hp_homes_m=hr["hp_homes"] / 1e6, ev_stock_m=self.ev.stock(y) / 1e6,
                    retired_mw=retired, invested_mw=invested)
+        for k, v in sc.items():               # system cost by component, GBP bn/yr (ukabm.costs)
+            rec[f"syscost_{k}_bn"] = v / 1e9
+        rec["syscost_bn"] = sum(sc.values()) / 1e9
         for k, v in st["battery"].items():   # battery revenue stack, kGBP/MW/yr (fleet average)
             rec[f"battery_{k}_k_per_mw"] = v / 1e3
         for tech in TECHS:
@@ -569,14 +610,15 @@ class GBMarketModel(ModelBase):
         rec["cap_interconnector"] = res["ic_cap"] / 1e3
         self.records.append(rec)
         self.hourly[y] = pd.DataFrame({"price": price, "demand": res["demand"], "heat": res["heat"],
-                                       "ev": res["ev"], "h2": res["h2"], "export": res["export"]})
+                                       "ev": res["ev"], "h2": res["h2"], "export": res["export"],
+                                       "load": res["base"] + res["heat"] + res["ev"]})   # inflexible load
         self.year += 1
 
     def invest(self, y):
         before = sum(p.mw for p in self.plants if p.online > y)
         price_fc = self.forecast(y + 3)
         self.cfd_round(y, price_fc)
-        self.cm_auction(y)
+        self.cm_auction(y, price_fc)
         # merchant: sequential, re-forecast after each decision (captures others' pipeline)
         order = list(self.rng.permutation(len(self.gencos)))
         budgets = {g.name: g.budget for g in self.gencos}

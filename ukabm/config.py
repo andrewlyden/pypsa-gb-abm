@@ -6,6 +6,8 @@ and MUST be reviewed before quantitative use. See docs/assumptions.md.
 """
 from dataclasses import dataclass, field
 
+import numpy as np
+
 
 @dataclass(frozen=True)
 class Tech:
@@ -109,18 +111,53 @@ class Policy:
         return self.carbon_price_2025 + f * (self.carbon_price_2050 - self.carbon_price_2025)
 
 
+# Central wholesale gas price path (GBP/MWh_th, NBP; 1 p/therm = 0.3412 GBP/MWh_th), linear between
+# points and flat after the last. Re-based in November 2026 for the 2026 price spike:
+# * 2025 = 32 (~90 p/therm outturn; the 2025 calibration year, unchanged);
+# * 2026 = 55: spot rose from ~80 p/therm at the start of the year to 218-234 p/therm in November
+#   (Trading Economics, 26 Nov 2026); annual mean is an ASSUMPTION;
+# * 2027 = 63: forward curve 25 Nov 2026, Q1-27 ~223 p/therm (GBP 76), Summer-27 ~160 p/therm (GBP 55)
+#   (Catalyst Commercial UK wholesale gas prices), Q4-27 assumed between the two;
+# * 2028 = 45, 2030 = 35: ASSUMPTION, easing as the spike unwinds (no reliable 2028 quote found);
+# * 2035 onwards: the pre-spike central path (32 -> 25 by 2050, interpolated).
+GAS_PATH_CENTRAL = {2025: 32.0, 2026: 55.0, 2027: 63.0, 2028: 45.0, 2030: 35.0, 2035: 29.2, 2050: 25.0}
+
+# Social discount rate for system-cost accounting and the planner benchmark (HM Treasury Green Book
+# STPR, 3.5 %). Both runs are costed at this rate, so the gap measures misallocation, not who finances it.
+SOCIAL_DISCOUNT_RATE = 0.035
+
+# Planner build-rate limits (MW of new capacity per year, by technology). Supply-chain limits that apply
+# to any decision-maker, so the planner cannot build what no one could. ASSUMPTION, of the order of the
+# fastest rates in NESO FES 2025 Holistic Transition / Clean Power 2030. New nuclear is limited to what
+# the committed units already give both runs (Hinkley C, Sizewell C), because agents cannot build it.
+PLANNER_BUILD_MW_PER_YEAR = {
+    "wind_offshore": 6000, "wind_onshore": 2500, "solar": 6000, "battery": 5000,
+    "ccgt": 3000, "ocgt": 2000, "gas_ccs": 1500, "h2_turbine": 1500, "nuclear": 0,
+}
+
+
 @dataclass
 class Fuels:
-    gas_2025: float = 32.0        # GBP/MWh_th wholesale
-    gas_2050: float = 25.0
+    gas_2025: float | None = None   # if both set: linear gas path 2025 -> 2050 instead of the central path
+    gas_2050: float | None = None
+    gas_adder: float = 0.0          # GBP/MWh_th added to every year of the gas path (high_gas scenario)
+    gas_path: dict = field(default_factory=lambda: dict(GAS_PATH_CENTRAL))
     uranium: float = 2.5          # GBP/MWh_th
     biomass: float = 25.0
     hydrogen: float = 80.0        # GBP/MWh_th delivered (hook: could be endogenous)
+
+    def gas(self, year: int) -> float:
+        if self.gas_2025 is not None and self.gas_2050 is not None:
+            f = min(max((year - 2025) / 25, 0), 1)
+            base = self.gas_2025 + f * (self.gas_2050 - self.gas_2025)
+        else:
+            ys = sorted(self.gas_path)
+            base = float(np.interp(year, ys, [self.gas_path[y] for y in ys]))
+        return base + self.gas_adder
 
     def price(self, fuel: str | None, year: int) -> float:
         if fuel is None:
             return 0.0
         if fuel == "gas":
-            f = min(max((year - 2025) / 25, 0), 1)
-            return self.gas_2025 + f * (self.gas_2050 - self.gas_2025)
+            return self.gas(year)
         return getattr(self, fuel)

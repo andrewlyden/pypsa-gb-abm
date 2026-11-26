@@ -155,4 +155,110 @@ if ens:  # multi-seed bands: median line, shaded min-max across seeds
         rows.append("| " + " | ".join(cells) + " |")
     (RES / "ensemble_summary.md").write_text("median [min–max] across seeds\n\n" + "\n".join(rows) + "\n")
     print("\n".join(rows))
+gap_p = RES / "gap_costs.csv"
+if gap_p.exists():   # optimal vs emergent (scripts/run_gap.py)
+    sys.path.insert(0, str(ROOT))
+    from ukabm.gap import summarise
+    from ukabm.scenarios import LADDER
+    OPT, EMG, INV, OPS, INK = "#111111", "#257de0", "#257de0", "#f47230", "#444444"
+    gc = pd.read_csv(gap_p)
+    gs = summarise(gc)
+    full = LADDER[-1][0]
+
+    # 1. the gap over time (deck slide 5, with results): planner vs agents, baseline full model
+    b = gc[gc.run == full]
+    fig, ax = plt.subplots(figsize=(8.5, 4.6))
+    for kind, col, lab in (("agents_realised", EMG, "Emergent: agents (realised)"), ("planner", OPT, "Optimal: one planner")):
+        piv = b[b.kind == kind].pivot_table(index="year", columns="seed", values="total")
+        ax.fill_between(piv.index, piv.min(1), piv.max(1), color=col, alpha=.15, lw=0)
+        ax.plot(piv.index, piv.median(1), color=col, lw=2, marker="o", ms=4, label=f"{lab}, median and range of {piv.shape[1]} seeds")
+    ax.set_ylabel("System cost (GBP bn/yr)"); ax.set_ylim(bottom=0); ax.grid(alpha=.3)
+    ax.set_title("Baseline: system cost of the optimal and the emergent pathway", fontsize=11)
+    ax.legend(fontsize=8, loc="upper left", frameon=False)
+    fig.tight_layout(); fig.savefig(FIG / "gap_over_time.png", dpi=130); plt.close(fig)
+
+    # 2. where the gap comes from (deck slide 11): ladder of idealised -> full agents, PV 2025-54
+    lad = [l for l, _ in LADDER if l in set(gs.run)]
+    if lad:
+        med = gs.groupby("run").median(numeric_only=True).reindex(lad)
+        lo = gs.groupby("run").gap_total_bn.min().reindex(lad)
+        hi = gs.groupby("run").gap_total_bn.max().reindex(lad)
+        fig, ax = plt.subplots(figsize=(9, 3.8))
+        y = range(len(lad))[::-1]
+        ax.barh(y, med.gap_investment_bn, color=INV, height=.55, label="investment: what was built")
+        ax.barh(y, med.gap_operation_bn, left=med.gap_investment_bn.clip(lower=0), color=OPS, height=.55,
+                label="operation: how it was run")
+        ax.errorbar(med.gap_total_bn, list(y), xerr=[med.gap_total_bn - lo, hi - med.gap_total_bn], fmt="none",
+                    ecolor=INK, capsize=3, lw=1)
+        for yy, v, pct in zip(y, med.gap_total_bn, med.gap_total_pct):
+            ax.text(max(hi.max(), v) * 1.02 + 1, yy, f"GBP {v:.0f}bn ({pct:.0f} %)", va="center", fontsize=8, color=INK)
+        ax.set_yticks(list(y)); ax.set_yticklabels(lad, fontsize=9)
+        ax.axvline(0, color=OPT, lw=1)
+        ax.set_xlim(min(0, med.gap_total_bn.min()) * 1.2 - 2, hi.max() * 1.35 + 5)
+        ax.set_xlabel("Gap to the optimum, present value 2025-2054 (GBP bn, 3.5 %); bars: median, whiskers: seed range")
+        ax.set_title("Where the gap comes from: agent frictions added one at a time (baseline)", fontsize=11)
+        ax.legend(fontsize=8, loc="lower right", frameon=False); ax.grid(axis="x", alpha=.3)
+        fig.tight_layout(); fig.savefig(FIG / "gap_ladder.png", dpi=130); plt.close(fig)
+
+    # 3. how to close it (deck slide 13): gap by market design / policy lever, full agents
+    order = [full] + [r for r in gs.run.unique() if r not in dict(LADDER)]
+    lev = gs[gs.run.isin(order)]
+    if lev.run.nunique() > 1:
+        fig, ax = plt.subplots(figsize=(8.5, 3.8))
+        for k, r in enumerate(order[::-1]):
+            v = lev[lev.run == r].gap_total_pct
+            ax.plot([v.min(), v.max()], [k, k], color="#c5c5bd", lw=6, solid_capstyle="round")
+            ax.plot(v.median(), k, "o", color=EMG, ms=9, mec="white", mew=1.5)
+            ax.text(v.max() + 0.6, k, f"{v.median():.0f} %", va="center", fontsize=8, color=INK)
+        ax.set_yticks(range(len(order))); ax.set_yticklabels([("baseline" if r == full else r) for r in order[::-1]], fontsize=9)
+        ax.axvline(0, color=OPT, lw=1.5); ax.text(0, len(order) - 0.4, " optimal", fontsize=8)
+        ax.set_xlabel("Gap to the optimum, % of the optimum's PV system cost (dot: median; bar: seed range)")
+        ax.set_title("Gap by scenario: each scenario against its own optimum", fontsize=11)
+        ax.grid(axis="x", alpha=.3); ax.set_ylim(-0.6, len(order) - 0.2)
+        fig.tight_layout(); fig.savefig(FIG / "gap_levers.png", dpi=130); plt.close(fig)
+
+    # 4. what each pathway builds: capacity, planner vs agents, baseline seed with the median gap
+    cp_p = RES / "gap_capacity.csv"
+    if cp_p.exists():
+        cap = pd.read_csv(cp_p)
+        bs = gs[gs.run == full].sort_values("gap_total_bn")
+        seed = int(bs.iloc[len(bs) // 2].seed)
+        c = cap[(cap.run == full) & (cap.seed == seed)]
+        years = sorted(c.year.unique())[1:]
+        techs = [t for t in COL if t in set(c.tech)]
+        fig, ax = plt.subplots(figsize=(10, 4.6))
+        x, labels = 0, []
+        for yr in years:
+            for path in ("planner", "agents"):
+                s = c[(c.year == yr) & (c.pathway == path)].set_index("tech").gw.reindex(techs).fillna(0)
+                bottom = 0
+                for t, v in s.items():
+                    ax.bar(x, v, bottom=bottom, color=COL[t], width=.8, edgecolor="white", lw=.6,
+                           label=t if (yr, path) == (years[0], "planner") else None)
+                    bottom += v
+                labels.append(f"{yr}\n{'optimal' if path == 'planner' else 'agents'}")
+                x += 1
+            x += .5
+        ax.set_xticks([i + (i // 2) * .5 for i in range(len(labels))]); ax.set_xticklabels(labels, fontsize=8)
+        ax.set_ylabel("GW"); ax.set_title(f"Installed capacity, optimal vs agents (baseline, seed {seed})", fontsize=11)
+        ax.legend(fontsize=7, ncol=1, loc="upper left", bbox_to_anchor=(1.0, 1.0), frameon=False)
+        ax.grid(axis="y", alpha=.3)
+        fig.tight_layout(); fig.savefig(FIG / "gap_capacity.png", dpi=130); plt.close(fig)
+
+    tab = gs.groupby("run", sort=False).agg(
+        seeds=("seed", "nunique"), planner=("pv_planner_bn", "median"), agents=("pv_agents_realised_bn", "median"),
+        gap=("gap_total_bn", "median"), gap_min=("gap_total_bn", "min"), gap_max=("gap_total_bn", "max"),
+        investment=("gap_investment_bn", "median"), operation=("gap_operation_bn", "median"),
+        pct=("gap_total_pct", "median"))
+    rows = ["| run | seeds | optimal PV (£bn) | agents PV (£bn) | gap (£bn) [range] | of which investment | of which operation | gap (%) |",
+            "|---|---|---|---|---|---|---|---|"]
+    for r, t in tab.iterrows():
+        rows.append(f"| {r} | {t.seeds} | {t.planner:.0f} | {t.agents:.0f} | {t.gap:.0f} [{t.gap_min:.0f}–{t.gap_max:.0f}] | "
+                    f"{t.investment:.0f} | {t.operation:.0f} | {t.pct:.1f} |")
+    (RES / "gap_summary.md").write_text(
+        "Present value of system cost 2025-2054 at 3.5 % (GBP bn, 2024 prices), median across seeds.\n"
+        "Gap = agents' realised cost - planner's cost; investment = both fleets under the same least-cost\n"
+        "dispatch; operation = agents' realised - least-cost dispatch of the agents' fleet.\n\n" + "\n".join(rows) + "\n",
+        encoding="utf-8")
+    print("\n".join(rows))
 print("figures:", sorted(p.name for p in FIG.glob("*.png")))
