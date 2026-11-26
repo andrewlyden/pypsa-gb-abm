@@ -61,10 +61,14 @@ NUCLEAR_BM_BID = -300.0
 # (2025, NESO); Sizewell B ran at 99 % in 2025 (10.4 TWh) while the AGRs averaged ~58 % with an
 # extended Hartlepool outage (EDF UK nuclear fleet update, Jan 2026; EDF plans ~36-37 TWh in
 # 2026-27). AGRs 0.62, Sizewell B 0.88 (18-month refuelling cycle); new EPRs use Tech default.
-NUCLEAR_UNITS = [(2300, 1983, 2027, "Z9", 0.62), (2400, 1988, 2030, "Z5", 0.62),   # AGRs
+# Zones matter only for the network stage: Heysham 1 + Hartlepool in England (Z9); Torness in Z6
+# (south of B5, like the Western HVDC and EGL1 landings, see ukabm/data/pypsagb.py); Heysham 2 in
+# England (Z9), listed last so the owner assignment (i % 2) of the other units is unchanged.
+NUCLEAR_UNITS = [(2300, 1983, 2027, "Z9", 0.62), (1200, 1988, 2030, "Z6", 0.62),   # AGRs
                  (1200, 1995, 2035, "Z12", 0.88),                                   # Sizewell B
                  (1630, 2030, 2089, "Z17", None), (1630, 2031, 2090, "Z17", None),  # Hinkley Point C
-                 (1600, 2038, 2097, "Z12", None), (1600, 2039, 2098, "Z12", None)]  # Sizewell C
+                 (1600, 2038, 2097, "Z12", None), (1600, 2039, 2098, "Z12", None),  # Sizewell C
+                 (1200, 1988, 2030, "Z9", 0.62)]                                    # Heysham 2 (AGR)
 
 GENCO_SPECS = [
     dict(name="IntegratedUtility", wacc=0.07, expectation="adaptive", markup=0.03, risk_aversion=0.10, budget_gbp=4e9),
@@ -201,7 +205,7 @@ class GBMarketModel(ModelBase):
         for k, (mkt, mw) in enumerate(sorted(caps.items())):
             fp = ref * decarb * IC_PRICE_LEVEL[mkt if mkt in IC_PRICE_LEVEL else "continent"] * shape[mkt].values
             imports.append(Block(-1 - k, fp + IC_SPREAD, IC_AVAILABILITY * mw))
-            exports.append(Block(-11 - k, fp - IC_SPREAD, IC_AVAILABILITY * mw))
+            exports.append(Block(-11 - k, fp - IC_SPREAD, IC_AVAILABILITY * mw, demand_bid=True))
         return imports, exports, sum(caps.values()), ref
 
     def blocks(self, plants, year, carbon=None):
@@ -211,7 +215,9 @@ class GBMarketModel(ModelBase):
                 continue
             t = TECHS[p.tech]
             prof = self.cf_profile(p.tech)
-            avail = p.mw * (prof if prof is not None else (p.availability or t.availability))
+            if prof is None:
+                prof = t.availability if p.availability is None else p.availability
+            avail = p.mw * prof
             out.append(Block(p.pid, p.owner.offer_price(p, self.plant_srmc(p, year, carbon), year), avail))
         return out
 
@@ -588,6 +594,8 @@ class GBMarketModel(ModelBase):
         hours, weights = [], []
         for s in range(NET_STRATA):
             idx = np.flatnonzero(strata == s)
+            if len(idx) == 0:      # repeated quantile edges (e.g. many zero-wind hours) leave strata empty
+                continue
             k = min(per, len(idx))
             hours += list(rng.choice(idx, k, replace=False))
             weights += [len(idx) / k] * k
@@ -597,7 +605,8 @@ class GBMarketModel(ModelBase):
     def bm_bids(self, plants, blocks, price, year):
         """Balancing Mechanism bid prices (GBP/MWh paid by the plant to be turned down; negative =
         the system pays it). Thermal: SRMC (fuel saved). RO renewables: -ROC value. CfD renewables:
-        -(strike - market price), the top-up lost on curtailed output. Merchant VRE/hydro: 0.
+        -(strike - market price), the difference payment lost on curtailed output (positive above the
+        strike, where turning down saves the generator's payback). Merchant VRE/hydro: 0.
         Nuclear: NUCLEAR_BM_BID (inflexible, effectively never turned down)."""
         pmap = {p.pid: p for p in plants}
         bids = np.zeros((len(price), len(blocks)))
@@ -609,7 +618,7 @@ class GBMarketModel(ModelBase):
                 if p.support == "ro":
                     bids[:, j] = -self.policy.ro_value
                 elif p.support == "cfd" and year <= p.cfd_end:
-                    bids[:, j] = -np.maximum(p.strike - price, 0.0)
+                    bids[:, j] = -(p.strike - price)     # > 0 above the strike: turn-down saves the payback
             else:
                 bids[:, j] = self.plant_srmc(p, year)
         return bids
@@ -626,6 +635,10 @@ class GBMarketModel(ModelBase):
         avail = np.stack([bc(b.avail) for b in blocks], 1)
         offers = np.stack([bc(b.price) for b in blocks], 1)
         bids = self.bm_bids(plants, blocks, res["price"][hours], y)
+        # BSC rule: a unit's offer may not be below its bid, so the redispatch cannot turn the same
+        # unit down and up for profit. Binds only for CfD plant above the strike, whose turn-up would
+        # add payback: their offer is raised to the bid (price - strike).
+        offers = np.maximum(offers, bids)
         links = self.data.links_for_year(y)
         try:
             out = netmod.redispatch(self.data, plants, blocks, (res["demand"] - imports)[hours], sched, avail,
