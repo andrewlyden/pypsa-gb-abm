@@ -268,12 +268,22 @@ re-run `scripts/run_gap.py` and update [docs/gap.md](docs/gap.md).
     behind the item 1 interface (state: recent clearing prices, own margins; reward: profit), trained
     over repeated runs with fixed seeds. Compare their gap, prices and bids with the rule-based firms;
     check for tacit collusion.
-25. **LLM agents, compared with rules and Q-learning.** LLM (Claude API) implementations of the
-    government's round settings and firms' investment and bid decisions behind the same interface, with
-    structured prompts (forecasts, policy state, history), JSON outputs, response caching and fixed seeds
-    for reproducibility. Run the same scenarios as items 21–22 with rules, Q-learning and LLM decision
-    makers and compare gaps and behaviour. Needs an API key and a budget from the maintainer: skip until
-    one is configured.
+25. **LLM agents on open-weight models, compared with rules and Q-learning.** LLM implementations of the
+    government's round settings and firms' investment and bid decisions behind the item 1 interface.
+    * *Models:* open-weight, Apache-2.0 by default (e.g. Qwen3, gpt-oss, Mistral Small), with the model
+      name and revision pinned in the scenario. One client for the OpenAI-compatible API, so the same code
+      runs Ollama on a laptop, vLLM on a GPU cluster, or Claude as an optional comparison.
+    * *Division of labour:* the model computes NPVs, forecasts and the option set; the LLM chooses among
+      options (which projects, bid strategy, risk stance) and returns JSON validated against a schema,
+      falling back to the rule-based decision if invalid. One call per decision maker per year (~175 per
+      run).
+    * *Reproducibility:* temperature 0 and a seed; every response cached by (model, prompt) hash in
+      `results/llm_cache/`, so a cached run repeats exactly and the cache can be published.
+    * *Tests:* a fake client with canned responses, so CI needs no model. Development runs use a 4-bit
+      7–8B model under Ollama (~1–3 h per run on a CPU laptop).
+    * *Experiments:* rules vs Q-learning vs LLM on the scenarios of items 21–22, and a model-size ladder
+      (~8B, ~30B, ≥100B) as a bounded-rationality lever. Larger models and full sweeps need a GPU (university
+      HPC with vLLM): the maintainer arranges access; until then run the small model locally.
 
 *E. Realism*
 
@@ -298,7 +308,8 @@ re-run `scripts/run_gap.py` and update [docs/gap.md](docs/gap.md).
 *Decided by the maintainer (26 Nov 2026)*: the government agent gets several objectives, compared as
 levers (items 2, 6); the optimum becomes multi-energy with heat and hydrogen (items 14–15); validation
 extends to auction back-casts and weather years (items 16–17), not yet to 2020–24 operation back-casts;
-Q-learning and LLM agents are both built and compared (items 24–25).
+Q-learning and LLM agents are both built and compared (items 24–25), the LLM agents on open-weight
+models first, with Claude as an optional comparison.
 
 ## Credits
 Data extracts from PyPSA-GB (MIT), which in turn uses ESPENI, DUKES, NESO and LCCC data. Framework: Mesa, PyPSA, HiGHS.

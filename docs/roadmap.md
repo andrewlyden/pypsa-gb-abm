@@ -132,7 +132,11 @@ Once sections 1–3 are in place:
   and REMA options. [item 22; zonal pricing needs item 26]
 * **How it moves over time:** tipping points, lock-in, multiple equilibria. [item 23]
 * **Other decision makers:** Q-learning and LLM agents behind the decision interface, compared with the
-  rule-based agents and each other. [items 24, 25]
+  rule-based agents and each other. [items 24, 25] The LLM agents run on open-weight models first:
+  pinned weights and a published response cache make runs reproducible, there is no cost per call, and
+  model size becomes a lever for how much reasoning an agent has (bounded rationality). The model does
+  the arithmetic and the LLM chooses among options, because small models are unreliable with numbers.
+  A CPU laptop runs a 4-bit 7–8B model for development; larger models and sweeps need a GPU cluster.
 
 ## 8. Practical
 
