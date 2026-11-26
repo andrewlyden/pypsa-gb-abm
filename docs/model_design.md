@@ -60,3 +60,25 @@
 * `network.redispatch` — add zonal (Scottish vs English) wind profiles, KVL on the PyPSA-GB Reduced
   (32-bus) network, or call PyPSA-GB's `solve_balancing.py` stage directly with ABM bids; feed
   constraint costs into BSUoS in the retail tariff.
+
+## Optimal versus emergent (`ukabm.gap`)
+```
+ scenario + seed ──▶ Run 2: GBMarketModel (agents)  ──▶ agents' fleet by year, realised system cost
+        │                     │ realised inflexible demand, starting fleet
+        │                     ▼
+        └──────────▶ Run 1: planner.plan (PyPSA multi-period LP) ──▶ planner's fleet by period
+                                         │
+     planner.evaluate: least-cost 8760 h dispatch of each fleet in 2025, 2030, …, 2050, one cost definition
+                                         ▼
+     gap = agents realised − planner  =  investment (agents eval − planner)  +  operation (agents realised − agents eval)
+```
+* `ukabm/costs.py` defines system cost (resource cost; transfers cancel) and is used by all three.
+* `GBMarketModel.system_cost` records the realised cost every year (`syscost_*_bn` columns).
+* Agent traits are idealised by trait group through the scenario key `agents_ideal`
+  (`scenarios.IDEAL_TRAITS`, `scenarios.LADDER`), which `gap.ladder_tasks` uses to attribute the gap.
+* `scripts/run_gap.py` runs the ladder and the policy levers; `scripts/make_plots.py` draws
+  `gap_over_time`, `gap_ladder`, `gap_levers`, `gap_capacity` and writes `results/gap_summary.md`.
+* Extension points: put the network in both runs (planner on the PyPSA-GB zones, agents' redispatch
+  cost in the system cost); a decision-logic interface so rule-based, Q-learning and LLM agents plug into
+  the same `GenCo` decisions (deck slide 16); multi-sector planner (heat pumps, hydrogen storage) so demand-
+  side choices enter the gap.

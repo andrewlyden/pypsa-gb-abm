@@ -153,7 +153,8 @@ if ens:  # multi-seed bands: median line, shaded min-max across seeds
             cell(df.groupby("seed").lole_h.sum()), cell(at(y1, "hp_homes_m"), "{:.1f}"),
             cell(at(y1, "cap_wind_offshore"))]
         rows.append("| " + " | ".join(cells) + " |")
-    (RES / "ensemble_summary.md").write_text("median [min–max] across seeds\n\n" + "\n".join(rows) + "\n")
+    (RES / "ensemble_summary.md").write_text("median [min–max] across seeds\n\n" + "\n".join(rows) + "\n",
+                                             encoding="utf-8")
     print("\n".join(rows))
 gap_p = RES / "gap_costs.csv"
 if gap_p.exists():   # optimal vs emergent (scripts/run_gap.py)

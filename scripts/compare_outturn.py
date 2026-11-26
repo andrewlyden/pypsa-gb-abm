@@ -27,7 +27,8 @@ def main(year=2025, seed=42):
                    "Outturn: NESO historic generation mix and carbon intensity (GB, incl. embedded wind/solar);\n"
                    "Elexon MID price (APXMIDP) and FUELHH interconnector flows (scripts/fetch_outturn.py);\n"
                    "constraint cost and curtailment: data/outturn/gb_constraints.csv (LCP Delta 2026, from NESO data).\n"
-                   "Rows 'after BM redispatch' add the network stage's annualised redispatch to the wholesale result.\n")
+                   "Rows 'after BM redispatch' add the network stage's annualised redispatch to the wholesale result.\n",
+                   encoding="utf-8")
     print("\n".join(md))
 
 
