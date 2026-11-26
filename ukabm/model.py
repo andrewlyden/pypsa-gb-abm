@@ -24,6 +24,7 @@ from .config import (TECHS, VRE_TECHS, STORAGE_TECHS, INITIAL_FLEET_MW, EXISTING
                      BATTERY_FLEET_FLOOR_MW)
 from .data import PyPSAGBData
 from .costs import COMPONENTS as COST_COMPONENTS, fixed_costs, variable_cost
+from . import decisions
 from .market import Block, clear, merit_order, storage_arbitrage
 from .scenarios import IDEAL_TRAITS
 from .multienergy import HeatModule, GasNetworkModule, EVModule, HydrogenModule
@@ -119,7 +120,8 @@ class GBMarketModel(ModelBase):
         for grp in self.scenario.get("agents_ideal", []):   # idealised trait groups (scenarios.IDEAL_TRAITS)
             for s in specs:
                 s.update(IDEAL_TRAITS[grp])
-        self.gencos = [GenCo(self, **s) for s in specs]
+        # decisions go through ukabm.decisions (scenario 'decision_logic': a name, or {genco: name})
+        self.gencos = [GenCo(self, decider=decisions.for_genco(self.scenario, s["name"]), **s) for s in specs]
         self.plants: list[Plant] = []
         self._pid = 0
         self._init_fleet()
