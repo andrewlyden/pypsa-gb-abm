@@ -184,7 +184,7 @@ if gap_p.exists():   # optimal vs emergent (scripts/run_gap.py)
         med = gs.groupby("run").median(numeric_only=True).reindex(lad)
         lo = gs.groupby("run").gap_total_bn.min().reindex(lad)
         hi = gs.groupby("run").gap_total_bn.max().reindex(lad)
-        fig, ax = plt.subplots(figsize=(9, 3.8))
+        fig, ax = plt.subplots(figsize=(9, 4.3))
         y = range(len(lad))[::-1]
         ax.barh(y, med.gap_investment_bn, color=INV, height=.55, label="investment: what was built")
         ax.barh(y, med.gap_operation_bn, left=med.gap_investment_bn.clip(lower=0), color=OPS, height=.55,
@@ -196,9 +196,10 @@ if gap_p.exists():   # optimal vs emergent (scripts/run_gap.py)
         ax.set_yticks(list(y)); ax.set_yticklabels(lad, fontsize=9)
         ax.axvline(0, color=OPT, lw=1)
         ax.set_xlim(min(0, med.gap_total_bn.min()) * 1.2 - 2, hi.max() * 1.35 + 5)
-        ax.set_xlabel("Gap to the optimum, present value 2025-2054 (GBP bn, 3.5 %); bars: median, whiskers: seed range")
+        ax.set_xlabel("Gap to the optimum, PV 2025-2054 (GBP bn, 3.5 %); bars: median, whiskers: seed range", fontsize=9)
         ax.set_title("Where the gap comes from: agent frictions added one at a time (baseline)", fontsize=11)
-        ax.legend(fontsize=8, loc="lower right", frameon=False); ax.grid(axis="x", alpha=.3)
+        ax.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.2), ncol=2, frameon=False)
+        ax.grid(axis="x", alpha=.3)
         fig.tight_layout(); fig.savefig(FIG / "gap_ladder.png", dpi=130); plt.close(fig)
 
     # 3. how to close it (deck slide 13): gap by market design / policy lever, full agents
@@ -254,7 +255,7 @@ if gap_p.exists():   # optimal vs emergent (scripts/run_gap.py)
     rows = ["| run | seeds | optimal PV (£bn) | agents PV (£bn) | gap (£bn) [range] | of which investment | of which operation | gap (%) |",
             "|---|---|---|---|---|---|---|---|"]
     for r, t in tab.iterrows():
-        rows.append(f"| {r} | {t.seeds} | {t.planner:.0f} | {t.agents:.0f} | {t.gap:.0f} [{t.gap_min:.0f}–{t.gap_max:.0f}] | "
+        rows.append(f"| {r} | {t.seeds:.0f} | {t.planner:.0f} | {t.agents:.0f} | {t.gap:.0f} [{t.gap_min:.0f}–{t.gap_max:.0f}] | "
                     f"{t.investment:.0f} | {t.operation:.0f} | {t.pct:.1f} |")
     (RES / "gap_summary.md").write_text(
         "Present value of system cost 2025-2054 at 3.5 % (GBP bn, 2024 prices), median across seeds.\n"

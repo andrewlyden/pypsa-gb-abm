@@ -1,0 +1,3267 @@
+run,seed,year,pathway,tech,gw
+ideal agents,1,2025,planner,ccgt,30.000000000000004
+ideal agents,1,2025,planner,ocgt,1.9999999999999996
+ideal agents,1,2025,planner,biomass,3.8000000000000007
+ideal agents,1,2025,planner,wind_onshore,14.999999999999996
+ideal agents,1,2025,planner,wind_offshore,15.499999999999998
+ideal agents,1,2025,planner,solar,18.000000000000004
+ideal agents,1,2025,planner,hydro,1.5
+ideal agents,1,2025,planner,battery,5.000000000000002
+ideal agents,1,2025,planner,pumped_hydro,2.9000000000000004
+ideal agents,1,2025,planner,nuclear,5.9
+ideal agents,1,2025,agents,ccgt,30.000000000000004
+ideal agents,1,2025,agents,ocgt,1.9999999999999996
+ideal agents,1,2025,agents,biomass,3.8000000000000007
+ideal agents,1,2025,agents,wind_onshore,14.999999999999996
+ideal agents,1,2025,agents,wind_offshore,15.499999999999998
+ideal agents,1,2025,agents,solar,18.000000000000004
+ideal agents,1,2025,agents,hydro,1.5
+ideal agents,1,2025,agents,battery,5.000000000000002
+ideal agents,1,2025,agents,pumped_hydro,2.9000000000000004
+ideal agents,1,2025,agents,nuclear,5.9
+ideal agents,1,2030,planner,ccgt,32.40344574353444
+ideal agents,1,2030,planner,ocgt,1.5577318848741128
+ideal agents,1,2030,planner,biomass,3.475849465696145
+ideal agents,1,2030,planner,wind_onshore,20.61550381737093
+ideal agents,1,2030,planner,wind_offshore,19.289480362407264
+ideal agents,1,2030,planner,solar,44.48916669264582
+ideal agents,1,2030,planner,hydro,1.5
+ideal agents,1,2030,planner,battery,3.0347349177330902
+ideal agents,1,2030,planner,pumped_hydro,2.9000000000000004
+ideal agents,1,2030,planner,nuclear,5.2299999999999995
+ideal agents,1,2030,agents,ccgt,34.607752874563566
+ideal agents,1,2030,agents,ocgt,1.5577318848741128
+ideal agents,1,2030,agents,biomass,3.475849465696145
+ideal agents,1,2030,agents,wind_onshore,17.61550381737093
+ideal agents,1,2030,agents,wind_offshore,17.289480362407264
+ideal agents,1,2030,agents,solar,21.989166692645817
+ideal agents,1,2030,agents,hydro,1.5
+ideal agents,1,2030,agents,battery,14.03473491773309
+ideal agents,1,2030,agents,pumped_hydro,2.9000000000000004
+ideal agents,1,2030,agents,nuclear,5.2299999999999995
+ideal agents,1,2035,planner,ccgt,29.50041810881647
+ideal agents,1,2035,planner,ocgt,1.4021112555929842
+ideal agents,1,2035,planner,biomass,1.7785906767848851
+ideal agents,1,2035,planner,wind_onshore,30.088469056078097
+ideal agents,1,2035,planner,wind_offshore,46.3214987213706
+ideal agents,1,2035,planner,solar,41.644792218723694
+ideal agents,1,2035,planner,hydro,1.5
+ideal agents,1,2035,planner,battery,1.7138939670932358
+ideal agents,1,2035,planner,pumped_hydro,2.9000000000000004
+ideal agents,1,2035,planner,nuclear,4.46
+ideal agents,1,2035,agents,ccgt,31.704725239845608
+ideal agents,1,2035,agents,ocgt,5.0021112555929825
+ideal agents,1,2035,agents,biomass,1.7785906767848851
+ideal agents,1,2035,agents,wind_onshore,22.088469056078097
+ideal agents,1,2035,agents,wind_offshore,34.36323877196203
+ideal agents,1,2035,agents,solar,26.644792218723694
+ideal agents,1,2035,agents,hydro,1.5
+ideal agents,1,2035,agents,battery,12.713893967093236
+ideal agents,1,2035,agents,pumped_hydro,2.9000000000000004
+ideal agents,1,2035,agents,nuclear,4.46
+ideal agents,1,2035,agents,gas_ccs,9.6
+ideal agents,1,2040,planner,ccgt,20.233119149980933
+ideal agents,1,2040,planner,ocgt,7.267320329795452
+ideal agents,1,2040,planner,biomass,1.6347984099943218
+ideal agents,1,2040,planner,wind_onshore,39.12068183536171
+ideal agents,1,2040,planner,wind_offshore,49.70933450667425
+ideal agents,1,2040,planner,solar,39.84471739875924
+ideal agents,1,2040,planner,hydro,1.5
+ideal agents,1,2040,planner,pumped_hydro,2.9000000000000004
+ideal agents,1,2040,planner,nuclear,6.459999999999999
+ideal agents,1,2040,planner,gas_ccs,2.436076746507623
+ideal agents,1,2040,agents,ccgt,21.6023365107969
+ideal agents,1,2040,agents,ocgt,16.72311323169547
+ideal agents,1,2040,agents,biomass,1.6347984099943218
+ideal agents,1,2040,agents,wind_onshore,26.120681835361705
+ideal agents,1,2040,agents,wind_offshore,53.10160307981383
+ideal agents,1,2040,agents,solar,32.34471739875924
+ideal agents,1,2040,agents,hydro,1.5
+ideal agents,1,2040,agents,pumped_hydro,2.9000000000000004
+ideal agents,1,2040,agents,nuclear,6.459999999999999
+ideal agents,1,2040,agents,battery,26.5
+ideal agents,1,2040,agents,gas_ccs,9.6
+ideal agents,1,2045,planner,ccgt,14.4994015176179
+ideal agents,1,2045,planner,ocgt,8.846950734289333
+ideal agents,1,2045,planner,biomass,1.5878354240875538
+ideal agents,1,2045,planner,wind_onshore,47.537525782102094
+ideal agents,1,2045,planner,wind_offshore,49.76212588534586
+ideal agents,1,2045,planner,solar,37.28353649032017
+ideal agents,1,2045,planner,hydro,1.5
+ideal agents,1,2045,planner,pumped_hydro,2.9000000000000004
+ideal agents,1,2045,planner,nuclear,6.459999999999999
+ideal agents,1,2045,planner,gas_ccs,7.712298969815089
+ideal agents,1,2045,agents,ccgt,15.868618878433868
+ideal agents,1,2045,agents,ocgt,23.546926802297637
+ideal agents,1,2045,agents,biomass,1.5878354240875538
+ideal agents,1,2045,agents,wind_onshore,29.537525782102094
+ideal agents,1,2045,agents,wind_offshore,71.29907508396056
+ideal agents,1,2045,agents,solar,37.28353649032017
+ideal agents,1,2045,agents,hydro,1.5
+ideal agents,1,2045,agents,pumped_hydro,2.9000000000000004
+ideal agents,1,2045,agents,nuclear,6.459999999999999
+ideal agents,1,2045,agents,gas_ccs,9.6
+ideal agents,1,2045,agents,battery,32.5
+ideal agents,1,2050,planner,wind_offshore,47.05987956045844
+ideal agents,1,2050,planner,solar,33.50531351181348
+ideal agents,1,2050,planner,hydro,1.5
+ideal agents,1,2050,planner,pumped_hydro,2.9000000000000004
+ideal agents,1,2050,planner,nuclear,6.459999999999999
+ideal agents,1,2050,planner,wind_onshore,57.5
+ideal agents,1,2050,planner,ccgt,9.830782639184038
+ideal agents,1,2050,planner,ocgt,10.170486321578865
+ideal agents,1,2050,planner,gas_ccs,13.347824365047773
+ideal agents,1,2050,agents,wind_offshore,87.47056520847056
+ideal agents,1,2050,agents,solar,40.89243071359541
+ideal agents,1,2050,agents,hydro,1.5
+ideal agents,1,2050,agents,pumped_hydro,2.9000000000000004
+ideal agents,1,2050,agents,nuclear,6.459999999999999
+ideal agents,1,2050,agents,wind_onshore,34.5
+ideal agents,1,2050,agents,ccgt,11.200000000000001
+ideal agents,1,2050,agents,gas_ccs,9.6
+ideal agents,1,2050,agents,ocgt,28.800000000000047
+ideal agents,1,2050,agents,battery,32.5
+ideal agents,2,2025,planner,ccgt,30.000000000000004
+ideal agents,2,2025,planner,ocgt,1.9999999999999996
+ideal agents,2,2025,planner,biomass,3.8000000000000007
+ideal agents,2,2025,planner,wind_onshore,14.999999999999996
+ideal agents,2,2025,planner,wind_offshore,15.499999999999998
+ideal agents,2,2025,planner,solar,18.000000000000004
+ideal agents,2,2025,planner,hydro,1.5
+ideal agents,2,2025,planner,battery,5.000000000000002
+ideal agents,2,2025,planner,pumped_hydro,2.9000000000000004
+ideal agents,2,2025,planner,nuclear,5.9
+ideal agents,2,2025,agents,ccgt,30.000000000000004
+ideal agents,2,2025,agents,ocgt,1.9999999999999996
+ideal agents,2,2025,agents,biomass,3.8000000000000007
+ideal agents,2,2025,agents,wind_onshore,14.999999999999996
+ideal agents,2,2025,agents,wind_offshore,15.499999999999998
+ideal agents,2,2025,agents,solar,18.000000000000004
+ideal agents,2,2025,agents,hydro,1.5
+ideal agents,2,2025,agents,battery,5.000000000000002
+ideal agents,2,2025,agents,pumped_hydro,2.9000000000000004
+ideal agents,2,2025,agents,nuclear,5.9
+ideal agents,2,2030,planner,ccgt,30.68378264920597
+ideal agents,2,2030,planner,ocgt,3.481992765763448
+ideal agents,2,2030,planner,biomass,0.4664911465592897
+ideal agents,2,2030,planner,wind_onshore,20.761125449499474
+ideal agents,2,2030,planner,wind_offshore,20.75758074792393
+ideal agents,2,2030,planner,solar,40.65034136608785
+ideal agents,2,2030,planner,hydro,1.5
+ideal agents,2,2030,planner,battery,4.643510054844609
+ideal agents,2,2030,planner,pumped_hydro,2.9000000000000004
+ideal agents,2,2030,planner,nuclear,5.2299999999999995
+ideal agents,2,2030,agents,ccgt,35.28378264920597
+ideal agents,2,2030,agents,ocgt,1.6610113958655428
+ideal agents,2,2030,agents,biomass,0.4664911465592897
+ideal agents,2,2030,agents,wind_onshore,17.761125449499474
+ideal agents,2,2030,agents,wind_offshore,18.75758074792393
+ideal agents,2,2030,agents,solar,18.15034136608785
+ideal agents,2,2030,agents,hydro,1.5
+ideal agents,2,2030,agents,battery,14.143510054844608
+ideal agents,2,2030,agents,pumped_hydro,2.9000000000000004
+ideal agents,2,2030,agents,nuclear,5.2299999999999995
+ideal agents,2,2035,planner,ccgt,28.45333846548887
+ideal agents,2,2035,planner,ocgt,3.0696016817739737
+ideal agents,2,2035,planner,biomass,0.3107129213773166
+ideal agents,2,2035,planner,wind_onshore,30.51772080818116
+ideal agents,2,2035,planner,wind_offshore,46.68796689263873
+ideal agents,2,2035,planner,solar,40.03616298282258
+ideal agents,2,2035,planner,hydro,1.5
+ideal agents,2,2035,planner,battery,2.024680073126143
+ideal agents,2,2035,planner,pumped_hydro,2.9000000000000004
+ideal agents,2,2035,planner,nuclear,4.46
+ideal agents,2,2035,agents,ccgt,30.668610687335548
+ideal agents,2,2035,agents,ocgt,6.6486203118760665
+ideal agents,2,2035,agents,biomass,0.3107129213773166
+ideal agents,2,2035,agents,wind_onshore,22.51772080818116
+ideal agents,2,2035,agents,wind_offshore,34.705031154498236
+ideal agents,2,2035,agents,solar,25.03616298282258
+ideal agents,2,2035,agents,hydro,1.5
+ideal agents,2,2035,agents,battery,21.52468007312614
+ideal agents,2,2035,agents,pumped_hydro,2.9000000000000004
+ideal agents,2,2035,agents,nuclear,4.46
+ideal agents,2,2035,agents,gas_ccs,9.6
+ideal agents,2,2040,planner,ccgt,24.834152865439723
+ideal agents,2,2040,planner,ocgt,3.771010909955574
+ideal agents,2,2040,planner,biomass,0.26374993547054876
+ideal agents,2,2040,planner,wind_onshore,37.131788386985306
+ideal agents,2,2040,planner,wind_offshore,51.03341006176424
+ideal agents,2,2040,planner,solar,37.612463759079716
+ideal agents,2,2040,planner,hydro,1.5
+ideal agents,2,2040,planner,pumped_hydro,2.9000000000000004
+ideal agents,2,2040,planner,nuclear,6.459999999999999
+ideal agents,2,2040,planner,gas_ccs,3.1339273246015633
+ideal agents,2,2040,agents,ccgt,27.0494250872864
+ideal agents,2,2040,agents,ocgt,15.353249306316375
+ideal agents,2,2040,agents,biomass,0.26374993547054876
+ideal agents,2,2040,agents,wind_onshore,24.131788386985303
+ideal agents,2,2040,agents,wind_offshore,51.073696316534026
+ideal agents,2,2040,agents,solar,30.112463759079713
+ideal agents,2,2040,agents,hydro,1.5
+ideal agents,2,2040,agents,pumped_hydro,2.9000000000000004
+ideal agents,2,2040,agents,nuclear,6.459999999999999
+ideal agents,2,2040,agents,battery,19.5
+ideal agents,2,2040,agents,gas_ccs,9.6
+ideal agents,2,2045,planner,ccgt,14.990090899780903
+ideal agents,2,2045,planner,ocgt,9.163093566800104
+ideal agents,2,2045,planner,wind_onshore,46.73126140621794
+ideal agents,2,2045,planner,wind_offshore,50.63646557832418
+ideal agents,2,2045,planner,solar,35.79508682233376
+ideal agents,2,2045,planner,hydro,1.5
+ideal agents,2,2045,planner,pumped_hydro,2.9000000000000004
+ideal agents,2,2045,planner,nuclear,6.459999999999999
+ideal agents,2,2045,planner,gas_ccs,9.140472193358498
+ideal agents,2,2045,agents,ccgt,17.205363121627578
+ideal agents,2,2045,agents,ocgt,25.82634359609698
+ideal agents,2,2045,agents,wind_onshore,28.73126140621794
+ideal agents,2,2045,agents,wind_offshore,70.67675183309396
+ideal agents,2,2045,agents,solar,35.79508682233376
+ideal agents,2,2045,agents,hydro,1.5
+ideal agents,2,2045,agents,pumped_hydro,2.9000000000000004
+ideal agents,2,2045,agents,nuclear,6.459999999999999
+ideal agents,2,2045,agents,gas_ccs,9.6
+ideal agents,2,2045,agents,battery,30.0
+ideal agents,2,2050,planner,wind_offshore,48.8118432658721
+ideal agents,2,2050,planner,solar,33.1243060201102
+ideal agents,2,2050,planner,hydro,1.5
+ideal agents,2,2050,planner,pumped_hydro,2.9000000000000004
+ideal agents,2,2050,planner,nuclear,6.459999999999999
+ideal agents,2,2050,planner,wind_onshore,57.5
+ideal agents,2,2050,planner,ccgt,11.384727778153334
+ideal agents,2,2050,planner,ocgt,10.167985505512688
+ideal agents,2,2050,planner,gas_ccs,12.796224027601742
+ideal agents,2,2050,agents,wind_offshore,88.85212952064188
+ideal agents,2,2050,agents,solar,40.043878791657576
+ideal agents,2,2050,agents,hydro,1.5
+ideal agents,2,2050,agents,pumped_hydro,2.9000000000000004
+ideal agents,2,2050,agents,nuclear,6.459999999999999
+ideal agents,2,2050,agents,wind_onshore,34.5
+ideal agents,2,2050,agents,ccgt,13.600000000000003
+ideal agents,2,2050,agents,gas_ccs,9.6
+ideal agents,2,2050,agents,ocgt,29.100000000000048
+ideal agents,2,2050,agents,battery,30.0
+ideal agents,3,2025,planner,ccgt,30.000000000000004
+ideal agents,3,2025,planner,ocgt,1.9999999999999996
+ideal agents,3,2025,planner,biomass,3.8000000000000007
+ideal agents,3,2025,planner,wind_onshore,14.999999999999996
+ideal agents,3,2025,planner,wind_offshore,15.499999999999998
+ideal agents,3,2025,planner,solar,18.000000000000004
+ideal agents,3,2025,planner,hydro,1.5
+ideal agents,3,2025,planner,battery,5.000000000000002
+ideal agents,3,2025,planner,pumped_hydro,2.9000000000000004
+ideal agents,3,2025,planner,nuclear,5.9
+ideal agents,3,2025,agents,ccgt,30.000000000000004
+ideal agents,3,2025,agents,ocgt,1.9999999999999996
+ideal agents,3,2025,agents,biomass,3.8000000000000007
+ideal agents,3,2025,agents,wind_onshore,14.999999999999996
+ideal agents,3,2025,agents,wind_offshore,15.499999999999998
+ideal agents,3,2025,agents,solar,18.000000000000004
+ideal agents,3,2025,agents,hydro,1.5
+ideal agents,3,2025,agents,battery,5.000000000000002
+ideal agents,3,2025,agents,pumped_hydro,2.9000000000000004
+ideal agents,3,2025,agents,nuclear,5.9
+ideal agents,3,2030,planner,ccgt,32.064123445005784
+ideal agents,3,2030,planner,ocgt,1.4014354899812627
+ideal agents,3,2030,planner,biomass,3.5347984099943224
+ideal agents,3,2030,planner,wind_onshore,20.39051110655162
+ideal agents,3,2030,planner,wind_offshore,20.5532083193849
+ideal agents,3,2030,planner,solar,45.746983820182685
+ideal agents,3,2030,planner,hydro,1.5
+ideal agents,3,2030,planner,battery,3.7020109689213903
+ideal agents,3,2030,planner,pumped_hydro,2.9000000000000004
+ideal agents,3,2030,planner,nuclear,5.2299999999999995
+ideal agents,3,2030,agents,ccgt,31.845479025668862
+ideal agents,3,2030,agents,ocgt,1.4014354899812627
+ideal agents,3,2030,agents,biomass,3.5347984099943224
+ideal agents,3,2030,agents,wind_onshore,17.39051110655162
+ideal agents,3,2030,agents,wind_offshore,18.5532083193849
+ideal agents,3,2030,agents,solar,23.246983820182685
+ideal agents,3,2030,agents,hydro,1.5
+ideal agents,3,2030,agents,battery,16.702010968921392
+ideal agents,3,2030,agents,pumped_hydro,2.9000000000000004
+ideal agents,3,2030,agents,nuclear,5.2299999999999995
+ideal agents,3,2035,planner,ccgt,29.363211161429955
+ideal agents,3,2035,planner,ocgt,0.900908188026662
+ideal agents,3,2035,planner,biomass,2.0543265706468437
+ideal agents,3,2035,planner,wind_onshore,27.948446594602768
+ideal agents,3,2035,planner,wind_offshore,47.269440102019914
+ideal agents,3,2035,planner,solar,41.94528790098825
+ideal agents,3,2035,planner,hydro,1.5
+ideal agents,3,2035,planner,battery,2.394881170018282
+ideal agents,3,2035,planner,pumped_hydro,2.9000000000000004
+ideal agents,3,2035,planner,nuclear,4.46
+ideal agents,3,2035,agents,ccgt,29.144566742093033
+ideal agents,3,2035,agents,ocgt,7.800908188026659
+ideal agents,3,2035,agents,biomass,2.0543265706468437
+ideal agents,3,2035,agents,wind_onshore,19.948446594602768
+ideal agents,3,2035,agents,wind_offshore,35.91109629277669
+ideal agents,3,2035,agents,solar,26.945287900988248
+ideal agents,3,2035,agents,hydro,1.5
+ideal agents,3,2035,agents,battery,15.394881170018282
+ideal agents,3,2035,agents,pumped_hydro,2.9000000000000004
+ideal agents,3,2035,agents,nuclear,4.46
+ideal agents,3,2035,agents,gas_ccs,9.6
+ideal agents,3,2040,planner,ccgt,24.249047728540653
+ideal agents,3,2040,planner,ocgt,4.073035434018616
+ideal agents,3,2040,planner,biomass,0.5268917453925972
+ideal agents,3,2040,planner,wind_onshore,39.53219658110429
+ideal agents,3,2040,planner,wind_offshore,49.58984504155631
+ideal agents,3,2040,planner,solar,37.241730835177854
+ideal agents,3,2040,planner,hydro,1.5
+ideal agents,3,2040,planner,pumped_hydro,2.9000000000000004
+ideal agents,3,2040,planner,nuclear,6.459999999999999
+ideal agents,3,2040,planner,gas_ccs,2.670908301248585
+ideal agents,3,2040,agents,ccgt,24.03040330920373
+ideal agents,3,2040,agents,ocgt,18.169360172832196
+ideal agents,3,2040,agents,biomass,0.5268917453925972
+ideal agents,3,2040,agents,wind_onshore,26.532196581104284
+ideal agents,3,2040,agents,wind_offshore,50.68210803105731
+ideal agents,3,2040,agents,solar,29.741730835177854
+ideal agents,3,2040,agents,hydro,1.5
+ideal agents,3,2040,agents,pumped_hydro,2.9000000000000004
+ideal agents,3,2040,agents,nuclear,6.459999999999999
+ideal agents,3,2040,agents,battery,23.0
+ideal agents,3,2040,agents,gas_ccs,9.6
+ideal agents,3,2045,planner,ccgt,19.911553999850305
+ideal agents,3,2045,planner,ocgt,4.545180082742283
+ideal agents,3,2045,planner,biomass,0.3241505343038563
+ideal agents,3,2045,planner,wind_onshore,48.533065883394706
+ideal agents,3,2045,planner,wind_offshore,49.7005003980663
+ideal agents,3,2045,planner,solar,33.964148767029336
+ideal agents,3,2045,planner,hydro,1.5
+ideal agents,3,2045,planner,pumped_hydro,2.9000000000000004
+ideal agents,3,2045,planner,nuclear,6.459999999999999
+ideal agents,3,2045,planner,gas_ccs,8.258790946408725
+ideal agents,3,2045,agents,ccgt,19.692909580513383
+ideal agents,3,2045,agents,ocgt,22.730251773884763
+ideal agents,3,2045,agents,biomass,0.3241505343038563
+ideal agents,3,2045,agents,wind_onshore,30.533065883394706
+ideal agents,3,2045,agents,wind_offshore,70.03584927054199
+ideal agents,3,2045,agents,solar,33.964148767029336
+ideal agents,3,2045,agents,hydro,1.5
+ideal agents,3,2045,agents,pumped_hydro,2.9000000000000004
+ideal agents,3,2045,agents,nuclear,6.459999999999999
+ideal agents,3,2045,agents,gas_ccs,9.6
+ideal agents,3,2045,agents,battery,23.0
+ideal agents,3,2050,planner,wind_offshore,46.60510775088004
+ideal agents,3,2050,planner,solar,33.964148767029336
+ideal agents,3,2050,planner,hydro,1.5
+ideal agents,3,2050,planner,pumped_hydro,2.9000000000000004
+ideal agents,3,2050,planner,nuclear,6.459999999999999
+ideal agents,3,2050,planner,wind_onshore,57.5
+ideal agents,3,2050,planner,ccgt,8.18452279710441
+ideal agents,3,2050,planner,ocgt,11.87597411382978
+ideal agents,3,2050,planner,gas_ccs,13.902473880299299
+ideal agents,3,2050,agents,wind_offshore,85.17836355193677
+ideal agents,3,2050,agents,solar,41.464148767029336
+ideal agents,3,2050,agents,hydro,1.5
+ideal agents,3,2050,agents,pumped_hydro,2.9000000000000004
+ideal agents,3,2050,agents,nuclear,6.459999999999999
+ideal agents,3,2050,agents,wind_onshore,34.5
+ideal agents,3,2050,agents,ccgt,7.199999999999999
+ideal agents,3,2050,agents,gas_ccs,9.6
+ideal agents,3,2050,agents,ocgt,32.40000000000005
+ideal agents,3,2050,agents,battery,36.0
++ expectations,1,2025,planner,ccgt,30.000000000000004
++ expectations,1,2025,planner,ocgt,1.9999999999999996
++ expectations,1,2025,planner,biomass,3.8000000000000007
++ expectations,1,2025,planner,wind_onshore,14.999999999999996
++ expectations,1,2025,planner,wind_offshore,15.499999999999998
++ expectations,1,2025,planner,solar,18.000000000000004
++ expectations,1,2025,planner,hydro,1.5
++ expectations,1,2025,planner,battery,5.000000000000002
++ expectations,1,2025,planner,pumped_hydro,2.9000000000000004
++ expectations,1,2025,planner,nuclear,5.9
++ expectations,1,2025,agents,ccgt,30.000000000000004
++ expectations,1,2025,agents,ocgt,1.9999999999999996
++ expectations,1,2025,agents,biomass,3.8000000000000007
++ expectations,1,2025,agents,wind_onshore,14.999999999999996
++ expectations,1,2025,agents,wind_offshore,15.499999999999998
++ expectations,1,2025,agents,solar,18.000000000000004
++ expectations,1,2025,agents,hydro,1.5
++ expectations,1,2025,agents,battery,5.000000000000002
++ expectations,1,2025,agents,pumped_hydro,2.9000000000000004
++ expectations,1,2025,agents,nuclear,5.9
++ expectations,1,2030,planner,ccgt,32.40344574353444
++ expectations,1,2030,planner,ocgt,1.5577318848741128
++ expectations,1,2030,planner,biomass,3.475849465696145
++ expectations,1,2030,planner,wind_onshore,20.61550381737093
++ expectations,1,2030,planner,wind_offshore,19.289480362407264
++ expectations,1,2030,planner,solar,44.48916669264582
++ expectations,1,2030,planner,hydro,1.5
++ expectations,1,2030,planner,battery,3.0347349177330902
++ expectations,1,2030,planner,pumped_hydro,2.9000000000000004
++ expectations,1,2030,planner,nuclear,5.2299999999999995
++ expectations,1,2030,agents,ccgt,34.607752874563566
++ expectations,1,2030,agents,ocgt,1.5577318848741128
++ expectations,1,2030,agents,biomass,3.475849465696145
++ expectations,1,2030,agents,wind_onshore,17.61550381737093
++ expectations,1,2030,agents,wind_offshore,17.289480362407264
++ expectations,1,2030,agents,solar,21.989166692645817
++ expectations,1,2030,agents,hydro,1.5
++ expectations,1,2030,agents,battery,14.03473491773309
++ expectations,1,2030,agents,pumped_hydro,2.9000000000000004
++ expectations,1,2030,agents,nuclear,5.2299999999999995
++ expectations,1,2035,planner,ccgt,29.50041810881647
++ expectations,1,2035,planner,ocgt,1.4021112555929842
++ expectations,1,2035,planner,biomass,1.7785906767848851
++ expectations,1,2035,planner,wind_onshore,30.088469056078097
++ expectations,1,2035,planner,wind_offshore,46.3214987213706
++ expectations,1,2035,planner,solar,41.644792218723694
++ expectations,1,2035,planner,hydro,1.5
++ expectations,1,2035,planner,battery,1.7138939670932358
++ expectations,1,2035,planner,pumped_hydro,2.9000000000000004
++ expectations,1,2035,planner,nuclear,4.46
++ expectations,1,2035,agents,ccgt,31.704725239845608
++ expectations,1,2035,agents,ocgt,5.0021112555929825
++ expectations,1,2035,agents,biomass,1.7785906767848851
++ expectations,1,2035,agents,wind_onshore,22.088469056078097
++ expectations,1,2035,agents,wind_offshore,34.36323877196203
++ expectations,1,2035,agents,solar,26.644792218723694
++ expectations,1,2035,agents,hydro,1.5
++ expectations,1,2035,agents,battery,12.713893967093236
++ expectations,1,2035,agents,pumped_hydro,2.9000000000000004
++ expectations,1,2035,agents,nuclear,4.46
++ expectations,1,2035,agents,gas_ccs,9.6
++ expectations,1,2040,planner,ccgt,20.233119149980933
++ expectations,1,2040,planner,ocgt,7.267320329795452
++ expectations,1,2040,planner,biomass,1.6347984099943218
++ expectations,1,2040,planner,wind_onshore,39.12068183536171
++ expectations,1,2040,planner,wind_offshore,49.70933450667425
++ expectations,1,2040,planner,solar,39.84471739875924
++ expectations,1,2040,planner,hydro,1.5
++ expectations,1,2040,planner,pumped_hydro,2.9000000000000004
++ expectations,1,2040,planner,nuclear,6.459999999999999
++ expectations,1,2040,planner,gas_ccs,2.436076746507623
++ expectations,1,2040,agents,ccgt,21.6023365107969
++ expectations,1,2040,agents,ocgt,16.72311323169547
++ expectations,1,2040,agents,biomass,1.6347984099943218
++ expectations,1,2040,agents,wind_onshore,26.120681835361705
++ expectations,1,2040,agents,wind_offshore,53.10160307981383
++ expectations,1,2040,agents,solar,32.34471739875924
++ expectations,1,2040,agents,hydro,1.5
++ expectations,1,2040,agents,pumped_hydro,2.9000000000000004
++ expectations,1,2040,agents,nuclear,6.459999999999999
++ expectations,1,2040,agents,battery,26.5
++ expectations,1,2040,agents,gas_ccs,9.6
++ expectations,1,2045,planner,ccgt,14.4994015176179
++ expectations,1,2045,planner,ocgt,8.846950734289333
++ expectations,1,2045,planner,biomass,1.5878354240875538
++ expectations,1,2045,planner,wind_onshore,47.537525782102094
++ expectations,1,2045,planner,wind_offshore,49.76212588534586
++ expectations,1,2045,planner,solar,37.28353649032017
++ expectations,1,2045,planner,hydro,1.5
++ expectations,1,2045,planner,pumped_hydro,2.9000000000000004
++ expectations,1,2045,planner,nuclear,6.459999999999999
++ expectations,1,2045,planner,gas_ccs,7.712298969815089
++ expectations,1,2045,agents,ccgt,15.868618878433868
++ expectations,1,2045,agents,ocgt,23.546926802297637
++ expectations,1,2045,agents,biomass,1.5878354240875538
++ expectations,1,2045,agents,wind_onshore,29.537525782102094
++ expectations,1,2045,agents,wind_offshore,71.29907508396056
++ expectations,1,2045,agents,solar,37.28353649032017
++ expectations,1,2045,agents,hydro,1.5
++ expectations,1,2045,agents,pumped_hydro,2.9000000000000004
++ expectations,1,2045,agents,nuclear,6.459999999999999
++ expectations,1,2045,agents,gas_ccs,9.6
++ expectations,1,2045,agents,battery,32.5
++ expectations,1,2050,planner,wind_offshore,47.05987956045844
++ expectations,1,2050,planner,solar,33.50531351181348
++ expectations,1,2050,planner,hydro,1.5
++ expectations,1,2050,planner,pumped_hydro,2.9000000000000004
++ expectations,1,2050,planner,nuclear,6.459999999999999
++ expectations,1,2050,planner,wind_onshore,57.5
++ expectations,1,2050,planner,ccgt,9.830782639184038
++ expectations,1,2050,planner,ocgt,10.170486321578865
++ expectations,1,2050,planner,gas_ccs,13.347824365047773
++ expectations,1,2050,agents,wind_offshore,87.47056520847056
++ expectations,1,2050,agents,solar,40.89243071359541
++ expectations,1,2050,agents,hydro,1.5
++ expectations,1,2050,agents,pumped_hydro,2.9000000000000004
++ expectations,1,2050,agents,nuclear,6.459999999999999
++ expectations,1,2050,agents,wind_onshore,34.5
++ expectations,1,2050,agents,ccgt,11.200000000000001
++ expectations,1,2050,agents,gas_ccs,9.6
++ expectations,1,2050,agents,ocgt,28.800000000000047
++ expectations,1,2050,agents,battery,32.5
++ expectations,2,2025,planner,ccgt,30.000000000000004
++ expectations,2,2025,planner,ocgt,1.9999999999999996
++ expectations,2,2025,planner,biomass,3.8000000000000007
++ expectations,2,2025,planner,wind_onshore,14.999999999999996
++ expectations,2,2025,planner,wind_offshore,15.499999999999998
++ expectations,2,2025,planner,solar,18.000000000000004
++ expectations,2,2025,planner,hydro,1.5
++ expectations,2,2025,planner,battery,5.000000000000002
++ expectations,2,2025,planner,pumped_hydro,2.9000000000000004
++ expectations,2,2025,planner,nuclear,5.9
++ expectations,2,2025,agents,ccgt,30.000000000000004
++ expectations,2,2025,agents,ocgt,1.9999999999999996
++ expectations,2,2025,agents,biomass,3.8000000000000007
++ expectations,2,2025,agents,wind_onshore,14.999999999999996
++ expectations,2,2025,agents,wind_offshore,15.499999999999998
++ expectations,2,2025,agents,solar,18.000000000000004
++ expectations,2,2025,agents,hydro,1.5
++ expectations,2,2025,agents,battery,5.000000000000002
++ expectations,2,2025,agents,pumped_hydro,2.9000000000000004
++ expectations,2,2025,agents,nuclear,5.9
++ expectations,2,2030,planner,ccgt,30.68378264920597
++ expectations,2,2030,planner,ocgt,3.4942172363095887
++ expectations,2,2030,planner,biomass,0.4664911465592897
++ expectations,2,2030,planner,wind_onshore,20.761125449499474
++ expectations,2,2030,planner,wind_offshore,20.75758074792393
++ expectations,2,2030,planner,solar,40.65034136608785
++ expectations,2,2030,planner,hydro,1.5
++ expectations,2,2030,planner,battery,4.643510054844609
++ expectations,2,2030,planner,pumped_hydro,2.9000000000000004
++ expectations,2,2030,planner,nuclear,5.2299999999999995
++ expectations,2,2030,agents,ccgt,36.88378264920596
++ expectations,2,2030,agents,ocgt,1.6610113958655428
++ expectations,2,2030,agents,biomass,0.4664911465592897
++ expectations,2,2030,agents,wind_onshore,17.761125449499474
++ expectations,2,2030,agents,wind_offshore,18.75758074792393
++ expectations,2,2030,agents,solar,18.15034136608785
++ expectations,2,2030,agents,hydro,1.5
++ expectations,2,2030,agents,battery,14.143510054844608
++ expectations,2,2030,agents,pumped_hydro,2.9000000000000004
++ expectations,2,2030,agents,nuclear,5.2299999999999995
++ expectations,2,2035,planner,ccgt,28.464702583505343
++ expectations,2,2035,planner,ocgt,3.0818261523201147
++ expectations,2,2035,planner,biomass,0.3107129213773166
++ expectations,2,2035,planner,wind_onshore,30.51772080818116
++ expectations,2,2035,planner,wind_offshore,46.70484212399471
++ expectations,2,2035,planner,solar,40.03616298282258
++ expectations,2,2035,planner,hydro,1.5
++ expectations,2,2035,planner,battery,2.024680073126143
++ expectations,2,2035,planner,pumped_hydro,2.9000000000000004
++ expectations,2,2035,planner,nuclear,4.46
++ expectations,2,2035,agents,ccgt,32.268610687335546
++ expectations,2,2035,agents,ocgt,4.848620311876068
++ expectations,2,2035,agents,biomass,0.3107129213773166
++ expectations,2,2035,agents,wind_onshore,22.51772080818116
++ expectations,2,2035,agents,wind_offshore,34.705031154498236
++ expectations,2,2035,agents,solar,25.03616298282258
++ expectations,2,2035,agents,hydro,1.5
++ expectations,2,2035,agents,battery,12.524680073126143
++ expectations,2,2035,agents,pumped_hydro,2.9000000000000004
++ expectations,2,2035,agents,nuclear,4.46
++ expectations,2,2035,agents,gas_ccs,12.000000000000002
++ expectations,2,2040,planner,ccgt,24.845516983456196
++ expectations,2,2040,planner,ocgt,3.781492821187745
++ expectations,2,2040,planner,biomass,0.26374993547054876
++ expectations,2,2040,planner,wind_onshore,37.131788386985306
++ expectations,2,2040,planner,wind_offshore,51.074051865317244
++ expectations,2,2040,planner,solar,37.612463759079716
++ expectations,2,2040,planner,hydro,1.5
++ expectations,2,2040,planner,pumped_hydro,2.9000000000000004
++ expectations,2,2040,planner,nuclear,6.459999999999999
++ expectations,2,2040,planner,gas_ccs,3.1238067551759516
++ expectations,2,2040,agents,ccgt,28.649425087286403
++ expectations,2,2040,agents,ocgt,11.453249306316366
++ expectations,2,2040,agents,biomass,0.26374993547054876
++ expectations,2,2040,agents,wind_onshore,24.131788386985303
++ expectations,2,2040,agents,wind_offshore,51.073696316534026
++ expectations,2,2040,agents,solar,30.112463759079713
++ expectations,2,2040,agents,hydro,1.5
++ expectations,2,2040,agents,pumped_hydro,2.9000000000000004
++ expectations,2,2040,agents,nuclear,6.459999999999999
++ expectations,2,2040,agents,battery,20.5
++ expectations,2,2040,agents,gas_ccs,12.000000000000002
++ expectations,2,2045,planner,ccgt,15.001455017797376
++ expectations,2,2045,planner,ocgt,9.1578560016201
++ expectations,2,2045,planner,wind_onshore,46.73126140621794
++ expectations,2,2045,planner,wind_offshore,50.677107381877185
++ expectations,2,2045,planner,solar,35.79508682233376
++ expectations,2,2045,planner,hydro,1.5
++ expectations,2,2045,planner,pumped_hydro,2.9000000000000004
++ expectations,2,2045,planner,nuclear,6.459999999999999
++ expectations,2,2045,planner,gas_ccs,9.162240451737459
++ expectations,2,2045,agents,ccgt,18.80536312162758
++ expectations,2,2045,agents,ocgt,22.826343596096972
++ expectations,2,2045,agents,wind_onshore,28.73126140621794
++ expectations,2,2045,agents,wind_offshore,70.67675183309396
++ expectations,2,2045,agents,solar,35.79508682233376
++ expectations,2,2045,agents,hydro,1.5
++ expectations,2,2045,agents,pumped_hydro,2.9000000000000004
++ expectations,2,2045,agents,nuclear,6.459999999999999
++ expectations,2,2045,agents,gas_ccs,12.000000000000002
++ expectations,2,2045,agents,battery,26.0
++ expectations,2,2050,planner,wind_offshore,48.85248506942511
++ expectations,2,2050,planner,solar,33.17285592713694
++ expectations,2,2050,planner,hydro,1.5
++ expectations,2,2050,planner,pumped_hydro,2.9000000000000004
++ expectations,2,2050,planner,nuclear,6.459999999999999
++ expectations,2,2050,planner,wind_onshore,57.5
++ expectations,2,2050,planner,ccgt,11.396091896169805
++ expectations,2,2050,planner,ocgt,10.199040480012705
++ expectations,2,2050,planner,gas_ccs,12.890761920431672
++ expectations,2,2050,agents,wind_offshore,88.85212952064188
++ expectations,2,2050,agents,solar,40.043878791657576
++ expectations,2,2050,agents,hydro,1.5
++ expectations,2,2050,agents,pumped_hydro,2.9000000000000004
++ expectations,2,2050,agents,nuclear,6.459999999999999
++ expectations,2,2050,agents,wind_onshore,34.5
++ expectations,2,2050,agents,ccgt,15.200000000000005
++ expectations,2,2050,agents,gas_ccs,12.000000000000002
++ expectations,2,2050,agents,battery,28.0
++ expectations,2,2050,agents,ocgt,24.300000000000036
++ expectations,3,2025,planner,ccgt,30.000000000000004
++ expectations,3,2025,planner,ocgt,1.9999999999999996
++ expectations,3,2025,planner,biomass,3.8000000000000007
++ expectations,3,2025,planner,wind_onshore,14.999999999999996
++ expectations,3,2025,planner,wind_offshore,15.499999999999998
++ expectations,3,2025,planner,solar,18.000000000000004
++ expectations,3,2025,planner,hydro,1.5
++ expectations,3,2025,planner,battery,5.000000000000002
++ expectations,3,2025,planner,pumped_hydro,2.9000000000000004
++ expectations,3,2025,planner,nuclear,5.9
++ expectations,3,2025,agents,ccgt,30.000000000000004
++ expectations,3,2025,agents,ocgt,1.9999999999999996
++ expectations,3,2025,agents,biomass,3.8000000000000007
++ expectations,3,2025,agents,wind_onshore,14.999999999999996
++ expectations,3,2025,agents,wind_offshore,15.499999999999998
++ expectations,3,2025,agents,solar,18.000000000000004
++ expectations,3,2025,agents,hydro,1.5
++ expectations,3,2025,agents,battery,5.000000000000002
++ expectations,3,2025,agents,pumped_hydro,2.9000000000000004
++ expectations,3,2025,agents,nuclear,5.9
++ expectations,3,2030,planner,ccgt,32.08492744382576
++ expectations,3,2030,planner,ocgt,1.4014354899812627
++ expectations,3,2030,planner,biomass,3.5347984099943224
++ expectations,3,2030,planner,wind_onshore,20.39051110655162
++ expectations,3,2030,planner,wind_offshore,20.5532083193849
++ expectations,3,2030,planner,solar,45.746983820182685
++ expectations,3,2030,planner,hydro,1.5
++ expectations,3,2030,planner,battery,3.7020109689213903
++ expectations,3,2030,planner,pumped_hydro,2.9000000000000004
++ expectations,3,2030,planner,nuclear,5.2299999999999995
++ expectations,3,2030,agents,ccgt,33.44547902566886
++ expectations,3,2030,agents,ocgt,1.4014354899812627
++ expectations,3,2030,agents,biomass,3.5347984099943224
++ expectations,3,2030,agents,wind_onshore,17.39051110655162
++ expectations,3,2030,agents,wind_offshore,18.5532083193849
++ expectations,3,2030,agents,solar,23.246983820182685
++ expectations,3,2030,agents,hydro,1.5
++ expectations,3,2030,agents,battery,16.702010968921392
++ expectations,3,2030,agents,pumped_hydro,2.9000000000000004
++ expectations,3,2030,agents,nuclear,5.2299999999999995
++ expectations,3,2035,planner,ccgt,29.38401516024993
++ expectations,3,2035,planner,ocgt,0.900908188026662
++ expectations,3,2035,planner,biomass,2.0543265706468437
++ expectations,3,2035,planner,wind_onshore,27.948446594602768
++ expectations,3,2035,planner,wind_offshore,47.27267500272036
++ expectations,3,2035,planner,solar,41.94528790098825
++ expectations,3,2035,planner,hydro,1.5
++ expectations,3,2035,planner,battery,2.394881170018282
++ expectations,3,2035,planner,pumped_hydro,2.9000000000000004
++ expectations,3,2035,planner,nuclear,4.46
++ expectations,3,2035,agents,ccgt,30.744566742093035
++ expectations,3,2035,agents,ocgt,6.30090818802666
++ expectations,3,2035,agents,biomass,2.0543265706468437
++ expectations,3,2035,agents,wind_onshore,19.948446594602768
++ expectations,3,2035,agents,wind_offshore,35.91109629277669
++ expectations,3,2035,agents,solar,26.945287900988248
++ expectations,3,2035,agents,hydro,1.5
++ expectations,3,2035,agents,battery,15.394881170018282
++ expectations,3,2035,agents,pumped_hydro,2.9000000000000004
++ expectations,3,2035,agents,nuclear,4.46
++ expectations,3,2035,agents,gas_ccs,9.6
++ expectations,3,2040,planner,ccgt,24.269851727360628
++ expectations,3,2040,planner,ocgt,4.082541213895161
++ expectations,3,2040,planner,biomass,0.5268917453925972
++ expectations,3,2040,planner,wind_onshore,39.53219658110429
++ expectations,3,2040,planner,wind_offshore,49.646841334751755
++ expectations,3,2040,planner,solar,37.241730835177854
++ expectations,3,2040,planner,hydro,1.5
++ expectations,3,2040,planner,pumped_hydro,2.9000000000000004
++ expectations,3,2040,planner,nuclear,6.459999999999999
++ expectations,3,2040,planner,gas_ccs,2.6829015792351845
++ expectations,3,2040,agents,ccgt,25.630403309203732
++ expectations,3,2040,agents,ocgt,16.669360172832192
++ expectations,3,2040,agents,biomass,0.5268917453925972
++ expectations,3,2040,agents,wind_onshore,26.532196581104284
++ expectations,3,2040,agents,wind_offshore,50.68210803105731
++ expectations,3,2040,agents,solar,29.741730835177854
++ expectations,3,2040,agents,hydro,1.5
++ expectations,3,2040,agents,pumped_hydro,2.9000000000000004
++ expectations,3,2040,agents,nuclear,6.459999999999999
++ expectations,3,2040,agents,battery,23.0
++ expectations,3,2040,agents,gas_ccs,9.6
++ expectations,3,2045,planner,ccgt,19.93235799867028
++ expectations,3,2045,planner,ocgt,4.524653231426808
++ expectations,3,2045,planner,biomass,0.3241505343038563
++ expectations,3,2045,planner,wind_onshore,48.533065883394706
++ expectations,3,2045,planner,wind_offshore,49.70083978625586
++ expectations,3,2045,planner,solar,33.964148767029336
++ expectations,3,2045,planner,hydro,1.5
++ expectations,3,2045,planner,pumped_hydro,2.9000000000000004
++ expectations,3,2045,planner,nuclear,6.459999999999999
++ expectations,3,2045,planner,gas_ccs,8.261349617718466
++ expectations,3,2045,agents,ccgt,21.292909580513385
++ expectations,3,2045,agents,ocgt,23.030251773884764
++ expectations,3,2045,agents,biomass,0.3241505343038563
++ expectations,3,2045,agents,wind_onshore,30.533065883394706
++ expectations,3,2045,agents,wind_offshore,70.03584927054199
++ expectations,3,2045,agents,solar,33.964148767029336
++ expectations,3,2045,agents,hydro,1.5
++ expectations,3,2045,agents,pumped_hydro,2.9000000000000004
++ expectations,3,2045,agents,nuclear,6.459999999999999
++ expectations,3,2045,agents,gas_ccs,9.6
++ expectations,3,2045,agents,battery,23.0
++ expectations,3,2050,planner,wind_offshore,46.91894066346242
++ expectations,3,2050,planner,solar,33.964148767029336
++ expectations,3,2050,planner,hydro,1.5
++ expectations,3,2050,planner,pumped_hydro,2.9000000000000004
++ expectations,3,2050,planner,nuclear,6.459999999999999
++ expectations,3,2050,planner,wind_onshore,57.5
++ expectations,3,2050,planner,ccgt,8.381665017610597
++ expectations,3,2050,planner,ocgt,11.841706737774967
++ expectations,3,2050,planner,gas_ccs,13.979114056112437
++ expectations,3,2050,agents,wind_offshore,85.17836355193677
++ expectations,3,2050,agents,solar,41.464148767029336
++ expectations,3,2050,agents,hydro,1.5
++ expectations,3,2050,agents,pumped_hydro,2.9000000000000004
++ expectations,3,2050,agents,nuclear,6.459999999999999
++ expectations,3,2050,agents,wind_onshore,34.5
++ expectations,3,2050,agents,ccgt,8.799999999999999
++ expectations,3,2050,agents,gas_ccs,9.6
++ expectations,3,2050,agents,ocgt,31.200000000000053
++ expectations,3,2050,agents,battery,35.0
++ cost of capital and risk,1,2025,planner,ccgt,30.000000000000004
++ cost of capital and risk,1,2025,planner,ocgt,1.9999999999999996
++ cost of capital and risk,1,2025,planner,biomass,3.8000000000000007
++ cost of capital and risk,1,2025,planner,wind_onshore,14.999999999999996
++ cost of capital and risk,1,2025,planner,wind_offshore,15.499999999999998
++ cost of capital and risk,1,2025,planner,solar,18.000000000000004
++ cost of capital and risk,1,2025,planner,hydro,1.5
++ cost of capital and risk,1,2025,planner,battery,5.000000000000002
++ cost of capital and risk,1,2025,planner,pumped_hydro,2.9000000000000004
++ cost of capital and risk,1,2025,planner,nuclear,5.9
++ cost of capital and risk,1,2025,agents,ccgt,30.000000000000004
++ cost of capital and risk,1,2025,agents,ocgt,1.9999999999999996
++ cost of capital and risk,1,2025,agents,biomass,3.8000000000000007
++ cost of capital and risk,1,2025,agents,wind_onshore,14.999999999999996
++ cost of capital and risk,1,2025,agents,wind_offshore,15.499999999999998
++ cost of capital and risk,1,2025,agents,solar,18.000000000000004
++ cost of capital and risk,1,2025,agents,hydro,1.5
++ cost of capital and risk,1,2025,agents,battery,5.000000000000002
++ cost of capital and risk,1,2025,agents,pumped_hydro,2.9000000000000004
++ cost of capital and risk,1,2025,agents,nuclear,5.9
++ cost of capital and risk,1,2030,planner,ccgt,32.3751439879644
++ cost of capital and risk,1,2030,planner,ocgt,1.5577318848741128
++ cost of capital and risk,1,2030,planner,biomass,3.475849465696145
++ cost of capital and risk,1,2030,planner,wind_onshore,20.61550381737093
++ cost of capital and risk,1,2030,planner,wind_offshore,19.289480362407264
++ cost of capital and risk,1,2030,planner,solar,44.48916669264582
++ cost of capital and risk,1,2030,planner,hydro,1.5
++ cost of capital and risk,1,2030,planner,battery,3.0347349177330902
++ cost of capital and risk,1,2030,planner,pumped_hydro,2.9000000000000004
++ cost of capital and risk,1,2030,planner,nuclear,5.2299999999999995
++ cost of capital and risk,1,2030,agents,ccgt,34.607752874563566
++ cost of capital and risk,1,2030,agents,ocgt,1.5577318848741128
++ cost of capital and risk,1,2030,agents,biomass,3.475849465696145
++ cost of capital and risk,1,2030,agents,wind_onshore,17.61550381737093
++ cost of capital and risk,1,2030,agents,wind_offshore,17.289480362407264
++ cost of capital and risk,1,2030,agents,solar,21.989166692645817
++ cost of capital and risk,1,2030,agents,hydro,1.5
++ cost of capital and risk,1,2030,agents,battery,6.03473491773309
++ cost of capital and risk,1,2030,agents,pumped_hydro,2.9000000000000004
++ cost of capital and risk,1,2030,agents,nuclear,5.2299999999999995
++ cost of capital and risk,1,2035,planner,ccgt,29.472116353246427
++ cost of capital and risk,1,2035,planner,ocgt,1.4021112555929842
++ cost of capital and risk,1,2035,planner,biomass,1.7785906767848851
++ cost of capital and risk,1,2035,planner,wind_onshore,30.088469056078097
++ cost of capital and risk,1,2035,planner,wind_offshore,46.296459454222436
++ cost of capital and risk,1,2035,planner,solar,41.644792218723694
++ cost of capital and risk,1,2035,planner,hydro,1.5
++ cost of capital and risk,1,2035,planner,battery,1.7138939670932358
++ cost of capital and risk,1,2035,planner,pumped_hydro,2.9000000000000004
++ cost of capital and risk,1,2035,planner,nuclear,4.46
++ cost of capital and risk,1,2035,agents,ccgt,31.704725239845608
++ cost of capital and risk,1,2035,agents,ocgt,4.702111255592983
++ cost of capital and risk,1,2035,agents,biomass,1.7785906767848851
++ cost of capital and risk,1,2035,agents,wind_onshore,22.088469056078097
++ cost of capital and risk,1,2035,agents,wind_offshore,34.36323877196203
++ cost of capital and risk,1,2035,agents,solar,26.644792218723694
++ cost of capital and risk,1,2035,agents,hydro,1.5
++ cost of capital and risk,1,2035,agents,battery,15.713893967093236
++ cost of capital and risk,1,2035,agents,pumped_hydro,2.9000000000000004
++ cost of capital and risk,1,2035,agents,nuclear,4.46
++ cost of capital and risk,1,2035,agents,gas_ccs,9.6
++ cost of capital and risk,1,2040,planner,ccgt,20.22280036829828
++ cost of capital and risk,1,2040,planner,ocgt,7.2327815867291605
++ cost of capital and risk,1,2040,planner,biomass,1.6347984099943218
++ cost of capital and risk,1,2040,planner,wind_onshore,39.12068183536171
++ cost of capital and risk,1,2040,planner,wind_offshore,49.632888239170214
++ cost of capital and risk,1,2040,planner,solar,39.84471739875924
++ cost of capital and risk,1,2040,planner,hydro,1.5
++ cost of capital and risk,1,2040,planner,pumped_hydro,2.9000000000000004
++ cost of capital and risk,1,2040,planner,nuclear,6.459999999999999
++ cost of capital and risk,1,2040,planner,gas_ccs,2.4126061688204814
++ cost of capital and risk,1,2040,agents,ccgt,21.6023365107969
++ cost of capital and risk,1,2040,agents,ocgt,16.12311323169547
++ cost of capital and risk,1,2040,agents,biomass,1.6347984099943218
++ cost of capital and risk,1,2040,agents,wind_onshore,26.120681835361705
++ cost of capital and risk,1,2040,agents,wind_offshore,53.10160307981383
++ cost of capital and risk,1,2040,agents,solar,32.34471739875924
++ cost of capital and risk,1,2040,agents,hydro,1.5
++ cost of capital and risk,1,2040,agents,pumped_hydro,2.9000000000000004
++ cost of capital and risk,1,2040,agents,nuclear,6.459999999999999
++ cost of capital and risk,1,2040,agents,battery,16.0
++ cost of capital and risk,1,2040,agents,gas_ccs,9.6
++ cost of capital and risk,1,2045,planner,ccgt,14.489082735935254
++ cost of capital and risk,1,2045,planner,ocgt,8.839852219195162
++ cost of capital and risk,1,2045,planner,biomass,1.5878354240875538
++ cost of capital and risk,1,2045,planner,wind_onshore,47.537525782102094
++ cost of capital and risk,1,2045,planner,wind_offshore,49.71415409117421
++ cost of capital and risk,1,2045,planner,solar,37.28353649032017
++ cost of capital and risk,1,2045,planner,hydro,1.5
++ cost of capital and risk,1,2045,planner,pumped_hydro,2.9000000000000004
++ cost of capital and risk,1,2045,planner,nuclear,6.459999999999999
++ cost of capital and risk,1,2045,planner,gas_ccs,7.706122686896403
++ cost of capital and risk,1,2045,agents,ccgt,15.868618878433868
++ cost of capital and risk,1,2045,agents,ocgt,24.14692680229764
++ cost of capital and risk,1,2045,agents,biomass,1.5878354240875538
++ cost of capital and risk,1,2045,agents,wind_onshore,29.537525782102094
++ cost of capital and risk,1,2045,agents,wind_offshore,71.29907508396056
++ cost of capital and risk,1,2045,agents,solar,37.28353649032017
++ cost of capital and risk,1,2045,agents,hydro,1.5
++ cost of capital and risk,1,2045,agents,pumped_hydro,2.9000000000000004
++ cost of capital and risk,1,2045,agents,nuclear,6.459999999999999
++ cost of capital and risk,1,2045,agents,gas_ccs,9.6
++ cost of capital and risk,1,2045,agents,battery,20.5
++ cost of capital and risk,1,2050,planner,wind_offshore,47.019304996057414
++ cost of capital and risk,1,2050,planner,solar,33.50596850670331
++ cost of capital and risk,1,2050,planner,hydro,1.5
++ cost of capital and risk,1,2050,planner,pumped_hydro,2.9000000000000004
++ cost of capital and risk,1,2050,planner,nuclear,6.459999999999999
++ cost of capital and risk,1,2050,planner,wind_onshore,57.5
++ cost of capital and risk,1,2050,planner,ccgt,9.820463857501391
++ cost of capital and risk,1,2050,planner,ocgt,10.127749184508101
++ cost of capital and risk,1,2050,planner,gas_ccs,13.35046177586251
++ cost of capital and risk,1,2050,agents,wind_offshore,87.47056520847056
++ cost of capital and risk,1,2050,agents,solar,40.89243071359541
++ cost of capital and risk,1,2050,agents,hydro,1.5
++ cost of capital and risk,1,2050,agents,pumped_hydro,2.9000000000000004
++ cost of capital and risk,1,2050,agents,nuclear,6.459999999999999
++ cost of capital and risk,1,2050,agents,wind_onshore,34.5
++ cost of capital and risk,1,2050,agents,ccgt,11.200000000000001
++ cost of capital and risk,1,2050,agents,gas_ccs,9.6
++ cost of capital and risk,1,2050,agents,ocgt,30.00000000000005
++ cost of capital and risk,1,2050,agents,battery,24.0
++ cost of capital and risk,2,2025,planner,ccgt,30.000000000000004
++ cost of capital and risk,2,2025,planner,ocgt,1.9999999999999996
++ cost of capital and risk,2,2025,planner,biomass,3.8000000000000007
++ cost of capital and risk,2,2025,planner,wind_onshore,14.999999999999996
++ cost of capital and risk,2,2025,planner,wind_offshore,15.499999999999998
++ cost of capital and risk,2,2025,planner,solar,18.000000000000004
++ cost of capital and risk,2,2025,planner,hydro,1.5
++ cost of capital and risk,2,2025,planner,battery,5.000000000000002
++ cost of capital and risk,2,2025,planner,pumped_hydro,2.9000000000000004
++ cost of capital and risk,2,2025,planner,nuclear,5.9
++ cost of capital and risk,2,2025,agents,ccgt,30.000000000000004
++ cost of capital and risk,2,2025,agents,ocgt,1.9999999999999996
++ cost of capital and risk,2,2025,agents,biomass,3.8000000000000007
++ cost of capital and risk,2,2025,agents,wind_onshore,14.999999999999996
++ cost of capital and risk,2,2025,agents,wind_offshore,15.499999999999998
++ cost of capital and risk,2,2025,agents,solar,18.000000000000004
++ cost of capital and risk,2,2025,agents,hydro,1.5
++ cost of capital and risk,2,2025,agents,battery,5.000000000000002
++ cost of capital and risk,2,2025,agents,pumped_hydro,2.9000000000000004
++ cost of capital and risk,2,2025,agents,nuclear,5.9
++ cost of capital and risk,2,2030,planner,ccgt,30.68378264920597
++ cost of capital and risk,2,2030,planner,ocgt,3.4568711084072894
++ cost of capital and risk,2,2030,planner,biomass,0.4664911465592897
++ cost of capital and risk,2,2030,planner,wind_onshore,20.761125449499474
++ cost of capital and risk,2,2030,planner,wind_offshore,20.75758074792393
++ cost of capital and risk,2,2030,planner,solar,40.65034136608785
++ cost of capital and risk,2,2030,planner,hydro,1.5
++ cost of capital and risk,2,2030,planner,battery,4.643510054844609
++ cost of capital and risk,2,2030,planner,pumped_hydro,2.9000000000000004
++ cost of capital and risk,2,2030,planner,nuclear,5.2299999999999995
++ cost of capital and risk,2,2030,agents,ccgt,36.88378264920596
++ cost of capital and risk,2,2030,agents,ocgt,1.6610113958655428
++ cost of capital and risk,2,2030,agents,biomass,0.4664911465592897
++ cost of capital and risk,2,2030,agents,wind_onshore,17.761125449499474
++ cost of capital and risk,2,2030,agents,wind_offshore,18.75758074792393
++ cost of capital and risk,2,2030,agents,solar,18.15034136608785
++ cost of capital and risk,2,2030,agents,hydro,1.5
++ cost of capital and risk,2,2030,agents,battery,6.143510054844609
++ cost of capital and risk,2,2030,agents,pumped_hydro,2.9000000000000004
++ cost of capital and risk,2,2030,agents,nuclear,5.2299999999999995
++ cost of capital and risk,2,2035,planner,ccgt,28.42081528021252
++ cost of capital and risk,2,2035,planner,ocgt,3.0444800244178154
++ cost of capital and risk,2,2035,planner,biomass,0.3107129213773166
++ cost of capital and risk,2,2035,planner,wind_onshore,30.51772080818116
++ cost of capital and risk,2,2035,planner,wind_offshore,46.63860338123217
++ cost of capital and risk,2,2035,planner,solar,40.03616298282258
++ cost of capital and risk,2,2035,planner,hydro,1.5
++ cost of capital and risk,2,2035,planner,battery,2.024680073126143
++ cost of capital and risk,2,2035,planner,pumped_hydro,2.9000000000000004
++ cost of capital and risk,2,2035,planner,nuclear,4.46
++ cost of capital and risk,2,2035,agents,ccgt,32.268610687335546
++ cost of capital and risk,2,2035,agents,ocgt,6.048620311876067
++ cost of capital and risk,2,2035,agents,biomass,0.3107129213773166
++ cost of capital and risk,2,2035,agents,wind_onshore,22.51772080818116
++ cost of capital and risk,2,2035,agents,wind_offshore,34.705031154498236
++ cost of capital and risk,2,2035,agents,solar,25.03616298282258
++ cost of capital and risk,2,2035,agents,hydro,1.5
++ cost of capital and risk,2,2035,agents,battery,15.524680073126143
++ cost of capital and risk,2,2035,agents,pumped_hydro,2.9000000000000004
++ cost of capital and risk,2,2035,agents,nuclear,4.46
++ cost of capital and risk,2,2035,agents,gas_ccs,8.799999999999999
++ cost of capital and risk,2,2040,planner,ccgt,24.801629680163373
++ cost of capital and risk,2,2040,planner,ocgt,3.7105634970201113
++ cost of capital and risk,2,2040,planner,biomass,0.26374993547054876
++ cost of capital and risk,2,2040,planner,wind_onshore,37.131788386985306
++ cost of capital and risk,2,2040,planner,wind_offshore,50.90400702837903
++ cost of capital and risk,2,2040,planner,solar,37.612463759079716
++ cost of capital and risk,2,2040,planner,hydro,1.5
++ cost of capital and risk,2,2040,planner,pumped_hydro,2.9000000000000004
++ cost of capital and risk,2,2040,planner,nuclear,6.459999999999999
++ cost of capital and risk,2,2040,planner,gas_ccs,3.1452342428138884
++ cost of capital and risk,2,2040,agents,ccgt,28.649425087286403
++ cost of capital and risk,2,2040,agents,ocgt,15.053249306316374
++ cost of capital and risk,2,2040,agents,biomass,0.26374993547054876
++ cost of capital and risk,2,2040,agents,wind_onshore,24.131788386985303
++ cost of capital and risk,2,2040,agents,wind_offshore,51.073696316534026
++ cost of capital and risk,2,2040,agents,solar,30.112463759079713
++ cost of capital and risk,2,2040,agents,hydro,1.5
++ cost of capital and risk,2,2040,agents,pumped_hydro,2.9000000000000004
++ cost of capital and risk,2,2040,agents,nuclear,6.459999999999999
++ cost of capital and risk,2,2040,agents,battery,15.0
++ cost of capital and risk,2,2040,agents,gas_ccs,8.799999999999999
++ cost of capital and risk,2,2045,planner,ccgt,14.957567714504552
++ cost of capital and risk,2,2045,planner,ocgt,9.159545281904636
++ cost of capital and risk,2,2045,planner,wind_onshore,46.73126140621794
++ cost of capital and risk,2,2045,planner,wind_offshore,50.50706254493897
++ cost of capital and risk,2,2045,planner,solar,35.79508682233376
++ cost of capital and risk,2,2045,planner,hydro,1.5
++ cost of capital and risk,2,2045,planner,pumped_hydro,2.9000000000000004
++ cost of capital and risk,2,2045,planner,nuclear,6.459999999999999
++ cost of capital and risk,2,2045,planner,gas_ccs,9.127852265759541
++ cost of capital and risk,2,2045,agents,ccgt,18.80536312162758
++ cost of capital and risk,2,2045,agents,ocgt,25.82634359609698
++ cost of capital and risk,2,2045,agents,wind_onshore,28.73126140621794
++ cost of capital and risk,2,2045,agents,wind_offshore,70.67675183309396
++ cost of capital and risk,2,2045,agents,solar,35.79508682233376
++ cost of capital and risk,2,2045,agents,hydro,1.5
++ cost of capital and risk,2,2045,agents,pumped_hydro,2.9000000000000004
++ cost of capital and risk,2,2045,agents,nuclear,6.459999999999999
++ cost of capital and risk,2,2045,agents,gas_ccs,8.799999999999999
++ cost of capital and risk,2,2045,agents,battery,21.0
++ cost of capital and risk,2,2050,planner,wind_offshore,48.68244023248689
++ cost of capital and risk,2,2050,planner,solar,32.91237119038143
++ cost of capital and risk,2,2050,planner,hydro,1.5
++ cost of capital and risk,2,2050,planner,pumped_hydro,2.9000000000000004
++ cost of capital and risk,2,2050,planner,nuclear,6.459999999999999
++ cost of capital and risk,2,2050,planner,wind_onshore,57.5
++ cost of capital and risk,2,2050,planner,ccgt,11.352204592876983
++ cost of capital and risk,2,2050,planner,ocgt,10.048237604051227
++ cost of capital and risk,2,2050,planner,gas_ccs,12.719228110177784
++ cost of capital and risk,2,2050,agents,wind_offshore,88.85212952064188
++ cost of capital and risk,2,2050,agents,solar,40.043878791657576
++ cost of capital and risk,2,2050,agents,hydro,1.5
++ cost of capital and risk,2,2050,agents,pumped_hydro,2.9000000000000004
++ cost of capital and risk,2,2050,agents,nuclear,6.459999999999999
++ cost of capital and risk,2,2050,agents,wind_onshore,34.5
++ cost of capital and risk,2,2050,agents,ccgt,15.200000000000005
++ cost of capital and risk,2,2050,agents,gas_ccs,8.799999999999999
++ cost of capital and risk,2,2050,agents,ocgt,27.900000000000045
++ cost of capital and risk,2,2050,agents,battery,22.0
++ cost of capital and risk,3,2025,planner,ccgt,30.000000000000004
++ cost of capital and risk,3,2025,planner,ocgt,1.9999999999999996
++ cost of capital and risk,3,2025,planner,biomass,3.8000000000000007
++ cost of capital and risk,3,2025,planner,wind_onshore,14.999999999999996
++ cost of capital and risk,3,2025,planner,wind_offshore,15.499999999999998
++ cost of capital and risk,3,2025,planner,solar,18.000000000000004
++ cost of capital and risk,3,2025,planner,hydro,1.5
++ cost of capital and risk,3,2025,planner,battery,5.000000000000002
++ cost of capital and risk,3,2025,planner,pumped_hydro,2.9000000000000004
++ cost of capital and risk,3,2025,planner,nuclear,5.9
++ cost of capital and risk,3,2025,agents,ccgt,30.000000000000004
++ cost of capital and risk,3,2025,agents,ocgt,1.9999999999999996
++ cost of capital and risk,3,2025,agents,biomass,3.8000000000000007
++ cost of capital and risk,3,2025,agents,wind_onshore,14.999999999999996
++ cost of capital and risk,3,2025,agents,wind_offshore,15.499999999999998
++ cost of capital and risk,3,2025,agents,solar,18.000000000000004
++ cost of capital and risk,3,2025,agents,hydro,1.5
++ cost of capital and risk,3,2025,agents,battery,5.000000000000002
++ cost of capital and risk,3,2025,agents,pumped_hydro,2.9000000000000004
++ cost of capital and risk,3,2025,agents,nuclear,5.9
++ cost of capital and risk,3,2030,planner,ccgt,32.01590967476453
++ cost of capital and risk,3,2030,planner,ocgt,1.4014354899812627
++ cost of capital and risk,3,2030,planner,biomass,3.5347984099943224
++ cost of capital and risk,3,2030,planner,wind_onshore,20.39051110655162
++ cost of capital and risk,3,2030,planner,wind_offshore,20.5532083193849
++ cost of capital and risk,3,2030,planner,solar,45.746983820182685
++ cost of capital and risk,3,2030,planner,hydro,1.5
++ cost of capital and risk,3,2030,planner,battery,3.7020109689213903
++ cost of capital and risk,3,2030,planner,pumped_hydro,2.9000000000000004
++ cost of capital and risk,3,2030,planner,nuclear,5.2299999999999995
++ cost of capital and risk,3,2030,agents,ccgt,32.64547902566886
++ cost of capital and risk,3,2030,agents,ocgt,1.4014354899812627
++ cost of capital and risk,3,2030,agents,biomass,3.5347984099943224
++ cost of capital and risk,3,2030,agents,wind_onshore,17.39051110655162
++ cost of capital and risk,3,2030,agents,wind_offshore,18.5532083193849
++ cost of capital and risk,3,2030,agents,solar,23.246983820182685
++ cost of capital and risk,3,2030,agents,hydro,1.5
++ cost of capital and risk,3,2030,agents,battery,9.70201096892139
++ cost of capital and risk,3,2030,agents,pumped_hydro,2.9000000000000004
++ cost of capital and risk,3,2030,agents,nuclear,5.2299999999999995
++ cost of capital and risk,3,2035,planner,ccgt,29.314997391188697
++ cost of capital and risk,3,2035,planner,ocgt,0.900908188026662
++ cost of capital and risk,3,2035,planner,biomass,2.0543265706468437
++ cost of capital and risk,3,2035,planner,wind_onshore,27.948446594602768
++ cost of capital and risk,3,2035,planner,wind_offshore,47.25642152542214
++ cost of capital and risk,3,2035,planner,solar,41.94528790098825
++ cost of capital and risk,3,2035,planner,hydro,1.5
++ cost of capital and risk,3,2035,planner,battery,2.394881170018282
++ cost of capital and risk,3,2035,planner,pumped_hydro,2.9000000000000004
++ cost of capital and risk,3,2035,planner,nuclear,4.46
++ cost of capital and risk,3,2035,agents,ccgt,29.944566742093034
++ cost of capital and risk,3,2035,agents,ocgt,6.60090818802666
++ cost of capital and risk,3,2035,agents,biomass,2.0543265706468437
++ cost of capital and risk,3,2035,agents,wind_onshore,19.948446594602768
++ cost of capital and risk,3,2035,agents,wind_offshore,35.91109629277669
++ cost of capital and risk,3,2035,agents,solar,26.945287900988248
++ cost of capital and risk,3,2035,agents,hydro,1.5
++ cost of capital and risk,3,2035,agents,battery,14.394881170018282
++ cost of capital and risk,3,2035,agents,pumped_hydro,2.9000000000000004
++ cost of capital and risk,3,2035,agents,nuclear,4.46
++ cost of capital and risk,3,2035,agents,gas_ccs,9.6
++ cost of capital and risk,3,2040,planner,ccgt,24.2008339582994
++ cost of capital and risk,3,2040,planner,ocgt,4.075858730138536
++ cost of capital and risk,3,2040,planner,biomass,0.5268917453925972
++ cost of capital and risk,3,2040,planner,wind_onshore,39.53219658110429
++ cost of capital and risk,3,2040,planner,wind_offshore,49.46412627751669
++ cost of capital and risk,3,2040,planner,solar,37.241730835177854
++ cost of capital and risk,3,2040,planner,hydro,1.5
++ cost of capital and risk,3,2040,planner,pumped_hydro,2.9000000000000004
++ cost of capital and risk,3,2040,planner,nuclear,6.459999999999999
++ cost of capital and risk,3,2040,planner,gas_ccs,2.6470996754909164
++ cost of capital and risk,3,2040,agents,ccgt,24.83040330920373
++ cost of capital and risk,3,2040,agents,ocgt,18.169360172832196
++ cost of capital and risk,3,2040,agents,biomass,0.5268917453925972
++ cost of capital and risk,3,2040,agents,wind_onshore,26.532196581104284
++ cost of capital and risk,3,2040,agents,wind_offshore,50.68210803105731
++ cost of capital and risk,3,2040,agents,solar,29.741730835177854
++ cost of capital and risk,3,2040,agents,hydro,1.5
++ cost of capital and risk,3,2040,agents,pumped_hydro,2.9000000000000004
++ cost of capital and risk,3,2040,agents,nuclear,6.459999999999999
++ cost of capital and risk,3,2040,agents,battery,15.5
++ cost of capital and risk,3,2040,agents,gas_ccs,9.6
++ cost of capital and risk,3,2045,planner,ccgt,19.86334022960905
++ cost of capital and risk,3,2045,planner,ocgt,4.450656741416068
++ cost of capital and risk,3,2045,planner,biomass,0.3241505343038563
++ cost of capital and risk,3,2045,planner,wind_onshore,48.533065883394706
++ cost of capital and risk,3,2045,planner,wind_offshore,49.311468245579206
++ cost of capital and risk,3,2045,planner,solar,33.964148767029336
++ cost of capital and risk,3,2045,planner,hydro,1.5
++ cost of capital and risk,3,2045,planner,pumped_hydro,2.9000000000000004
++ cost of capital and risk,3,2045,planner,nuclear,6.459999999999999
++ cost of capital and risk,3,2045,planner,gas_ccs,8.149048538870193
++ cost of capital and risk,3,2045,agents,ccgt,20.492909580513384
++ cost of capital and risk,3,2045,agents,ocgt,23.030251773884764
++ cost of capital and risk,3,2045,agents,biomass,0.3241505343038563
++ cost of capital and risk,3,2045,agents,wind_onshore,30.533065883394706
++ cost of capital and risk,3,2045,agents,wind_offshore,70.03584927054199
++ cost of capital and risk,3,2045,agents,solar,33.964148767029336
++ cost of capital and risk,3,2045,agents,hydro,1.5
++ cost of capital and risk,3,2045,agents,pumped_hydro,2.9000000000000004
++ cost of capital and risk,3,2045,agents,nuclear,6.459999999999999
++ cost of capital and risk,3,2045,agents,gas_ccs,9.6
++ cost of capital and risk,3,2045,agents,battery,19.5
++ cost of capital and risk,3,2050,planner,wind_offshore,46.23322101520591
++ cost of capital and risk,3,2050,planner,solar,33.964148767029336
++ cost of capital and risk,3,2050,planner,hydro,1.5
++ cost of capital and risk,3,2050,planner,pumped_hydro,2.9000000000000004
++ cost of capital and risk,3,2050,planner,nuclear,6.459999999999999
++ cost of capital and risk,3,2050,planner,wind_onshore,57.5
++ cost of capital and risk,3,2050,planner,ccgt,7.897388758599551
++ cost of capital and risk,3,2050,planner,ocgt,11.88299869792726
++ cost of capital and risk,3,2050,planner,gas_ccs,13.710941799727738
++ cost of capital and risk,3,2050,agents,wind_offshore,85.17836355193677
++ cost of capital and risk,3,2050,agents,solar,41.464148767029336
++ cost of capital and risk,3,2050,agents,hydro,1.5
++ cost of capital and risk,3,2050,agents,pumped_hydro,2.9000000000000004
++ cost of capital and risk,3,2050,agents,nuclear,6.459999999999999
++ cost of capital and risk,3,2050,agents,wind_onshore,34.5
++ cost of capital and risk,3,2050,agents,ccgt,7.999999999999999
++ cost of capital and risk,3,2050,agents,gas_ccs,9.6
++ cost of capital and risk,3,2050,agents,ocgt,32.10000000000005
++ cost of capital and risk,3,2050,agents,battery,25.5
++ strategic mark-ups (full model),1,2025,planner,ccgt,30.000000000000004
++ strategic mark-ups (full model),1,2025,planner,ocgt,1.9999999999999996
++ strategic mark-ups (full model),1,2025,planner,biomass,3.8000000000000007
++ strategic mark-ups (full model),1,2025,planner,wind_onshore,14.999999999999996
++ strategic mark-ups (full model),1,2025,planner,wind_offshore,15.499999999999998
++ strategic mark-ups (full model),1,2025,planner,solar,18.000000000000004
++ strategic mark-ups (full model),1,2025,planner,hydro,1.5
++ strategic mark-ups (full model),1,2025,planner,battery,5.000000000000002
++ strategic mark-ups (full model),1,2025,planner,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),1,2025,planner,nuclear,5.9
++ strategic mark-ups (full model),1,2025,agents,ccgt,30.000000000000004
++ strategic mark-ups (full model),1,2025,agents,ocgt,1.9999999999999996
++ strategic mark-ups (full model),1,2025,agents,biomass,3.8000000000000007
++ strategic mark-ups (full model),1,2025,agents,wind_onshore,14.999999999999996
++ strategic mark-ups (full model),1,2025,agents,wind_offshore,15.499999999999998
++ strategic mark-ups (full model),1,2025,agents,solar,18.000000000000004
++ strategic mark-ups (full model),1,2025,agents,hydro,1.5
++ strategic mark-ups (full model),1,2025,agents,battery,5.000000000000002
++ strategic mark-ups (full model),1,2025,agents,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),1,2025,agents,nuclear,5.9
++ strategic mark-ups (full model),1,2030,planner,ccgt,32.38405410606157
++ strategic mark-ups (full model),1,2030,planner,ocgt,1.5577318848741128
++ strategic mark-ups (full model),1,2030,planner,biomass,3.475849465696145
++ strategic mark-ups (full model),1,2030,planner,wind_onshore,20.61550381737093
++ strategic mark-ups (full model),1,2030,planner,wind_offshore,19.289480362407264
++ strategic mark-ups (full model),1,2030,planner,solar,44.48916669264582
++ strategic mark-ups (full model),1,2030,planner,hydro,1.5
++ strategic mark-ups (full model),1,2030,planner,battery,3.0347349177330902
++ strategic mark-ups (full model),1,2030,planner,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),1,2030,planner,nuclear,5.2299999999999995
++ strategic mark-ups (full model),1,2030,agents,ccgt,35.40775287456356
++ strategic mark-ups (full model),1,2030,agents,ocgt,1.5577318848741128
++ strategic mark-ups (full model),1,2030,agents,biomass,3.475849465696145
++ strategic mark-ups (full model),1,2030,agents,wind_onshore,17.61550381737093
++ strategic mark-ups (full model),1,2030,agents,wind_offshore,17.289480362407264
++ strategic mark-ups (full model),1,2030,agents,solar,21.989166692645817
++ strategic mark-ups (full model),1,2030,agents,hydro,1.5
++ strategic mark-ups (full model),1,2030,agents,battery,5.03473491773309
++ strategic mark-ups (full model),1,2030,agents,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),1,2030,agents,nuclear,5.2299999999999995
++ strategic mark-ups (full model),1,2035,planner,ccgt,29.481026471343597
++ strategic mark-ups (full model),1,2035,planner,ocgt,1.4021112555929842
++ strategic mark-ups (full model),1,2035,planner,biomass,1.7785906767848851
++ strategic mark-ups (full model),1,2035,planner,wind_onshore,30.088469056078097
++ strategic mark-ups (full model),1,2035,planner,wind_offshore,46.3068723688486
++ strategic mark-ups (full model),1,2035,planner,solar,41.644792218723694
++ strategic mark-ups (full model),1,2035,planner,hydro,1.5
++ strategic mark-ups (full model),1,2035,planner,battery,1.7138939670932358
++ strategic mark-ups (full model),1,2035,planner,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),1,2035,planner,nuclear,4.46
++ strategic mark-ups (full model),1,2035,agents,ccgt,32.504725239845605
++ strategic mark-ups (full model),1,2035,agents,ocgt,4.702111255592983
++ strategic mark-ups (full model),1,2035,agents,biomass,1.7785906767848851
++ strategic mark-ups (full model),1,2035,agents,wind_onshore,22.088469056078097
++ strategic mark-ups (full model),1,2035,agents,wind_offshore,34.36323877196203
++ strategic mark-ups (full model),1,2035,agents,solar,26.644792218723694
++ strategic mark-ups (full model),1,2035,agents,hydro,1.5
++ strategic mark-ups (full model),1,2035,agents,battery,13.213893967093236
++ strategic mark-ups (full model),1,2035,agents,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),1,2035,agents,nuclear,4.46
++ strategic mark-ups (full model),1,2035,agents,gas_ccs,9.6
++ strategic mark-ups (full model),1,2040,planner,ccgt,20.23050704062112
++ strategic mark-ups (full model),1,2040,planner,ocgt,7.226905647962535
++ strategic mark-ups (full model),1,2040,planner,biomass,1.6347984099943218
++ strategic mark-ups (full model),1,2040,planner,wind_onshore,39.12068183536171
++ strategic mark-ups (full model),1,2040,planner,wind_offshore,49.638401231653944
++ strategic mark-ups (full model),1,2040,planner,solar,39.84471739875924
++ strategic mark-ups (full model),1,2040,planner,hydro,1.5
++ strategic mark-ups (full model),1,2040,planner,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),1,2040,planner,nuclear,6.459999999999999
++ strategic mark-ups (full model),1,2040,planner,gas_ccs,2.4195560405592524
++ strategic mark-ups (full model),1,2040,agents,ccgt,22.4023365107969
++ strategic mark-ups (full model),1,2040,agents,ocgt,16.12311323169547
++ strategic mark-ups (full model),1,2040,agents,biomass,1.6347984099943218
++ strategic mark-ups (full model),1,2040,agents,wind_onshore,26.120681835361705
++ strategic mark-ups (full model),1,2040,agents,wind_offshore,53.10160307981383
++ strategic mark-ups (full model),1,2040,agents,solar,32.34471739875924
++ strategic mark-ups (full model),1,2040,agents,hydro,1.5
++ strategic mark-ups (full model),1,2040,agents,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),1,2040,agents,nuclear,6.459999999999999
++ strategic mark-ups (full model),1,2040,agents,battery,16.5
++ strategic mark-ups (full model),1,2040,agents,gas_ccs,9.6
++ strategic mark-ups (full model),1,2045,planner,ccgt,14.496789408258088
++ strategic mark-ups (full model),1,2045,planner,ocgt,8.85387874703445
++ strategic mark-ups (full model),1,2045,planner,biomass,1.5878354240875538
++ strategic mark-ups (full model),1,2045,planner,wind_onshore,47.537525782102094
++ strategic mark-ups (full model),1,2045,planner,wind_offshore,49.77715398133421
++ strategic mark-ups (full model),1,2045,planner,solar,37.28353649032017
++ strategic mark-ups (full model),1,2045,planner,hydro,1.5
++ strategic mark-ups (full model),1,2045,planner,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),1,2045,planner,nuclear,6.459999999999999
++ strategic mark-ups (full model),1,2045,planner,gas_ccs,7.715293216519299
++ strategic mark-ups (full model),1,2045,agents,ccgt,16.66861887843387
++ strategic mark-ups (full model),1,2045,agents,ocgt,23.846926802297638
++ strategic mark-ups (full model),1,2045,agents,biomass,1.5878354240875538
++ strategic mark-ups (full model),1,2045,agents,wind_onshore,29.537525782102094
++ strategic mark-ups (full model),1,2045,agents,wind_offshore,71.29907508396056
++ strategic mark-ups (full model),1,2045,agents,solar,37.28353649032017
++ strategic mark-ups (full model),1,2045,agents,hydro,1.5
++ strategic mark-ups (full model),1,2045,agents,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),1,2045,agents,nuclear,6.459999999999999
++ strategic mark-ups (full model),1,2045,agents,gas_ccs,9.6
++ strategic mark-ups (full model),1,2045,agents,battery,20.0
++ strategic mark-ups (full model),1,2050,planner,wind_offshore,46.90295366818529
++ strategic mark-ups (full model),1,2050,planner,solar,33.485848733600555
++ strategic mark-ups (full model),1,2050,planner,hydro,1.5
++ strategic mark-ups (full model),1,2050,planner,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),1,2050,planner,nuclear,6.459999999999999
++ strategic mark-ups (full model),1,2050,planner,wind_onshore,57.5
++ strategic mark-ups (full model),1,2050,planner,ccgt,9.828170529824227
++ strategic mark-ups (full model),1,2050,planner,ocgt,10.00769097348952
++ strategic mark-ups (full model),1,2050,planner,gas_ccs,13.322082418543555
++ strategic mark-ups (full model),1,2050,agents,wind_offshore,87.47056520847056
++ strategic mark-ups (full model),1,2050,agents,solar,40.89243071359541
++ strategic mark-ups (full model),1,2050,agents,hydro,1.5
++ strategic mark-ups (full model),1,2050,agents,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),1,2050,agents,nuclear,6.459999999999999
++ strategic mark-ups (full model),1,2050,agents,wind_onshore,34.5
++ strategic mark-ups (full model),1,2050,agents,ccgt,12.000000000000002
++ strategic mark-ups (full model),1,2050,agents,gas_ccs,9.6
++ strategic mark-ups (full model),1,2050,agents,ocgt,29.40000000000005
++ strategic mark-ups (full model),1,2050,agents,battery,24.0
++ strategic mark-ups (full model),2,2025,planner,ccgt,30.000000000000004
++ strategic mark-ups (full model),2,2025,planner,ocgt,1.9999999999999996
++ strategic mark-ups (full model),2,2025,planner,biomass,3.8000000000000007
++ strategic mark-ups (full model),2,2025,planner,wind_onshore,14.999999999999996
++ strategic mark-ups (full model),2,2025,planner,wind_offshore,15.499999999999998
++ strategic mark-ups (full model),2,2025,planner,solar,18.000000000000004
++ strategic mark-ups (full model),2,2025,planner,hydro,1.5
++ strategic mark-ups (full model),2,2025,planner,battery,5.000000000000002
++ strategic mark-ups (full model),2,2025,planner,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),2,2025,planner,nuclear,5.9
++ strategic mark-ups (full model),2,2025,agents,ccgt,30.000000000000004
++ strategic mark-ups (full model),2,2025,agents,ocgt,1.9999999999999996
++ strategic mark-ups (full model),2,2025,agents,biomass,3.8000000000000007
++ strategic mark-ups (full model),2,2025,agents,wind_onshore,14.999999999999996
++ strategic mark-ups (full model),2,2025,agents,wind_offshore,15.499999999999998
++ strategic mark-ups (full model),2,2025,agents,solar,18.000000000000004
++ strategic mark-ups (full model),2,2025,agents,hydro,1.5
++ strategic mark-ups (full model),2,2025,agents,battery,5.000000000000002
++ strategic mark-ups (full model),2,2025,agents,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),2,2025,agents,nuclear,5.9
++ strategic mark-ups (full model),2,2030,planner,ccgt,30.68378264920597
++ strategic mark-ups (full model),2,2030,planner,ocgt,3.4359466476967793
++ strategic mark-ups (full model),2,2030,planner,biomass,0.4664911465592897
++ strategic mark-ups (full model),2,2030,planner,wind_onshore,20.761125449499474
++ strategic mark-ups (full model),2,2030,planner,wind_offshore,20.75758074792393
++ strategic mark-ups (full model),2,2030,planner,solar,40.65034136608785
++ strategic mark-ups (full model),2,2030,planner,hydro,1.5
++ strategic mark-ups (full model),2,2030,planner,battery,4.643510054844609
++ strategic mark-ups (full model),2,2030,planner,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),2,2030,planner,nuclear,5.2299999999999995
++ strategic mark-ups (full model),2,2030,agents,ccgt,37.68378264920596
++ strategic mark-ups (full model),2,2030,agents,ocgt,1.6610113958655428
++ strategic mark-ups (full model),2,2030,agents,biomass,0.4664911465592897
++ strategic mark-ups (full model),2,2030,agents,wind_onshore,17.761125449499474
++ strategic mark-ups (full model),2,2030,agents,wind_offshore,18.75758074792393
++ strategic mark-ups (full model),2,2030,agents,solar,18.15034136608785
++ strategic mark-ups (full model),2,2030,agents,hydro,1.5
++ strategic mark-ups (full model),2,2030,agents,battery,6.143510054844609
++ strategic mark-ups (full model),2,2030,agents,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),2,2030,agents,nuclear,5.2299999999999995
++ strategic mark-ups (full model),2,2035,planner,ccgt,28.401041791651416
++ strategic mark-ups (full model),2,2035,planner,ocgt,3.0235555637073057
++ strategic mark-ups (full model),2,2035,planner,biomass,0.3107129213773166
++ strategic mark-ups (full model),2,2035,planner,wind_onshore,30.51772080818116
++ strategic mark-ups (full model),2,2035,planner,wind_offshore,46.604765258229065
++ strategic mark-ups (full model),2,2035,planner,solar,40.03616298282258
++ strategic mark-ups (full model),2,2035,planner,hydro,1.5
++ strategic mark-ups (full model),2,2035,planner,battery,2.024680073126143
++ strategic mark-ups (full model),2,2035,planner,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),2,2035,planner,nuclear,4.46
++ strategic mark-ups (full model),2,2035,agents,ccgt,33.06861068733554
++ strategic mark-ups (full model),2,2035,agents,ocgt,4.248620311876068
++ strategic mark-ups (full model),2,2035,agents,biomass,0.3107129213773166
++ strategic mark-ups (full model),2,2035,agents,wind_onshore,22.51772080818116
++ strategic mark-ups (full model),2,2035,agents,wind_offshore,34.705031154498236
++ strategic mark-ups (full model),2,2035,agents,solar,25.03616298282258
++ strategic mark-ups (full model),2,2035,agents,hydro,1.5
++ strategic mark-ups (full model),2,2035,agents,battery,16.52468007312614
++ strategic mark-ups (full model),2,2035,agents,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),2,2035,agents,nuclear,4.46
++ strategic mark-ups (full model),2,2035,agents,gas_ccs,9.6
++ strategic mark-ups (full model),2,2040,planner,ccgt,24.78185619160227
++ strategic mark-ups (full model),2,2040,planner,ocgt,3.681038064037972
++ strategic mark-ups (full model),2,2040,planner,biomass,0.26374993547054876
++ strategic mark-ups (full model),2,2040,planner,wind_onshore,37.131788386985306
++ strategic mark-ups (full model),2,2040,planner,wind_offshore,50.8491463349494
++ strategic mark-ups (full model),2,2040,planner,solar,37.612463759079716
++ strategic mark-ups (full model),2,2040,planner,hydro,1.5
++ strategic mark-ups (full model),2,2040,planner,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),2,2040,planner,nuclear,6.459999999999999
++ strategic mark-ups (full model),2,2040,planner,gas_ccs,3.154806207872285
++ strategic mark-ups (full model),2,2040,agents,ccgt,29.449425087286404
++ strategic mark-ups (full model),2,2040,agents,ocgt,13.55324930631637
++ strategic mark-ups (full model),2,2040,agents,biomass,0.26374993547054876
++ strategic mark-ups (full model),2,2040,agents,wind_onshore,24.131788386985303
++ strategic mark-ups (full model),2,2040,agents,wind_offshore,51.073696316534026
++ strategic mark-ups (full model),2,2040,agents,solar,30.112463759079713
++ strategic mark-ups (full model),2,2040,agents,hydro,1.5
++ strategic mark-ups (full model),2,2040,agents,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),2,2040,agents,nuclear,6.459999999999999
++ strategic mark-ups (full model),2,2040,agents,battery,14.5
++ strategic mark-ups (full model),2,2040,agents,gas_ccs,9.6
++ strategic mark-ups (full model),2,2045,planner,ccgt,14.937794225943453
++ strategic mark-ups (full model),2,2045,planner,ocgt,9.144243128113812
++ strategic mark-ups (full model),2,2045,planner,wind_onshore,46.73126140621794
++ strategic mark-ups (full model),2,2045,planner,wind_offshore,50.452201851509344
++ strategic mark-ups (full model),2,2045,planner,solar,35.79508682233376
++ strategic mark-ups (full model),2,2045,planner,hydro,1.5
++ strategic mark-ups (full model),2,2045,planner,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),2,2045,planner,nuclear,6.459999999999999
++ strategic mark-ups (full model),2,2045,planner,gas_ccs,9.1382607048479
++ strategic mark-ups (full model),2,2045,agents,ccgt,19.60536312162758
++ strategic mark-ups (full model),2,2045,agents,ocgt,24.326343596096976
++ strategic mark-ups (full model),2,2045,agents,wind_onshore,28.73126140621794
++ strategic mark-ups (full model),2,2045,agents,wind_offshore,70.67675183309396
++ strategic mark-ups (full model),2,2045,agents,solar,35.79508682233376
++ strategic mark-ups (full model),2,2045,agents,hydro,1.5
++ strategic mark-ups (full model),2,2045,agents,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),2,2045,agents,nuclear,6.459999999999999
++ strategic mark-ups (full model),2,2045,agents,gas_ccs,9.6
++ strategic mark-ups (full model),2,2045,agents,battery,21.0
++ strategic mark-ups (full model),2,2050,planner,wind_offshore,48.627579539057265
++ strategic mark-ups (full model),2,2050,planner,solar,32.899493889651325
++ strategic mark-ups (full model),2,2050,planner,hydro,1.5
++ strategic mark-ups (full model),2,2050,planner,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),2,2050,planner,nuclear,6.459999999999999
++ strategic mark-ups (full model),2,2050,planner,wind_onshore,57.5
++ strategic mark-ups (full model),2,2050,planner,ccgt,11.33243110431588
++ strategic mark-ups (full model),2,2050,planner,ocgt,10.050803032915553
++ strategic mark-ups (full model),2,2050,planner,gas_ccs,12.70864675048444
++ strategic mark-ups (full model),2,2050,agents,wind_offshore,88.85212952064188
++ strategic mark-ups (full model),2,2050,agents,solar,40.043878791657576
++ strategic mark-ups (full model),2,2050,agents,hydro,1.5
++ strategic mark-ups (full model),2,2050,agents,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),2,2050,agents,nuclear,6.459999999999999
++ strategic mark-ups (full model),2,2050,agents,wind_onshore,34.5
++ strategic mark-ups (full model),2,2050,agents,ccgt,16.000000000000004
++ strategic mark-ups (full model),2,2050,agents,gas_ccs,9.6
++ strategic mark-ups (full model),2,2050,agents,ocgt,26.40000000000004
++ strategic mark-ups (full model),2,2050,agents,battery,22.5
++ strategic mark-ups (full model),3,2025,planner,ccgt,30.000000000000004
++ strategic mark-ups (full model),3,2025,planner,ocgt,1.9999999999999996
++ strategic mark-ups (full model),3,2025,planner,biomass,3.8000000000000007
++ strategic mark-ups (full model),3,2025,planner,wind_onshore,14.999999999999996
++ strategic mark-ups (full model),3,2025,planner,wind_offshore,15.499999999999998
++ strategic mark-ups (full model),3,2025,planner,solar,18.000000000000004
++ strategic mark-ups (full model),3,2025,planner,hydro,1.5
++ strategic mark-ups (full model),3,2025,planner,battery,5.000000000000002
++ strategic mark-ups (full model),3,2025,planner,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),3,2025,planner,nuclear,5.9
++ strategic mark-ups (full model),3,2025,agents,ccgt,30.000000000000004
++ strategic mark-ups (full model),3,2025,agents,ocgt,1.9999999999999996
++ strategic mark-ups (full model),3,2025,agents,biomass,3.8000000000000007
++ strategic mark-ups (full model),3,2025,agents,wind_onshore,14.999999999999996
++ strategic mark-ups (full model),3,2025,agents,wind_offshore,15.499999999999998
++ strategic mark-ups (full model),3,2025,agents,solar,18.000000000000004
++ strategic mark-ups (full model),3,2025,agents,hydro,1.5
++ strategic mark-ups (full model),3,2025,agents,battery,5.000000000000002
++ strategic mark-ups (full model),3,2025,agents,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),3,2025,agents,nuclear,5.9
++ strategic mark-ups (full model),3,2030,planner,ccgt,32.00938280004432
++ strategic mark-ups (full model),3,2030,planner,ocgt,1.4014354899812627
++ strategic mark-ups (full model),3,2030,planner,biomass,3.5347984099943224
++ strategic mark-ups (full model),3,2030,planner,wind_onshore,20.39051110655162
++ strategic mark-ups (full model),3,2030,planner,wind_offshore,20.5532083193849
++ strategic mark-ups (full model),3,2030,planner,solar,45.746983820182685
++ strategic mark-ups (full model),3,2030,planner,hydro,1.5
++ strategic mark-ups (full model),3,2030,planner,battery,3.7020109689213903
++ strategic mark-ups (full model),3,2030,planner,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),3,2030,planner,nuclear,5.2299999999999995
++ strategic mark-ups (full model),3,2030,agents,ccgt,33.44547902566886
++ strategic mark-ups (full model),3,2030,agents,ocgt,1.4014354899812627
++ strategic mark-ups (full model),3,2030,agents,biomass,3.5347984099943224
++ strategic mark-ups (full model),3,2030,agents,wind_onshore,17.39051110655162
++ strategic mark-ups (full model),3,2030,agents,wind_offshore,18.5532083193849
++ strategic mark-ups (full model),3,2030,agents,solar,23.246983820182685
++ strategic mark-ups (full model),3,2030,agents,hydro,1.5
++ strategic mark-ups (full model),3,2030,agents,battery,6.702010968921391
++ strategic mark-ups (full model),3,2030,agents,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),3,2030,agents,nuclear,5.2299999999999995
++ strategic mark-ups (full model),3,2035,planner,ccgt,29.308470516468493
++ strategic mark-ups (full model),3,2035,planner,ocgt,0.900908188026662
++ strategic mark-ups (full model),3,2035,planner,biomass,2.0543265706468437
++ strategic mark-ups (full model),3,2035,planner,wind_onshore,27.948446594602768
++ strategic mark-ups (full model),3,2035,planner,wind_offshore,47.24390593290436
++ strategic mark-ups (full model),3,2035,planner,solar,41.94528790098825
++ strategic mark-ups (full model),3,2035,planner,hydro,1.5
++ strategic mark-ups (full model),3,2035,planner,battery,2.394881170018282
++ strategic mark-ups (full model),3,2035,planner,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),3,2035,planner,nuclear,4.46
++ strategic mark-ups (full model),3,2035,agents,ccgt,30.744566742093035
++ strategic mark-ups (full model),3,2035,agents,ocgt,5.70090818802666
++ strategic mark-ups (full model),3,2035,agents,biomass,2.0543265706468437
++ strategic mark-ups (full model),3,2035,agents,wind_onshore,19.948446594602768
++ strategic mark-ups (full model),3,2035,agents,wind_offshore,35.91109629277669
++ strategic mark-ups (full model),3,2035,agents,solar,26.945287900988248
++ strategic mark-ups (full model),3,2035,agents,hydro,1.5
++ strategic mark-ups (full model),3,2035,agents,battery,12.894881170018282
++ strategic mark-ups (full model),3,2035,agents,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),3,2035,agents,nuclear,4.46
++ strategic mark-ups (full model),3,2035,agents,gas_ccs,9.6
++ strategic mark-ups (full model),3,2040,planner,ccgt,24.19430708357919
++ strategic mark-ups (full model),3,2040,planner,ocgt,4.071383210091038
++ strategic mark-ups (full model),3,2040,planner,biomass,0.5268917453925972
++ strategic mark-ups (full model),3,2040,planner,wind_onshore,39.53219658110429
++ strategic mark-ups (full model),3,2040,planner,wind_offshore,49.45354162413781
++ strategic mark-ups (full model),3,2040,planner,solar,37.241730835177854
++ strategic mark-ups (full model),3,2040,planner,hydro,1.5
++ strategic mark-ups (full model),3,2040,planner,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),3,2040,planner,nuclear,6.459999999999999
++ strategic mark-ups (full model),3,2040,planner,gas_ccs,2.6453165901073508
++ strategic mark-ups (full model),3,2040,agents,ccgt,25.630403309203732
++ strategic mark-ups (full model),3,2040,agents,ocgt,17.269360172832194
++ strategic mark-ups (full model),3,2040,agents,biomass,0.5268917453925972
++ strategic mark-ups (full model),3,2040,agents,wind_onshore,26.532196581104284
++ strategic mark-ups (full model),3,2040,agents,wind_offshore,50.68210803105731
++ strategic mark-ups (full model),3,2040,agents,solar,29.741730835177854
++ strategic mark-ups (full model),3,2040,agents,hydro,1.5
++ strategic mark-ups (full model),3,2040,agents,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),3,2040,agents,nuclear,6.459999999999999
++ strategic mark-ups (full model),3,2040,agents,battery,15.0
++ strategic mark-ups (full model),3,2040,agents,gas_ccs,9.6
++ strategic mark-ups (full model),3,2045,planner,ccgt,19.856813354888843
++ strategic mark-ups (full model),3,2045,planner,ocgt,4.474046678066257
++ strategic mark-ups (full model),3,2045,planner,biomass,0.3241505343038563
++ strategic mark-ups (full model),3,2045,planner,wind_onshore,48.533065883394706
++ strategic mark-ups (full model),3,2045,planner,wind_offshore,49.348292787580135
++ strategic mark-ups (full model),3,2045,planner,solar,33.964148767029336
++ strategic mark-ups (full model),3,2045,planner,hydro,1.5
++ strategic mark-ups (full model),3,2045,planner,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),3,2045,planner,nuclear,6.459999999999999
++ strategic mark-ups (full model),3,2045,planner,gas_ccs,8.15336414530447
++ strategic mark-ups (full model),3,2045,agents,ccgt,21.292909580513385
++ strategic mark-ups (full model),3,2045,agents,ocgt,22.130251773884762
++ strategic mark-ups (full model),3,2045,agents,biomass,0.3241505343038563
++ strategic mark-ups (full model),3,2045,agents,wind_onshore,30.533065883394706
++ strategic mark-ups (full model),3,2045,agents,wind_offshore,70.03584927054199
++ strategic mark-ups (full model),3,2045,agents,solar,33.964148767029336
++ strategic mark-ups (full model),3,2045,agents,hydro,1.5
++ strategic mark-ups (full model),3,2045,agents,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),3,2045,agents,nuclear,6.459999999999999
++ strategic mark-ups (full model),3,2045,agents,gas_ccs,9.6
++ strategic mark-ups (full model),3,2045,agents,battery,20.0
++ strategic mark-ups (full model),3,2050,planner,wind_offshore,46.21200024425811
++ strategic mark-ups (full model),3,2050,planner,solar,33.964148767029336
++ strategic mark-ups (full model),3,2050,planner,hydro,1.5
++ strategic mark-ups (full model),3,2050,planner,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),3,2050,planner,nuclear,6.459999999999999
++ strategic mark-ups (full model),3,2050,planner,wind_onshore,57.5
++ strategic mark-ups (full model),3,2050,planner,ccgt,7.893980236605458
++ strategic mark-ups (full model),3,2050,planner,ocgt,11.870833781008962
++ strategic mark-ups (full model),3,2050,planner,gas_ccs,13.706837084573007
++ strategic mark-ups (full model),3,2050,agents,wind_offshore,85.17836355193677
++ strategic mark-ups (full model),3,2050,agents,solar,41.464148767029336
++ strategic mark-ups (full model),3,2050,agents,hydro,1.5
++ strategic mark-ups (full model),3,2050,agents,pumped_hydro,2.9000000000000004
++ strategic mark-ups (full model),3,2050,agents,nuclear,6.459999999999999
++ strategic mark-ups (full model),3,2050,agents,wind_onshore,34.5
++ strategic mark-ups (full model),3,2050,agents,ccgt,8.799999999999999
++ strategic mark-ups (full model),3,2050,agents,gas_ccs,9.6
++ strategic mark-ups (full model),3,2050,agents,ocgt,31.500000000000053
++ strategic mark-ups (full model),3,2050,agents,battery,24.5
+no_cfd,1,2025,planner,ccgt,30.000000000000004
+no_cfd,1,2025,planner,ocgt,1.9999999999999996
+no_cfd,1,2025,planner,biomass,3.8000000000000007
+no_cfd,1,2025,planner,wind_onshore,14.999999999999996
+no_cfd,1,2025,planner,wind_offshore,15.499999999999998
+no_cfd,1,2025,planner,solar,18.000000000000004
+no_cfd,1,2025,planner,hydro,1.5
+no_cfd,1,2025,planner,battery,5.000000000000002
+no_cfd,1,2025,planner,pumped_hydro,2.9000000000000004
+no_cfd,1,2025,planner,nuclear,5.9
+no_cfd,1,2025,agents,ccgt,30.000000000000004
+no_cfd,1,2025,agents,ocgt,1.9999999999999996
+no_cfd,1,2025,agents,biomass,3.8000000000000007
+no_cfd,1,2025,agents,wind_onshore,14.999999999999996
+no_cfd,1,2025,agents,wind_offshore,15.499999999999998
+no_cfd,1,2025,agents,solar,18.000000000000004
+no_cfd,1,2025,agents,hydro,1.5
+no_cfd,1,2025,agents,battery,5.000000000000002
+no_cfd,1,2025,agents,pumped_hydro,2.9000000000000004
+no_cfd,1,2025,agents,nuclear,5.9
+no_cfd,1,2030,planner,ccgt,32.40775287456357
+no_cfd,1,2030,planner,ocgt,1.5577318848741128
+no_cfd,1,2030,planner,biomass,3.475849465696145
+no_cfd,1,2030,planner,wind_onshore,20.61550381737093
+no_cfd,1,2030,planner,wind_offshore,19.289480362407264
+no_cfd,1,2030,planner,solar,44.48916669264582
+no_cfd,1,2030,planner,hydro,1.5
+no_cfd,1,2030,planner,battery,3.0347349177330902
+no_cfd,1,2030,planner,pumped_hydro,2.9000000000000004
+no_cfd,1,2030,planner,nuclear,5.2299999999999995
+no_cfd,1,2030,agents,ccgt,36.20775287456356
+no_cfd,1,2030,agents,ocgt,1.5577318848741128
+no_cfd,1,2030,agents,biomass,3.475849465696145
+no_cfd,1,2030,agents,wind_onshore,19.11550381737093
+no_cfd,1,2030,agents,wind_offshore,13.289480362407264
+no_cfd,1,2030,agents,solar,14.989166692645817
+no_cfd,1,2030,agents,hydro,1.5
+no_cfd,1,2030,agents,battery,3.0347349177330902
+no_cfd,1,2030,agents,pumped_hydro,2.9000000000000004
+no_cfd,1,2030,agents,nuclear,5.2299999999999995
+no_cfd,1,2035,planner,ccgt,29.504725239845598
+no_cfd,1,2035,planner,ocgt,1.4021112555929842
+no_cfd,1,2035,planner,biomass,1.7785906767848851
+no_cfd,1,2035,planner,wind_onshore,30.088469056078097
+no_cfd,1,2035,planner,wind_offshore,45.73294621130973
+no_cfd,1,2035,planner,solar,41.644792218723694
+no_cfd,1,2035,planner,hydro,1.5
+no_cfd,1,2035,planner,battery,1.7138939670932358
+no_cfd,1,2035,planner,pumped_hydro,2.9000000000000004
+no_cfd,1,2035,planner,nuclear,4.46
+no_cfd,1,2035,agents,ccgt,36.50472523984559
+no_cfd,1,2035,agents,ocgt,4.702111255592983
+no_cfd,1,2035,agents,biomass,1.7785906767848851
+no_cfd,1,2035,agents,wind_onshore,24.588469056078097
+no_cfd,1,2035,agents,wind_offshore,10.36323877196203
+no_cfd,1,2035,agents,solar,14.644792218723694
+no_cfd,1,2035,agents,hydro,1.5
+no_cfd,1,2035,agents,battery,8.713893967093236
+no_cfd,1,2035,agents,pumped_hydro,2.9000000000000004
+no_cfd,1,2035,agents,nuclear,4.46
+no_cfd,1,2035,agents,gas_ccs,4.8
+no_cfd,1,2040,planner,ccgt,20.42590697769303
+no_cfd,1,2040,planner,ocgt,7.038576223771962
+no_cfd,1,2040,planner,biomass,1.6347984099943218
+no_cfd,1,2040,planner,wind_onshore,39.12068183536171
+no_cfd,1,2040,planner,wind_offshore,47.94140480187694
+no_cfd,1,2040,planner,solar,39.84471739875924
+no_cfd,1,2040,planner,hydro,1.5
+no_cfd,1,2040,planner,pumped_hydro,2.9000000000000004
+no_cfd,1,2040,planner,nuclear,6.459999999999999
+no_cfd,1,2040,planner,gas_ccs,2.8168913170287264
+no_cfd,1,2040,agents,ccgt,36.80233651079689
+no_cfd,1,2040,agents,ocgt,7.723113231695452
+no_cfd,1,2040,agents,biomass,1.6347984099943218
+no_cfd,1,2040,agents,wind_onshore,28.620681835361705
+no_cfd,1,2040,agents,wind_offshore,9.101603079813827
+no_cfd,1,2040,agents,solar,12.844717398759235
+no_cfd,1,2040,agents,hydro,1.5
+no_cfd,1,2040,agents,pumped_hydro,2.9000000000000004
+no_cfd,1,2040,agents,nuclear,6.459999999999999
+no_cfd,1,2040,agents,gas_ccs,13.600000000000003
+no_cfd,1,2040,agents,battery,7.0
+no_cfd,1,2045,planner,ccgt,14.692189345330002
+no_cfd,1,2045,planner,ocgt,7.53454808954385
+no_cfd,1,2045,planner,biomass,1.5878354240875538
+no_cfd,1,2045,planner,wind_onshore,47.537525782102094
+no_cfd,1,2045,planner,wind_offshore,46.953350678533894
+no_cfd,1,2045,planner,solar,37.28353649032017
+no_cfd,1,2045,planner,hydro,1.5
+no_cfd,1,2045,planner,pumped_hydro,2.9000000000000004
+no_cfd,1,2045,planner,nuclear,6.459999999999999
+no_cfd,1,2045,planner,gas_ccs,8.955220308928856
+no_cfd,1,2045,agents,ccgt,31.06861887843388
+no_cfd,1,2045,agents,ocgt,10.346926802297606
+no_cfd,1,2045,agents,biomass,1.5878354240875538
+no_cfd,1,2045,agents,wind_onshore,29.037525782102094
+no_cfd,1,2045,agents,wind_offshore,7.299075083960562
+no_cfd,1,2045,agents,solar,10.283536490320168
+no_cfd,1,2045,agents,hydro,1.5
+no_cfd,1,2045,agents,pumped_hydro,2.9000000000000004
+no_cfd,1,2045,agents,nuclear,6.459999999999999
+no_cfd,1,2045,agents,gas_ccs,16.000000000000004
+no_cfd,1,2045,agents,battery,7.0
+no_cfd,1,2050,planner,wind_offshore,43.589507022414175
+no_cfd,1,2050,planner,solar,33.39243071359541
+no_cfd,1,2050,planner,hydro,1.5
+no_cfd,1,2050,planner,pumped_hydro,2.9000000000000004
+no_cfd,1,2050,planner,nuclear,6.459999999999999
+no_cfd,1,2050,planner,wind_onshore,57.5
+no_cfd,1,2050,planner,ccgt,10.02357046689614
+no_cfd,1,2050,planner,ocgt,8.834095655839576
+no_cfd,1,2050,planner,gas_ccs,13.660452027125645
+no_cfd,1,2050,agents,wind_offshore,3.4705652084705676
+no_cfd,1,2050,agents,solar,6.392430713595411
+no_cfd,1,2050,agents,hydro,1.5
+no_cfd,1,2050,agents,pumped_hydro,2.9000000000000004
+no_cfd,1,2050,agents,nuclear,6.459999999999999
+no_cfd,1,2050,agents,ccgt,26.400000000000013
+no_cfd,1,2050,agents,gas_ccs,32.80000000000001
+no_cfd,1,2050,agents,wind_onshore,29.5
+no_cfd,1,2050,agents,ocgt,10.800000000000004
+no_cfd,1,2050,agents,battery,6.0
+no_cfd,2,2025,planner,ccgt,30.000000000000004
+no_cfd,2,2025,planner,ocgt,1.9999999999999996
+no_cfd,2,2025,planner,biomass,3.8000000000000007
+no_cfd,2,2025,planner,wind_onshore,14.999999999999996
+no_cfd,2,2025,planner,wind_offshore,15.499999999999998
+no_cfd,2,2025,planner,solar,18.000000000000004
+no_cfd,2,2025,planner,hydro,1.5
+no_cfd,2,2025,planner,battery,5.000000000000002
+no_cfd,2,2025,planner,pumped_hydro,2.9000000000000004
+no_cfd,2,2025,planner,nuclear,5.9
+no_cfd,2,2025,agents,ccgt,30.000000000000004
+no_cfd,2,2025,agents,ocgt,1.9999999999999996
+no_cfd,2,2025,agents,biomass,3.8000000000000007
+no_cfd,2,2025,agents,wind_onshore,14.999999999999996
+no_cfd,2,2025,agents,wind_offshore,15.499999999999998
+no_cfd,2,2025,agents,solar,18.000000000000004
+no_cfd,2,2025,agents,hydro,1.5
+no_cfd,2,2025,agents,battery,5.000000000000002
+no_cfd,2,2025,agents,pumped_hydro,2.9000000000000004
+no_cfd,2,2025,agents,nuclear,5.9
+no_cfd,2,2030,planner,ccgt,30.68378264920597
+no_cfd,2,2030,planner,ocgt,3.6932576563530644
+no_cfd,2,2030,planner,biomass,0.4664911465592897
+no_cfd,2,2030,planner,wind_onshore,20.761125449499474
+no_cfd,2,2030,planner,wind_offshore,20.75758074792393
+no_cfd,2,2030,planner,solar,40.65034136608785
+no_cfd,2,2030,planner,hydro,1.5
+no_cfd,2,2030,planner,battery,4.643510054844609
+no_cfd,2,2030,planner,pumped_hydro,2.9000000000000004
+no_cfd,2,2030,planner,nuclear,5.2299999999999995
+no_cfd,2,2030,agents,ccgt,37.68378264920596
+no_cfd,2,2030,agents,ocgt,1.6610113958655428
+no_cfd,2,2030,agents,biomass,0.4664911465592897
+no_cfd,2,2030,agents,wind_onshore,16.261125449499474
+no_cfd,2,2030,agents,wind_offshore,14.757580747923932
+no_cfd,2,2030,agents,solar,13.650341366087849
+no_cfd,2,2030,agents,hydro,1.5
+no_cfd,2,2030,agents,battery,5.143510054844609
+no_cfd,2,2030,agents,pumped_hydro,2.9000000000000004
+no_cfd,2,2030,agents,nuclear,5.2299999999999995
+no_cfd,2,2035,planner,ccgt,28.322511910790166
+no_cfd,2,2035,planner,ocgt,3.2808665723635904
+no_cfd,2,2035,planner,biomass,0.3107129213773166
+no_cfd,2,2035,planner,wind_onshore,30.51772080818116
+no_cfd,2,2035,planner,wind_offshore,46.26569146198101
+no_cfd,2,2035,planner,solar,40.03616298282258
+no_cfd,2,2035,planner,hydro,1.5
+no_cfd,2,2035,planner,battery,2.024680073126143
+no_cfd,2,2035,planner,pumped_hydro,2.9000000000000004
+no_cfd,2,2035,planner,nuclear,4.46
+no_cfd,2,2035,agents,ccgt,33.06861068733554
+no_cfd,2,2035,agents,ocgt,4.548620311876068
+no_cfd,2,2035,agents,biomass,0.3107129213773166
+no_cfd,2,2035,agents,wind_onshore,22.51772080818116
+no_cfd,2,2035,agents,wind_offshore,10.705031154498235
+no_cfd,2,2035,agents,solar,13.036162982822582
+no_cfd,2,2035,agents,hydro,1.5
+no_cfd,2,2035,agents,battery,7.024680073126143
+no_cfd,2,2035,agents,pumped_hydro,2.9000000000000004
+no_cfd,2,2035,agents,nuclear,4.46
+no_cfd,2,2035,agents,gas_ccs,9.6
+no_cfd,2,2040,planner,ccgt,24.70332631074102
+no_cfd,2,2040,planner,ocgt,3.2009022430739345
+no_cfd,2,2040,planner,biomass,0.26374993547054876
+no_cfd,2,2040,planner,wind_onshore,37.131788386985306
+no_cfd,2,2040,planner,wind_offshore,48.36563374601312
+no_cfd,2,2040,planner,solar,37.612463759079716
+no_cfd,2,2040,planner,hydro,1.5
+no_cfd,2,2040,planner,pumped_hydro,2.9000000000000004
+no_cfd,2,2040,planner,nuclear,6.459999999999999
+no_cfd,2,2040,planner,gas_ccs,3.76997724055631
+no_cfd,2,2040,agents,ccgt,37.449425087286386
+no_cfd,2,2040,agents,ocgt,7.253249306316358
+no_cfd,2,2040,agents,biomass,0.26374993547054876
+no_cfd,2,2040,agents,wind_onshore,25.631788386985303
+no_cfd,2,2040,agents,wind_offshore,7.073696316534022
+no_cfd,2,2040,agents,solar,10.612463759079713
+no_cfd,2,2040,agents,hydro,1.5
+no_cfd,2,2040,agents,pumped_hydro,2.9000000000000004
+no_cfd,2,2040,agents,nuclear,6.459999999999999
+no_cfd,2,2040,agents,battery,5.0
+no_cfd,2,2040,agents,gas_ccs,14.400000000000004
+no_cfd,2,2045,planner,ccgt,14.8592643450822
+no_cfd,2,2045,planner,ocgt,7.679503418654068
+no_cfd,2,2045,planner,wind_onshore,46.73126140621794
+no_cfd,2,2045,planner,wind_offshore,47.96868926257306
+no_cfd,2,2045,planner,solar,35.79508682233376
+no_cfd,2,2045,planner,hydro,1.5
+no_cfd,2,2045,planner,pumped_hydro,2.9000000000000004
+no_cfd,2,2045,planner,nuclear,6.459999999999999
+no_cfd,2,2045,planner,gas_ccs,10.11373910139656
+no_cfd,2,2045,agents,ccgt,27.605363121627587
+no_cfd,2,2045,agents,ocgt,9.626343596096943
+no_cfd,2,2045,agents,wind_onshore,30.23126140621794
+no_cfd,2,2045,agents,wind_offshore,6.67675183309396
+no_cfd,2,2045,agents,solar,8.79508682233376
+no_cfd,2,2045,agents,hydro,1.5
+no_cfd,2,2045,agents,pumped_hydro,2.9000000000000004
+no_cfd,2,2045,agents,nuclear,6.459999999999999
+no_cfd,2,2045,agents,gas_ccs,19.200000000000006
+no_cfd,2,2045,agents,battery,6.0
+no_cfd,2,2050,planner,wind_offshore,46.14406695012098
+no_cfd,2,2050,planner,solar,32.5854219927077
+no_cfd,2,2050,planner,hydro,1.5
+no_cfd,2,2050,planner,pumped_hydro,2.9000000000000004
+no_cfd,2,2050,planner,nuclear,6.459999999999999
+no_cfd,2,2050,planner,wind_onshore,57.5
+no_cfd,2,2050,planner,ccgt,11.25390122345463
+no_cfd,2,2050,planner,ocgt,8.510838030922983
+no_cfd,2,2050,planner,gas_ccs,12.742463259544856
+no_cfd,2,2050,agents,wind_offshore,4.85212952064188
+no_cfd,2,2050,agents,solar,5.5438787916575745
+no_cfd,2,2050,agents,hydro,1.5
+no_cfd,2,2050,agents,pumped_hydro,2.9000000000000004
+no_cfd,2,2050,agents,nuclear,6.459999999999999
+no_cfd,2,2050,agents,ccgt,24.00000000000001
+no_cfd,2,2050,agents,gas_ccs,36.0
+no_cfd,2,2050,agents,wind_onshore,31.0
+no_cfd,2,2050,agents,ocgt,11.100000000000005
+no_cfd,2,2050,agents,battery,3.5
+no_cfd,3,2025,planner,ccgt,30.000000000000004
+no_cfd,3,2025,planner,ocgt,1.9999999999999996
+no_cfd,3,2025,planner,biomass,3.8000000000000007
+no_cfd,3,2025,planner,wind_onshore,14.999999999999996
+no_cfd,3,2025,planner,wind_offshore,15.499999999999998
+no_cfd,3,2025,planner,solar,18.000000000000004
+no_cfd,3,2025,planner,hydro,1.5
+no_cfd,3,2025,planner,battery,5.000000000000002
+no_cfd,3,2025,planner,pumped_hydro,2.9000000000000004
+no_cfd,3,2025,planner,nuclear,5.9
+no_cfd,3,2025,agents,ccgt,30.000000000000004
+no_cfd,3,2025,agents,ocgt,1.9999999999999996
+no_cfd,3,2025,agents,biomass,3.8000000000000007
+no_cfd,3,2025,agents,wind_onshore,14.999999999999996
+no_cfd,3,2025,agents,wind_offshore,15.499999999999998
+no_cfd,3,2025,agents,solar,18.000000000000004
+no_cfd,3,2025,agents,hydro,1.5
+no_cfd,3,2025,agents,battery,5.000000000000002
+no_cfd,3,2025,agents,pumped_hydro,2.9000000000000004
+no_cfd,3,2025,agents,nuclear,5.9
+no_cfd,3,2030,planner,ccgt,32.123964261401106
+no_cfd,3,2030,planner,ocgt,1.4014354899812627
+no_cfd,3,2030,planner,biomass,3.5347984099943224
+no_cfd,3,2030,planner,wind_onshore,20.39051110655162
+no_cfd,3,2030,planner,wind_offshore,20.5532083193849
+no_cfd,3,2030,planner,solar,45.746983820182685
+no_cfd,3,2030,planner,hydro,1.5
+no_cfd,3,2030,planner,battery,3.7020109689213903
+no_cfd,3,2030,planner,pumped_hydro,2.9000000000000004
+no_cfd,3,2030,planner,nuclear,5.2299999999999995
+no_cfd,3,2030,agents,ccgt,37.445479025668845
+no_cfd,3,2030,agents,ocgt,1.4014354899812627
+no_cfd,3,2030,agents,biomass,3.5347984099943224
+no_cfd,3,2030,agents,wind_onshore,17.39051110655162
+no_cfd,3,2030,agents,wind_offshore,14.5532083193849
+no_cfd,3,2030,agents,solar,15.746983820182685
+no_cfd,3,2030,agents,hydro,1.5
+no_cfd,3,2030,agents,battery,5.702010968921391
+no_cfd,3,2030,agents,pumped_hydro,2.9000000000000004
+no_cfd,3,2030,agents,nuclear,5.2299999999999995
+no_cfd,3,2035,planner,ccgt,29.423051977825278
+no_cfd,3,2035,planner,ocgt,0.900908188026662
+no_cfd,3,2035,planner,biomass,2.0543265706468437
+no_cfd,3,2035,planner,wind_onshore,27.948446594602768
+no_cfd,3,2035,planner,wind_offshore,46.99632803477397
+no_cfd,3,2035,planner,solar,41.94528790098825
+no_cfd,3,2035,planner,hydro,1.5
+no_cfd,3,2035,planner,battery,2.394881170018282
+no_cfd,3,2035,planner,pumped_hydro,2.9000000000000004
+no_cfd,3,2035,planner,nuclear,4.46
+no_cfd,3,2035,agents,ccgt,37.944566742093016
+no_cfd,3,2035,agents,ocgt,3.9009081880266607
+no_cfd,3,2035,agents,biomass,2.0543265706468437
+no_cfd,3,2035,agents,wind_onshore,21.448446594602768
+no_cfd,3,2035,agents,wind_offshore,11.91109629277669
+no_cfd,3,2035,agents,solar,13.945287900988246
+no_cfd,3,2035,agents,hydro,1.5
+no_cfd,3,2035,agents,battery,12.394881170018282
+no_cfd,3,2035,agents,pumped_hydro,2.9000000000000004
+no_cfd,3,2035,agents,nuclear,4.46
+no_cfd,3,2035,agents,gas_ccs,4.8
+no_cfd,3,2040,planner,ccgt,24.308888544935975
+no_cfd,3,2040,planner,ocgt,3.229523943452425
+no_cfd,3,2040,planner,biomass,0.5268917453925972
+no_cfd,3,2040,planner,wind_onshore,39.53219658110429
+no_cfd,3,2040,planner,wind_offshore,47.70043990339533
+no_cfd,3,2040,planner,solar,37.241730835177854
+no_cfd,3,2040,planner,hydro,1.5
+no_cfd,3,2040,planner,pumped_hydro,2.9000000000000004
+no_cfd,3,2040,planner,nuclear,6.459999999999999
+no_cfd,3,2040,planner,gas_ccs,3.2064870397326226
+no_cfd,3,2040,agents,ccgt,40.8304033092037
+no_cfd,3,2040,agents,ocgt,4.069360172832174
+no_cfd,3,2040,agents,biomass,0.5268917453925972
+no_cfd,3,2040,agents,wind_onshore,26.532196581104284
+no_cfd,3,2040,agents,wind_offshore,6.682108031057309
+no_cfd,3,2040,agents,solar,9.241730835177854
+no_cfd,3,2040,agents,hydro,1.5
+no_cfd,3,2040,agents,pumped_hydro,2.9000000000000004
+no_cfd,3,2040,agents,nuclear,6.459999999999999
+no_cfd,3,2040,agents,battery,10.0
+no_cfd,3,2040,agents,gas_ccs,13.600000000000003
+no_cfd,3,2045,planner,ccgt,19.971394816245628
+no_cfd,3,2045,planner,ocgt,2.990415544504981
+no_cfd,3,2045,planner,biomass,0.3241505343038563
+no_cfd,3,2045,planner,wind_onshore,48.533065883394706
+no_cfd,3,2045,planner,wind_offshore,47.054181142880005
+no_cfd,3,2045,planner,solar,33.964148767029336
+no_cfd,3,2045,planner,hydro,1.5
+no_cfd,3,2045,planner,pumped_hydro,2.9000000000000004
+no_cfd,3,2045,planner,nuclear,6.459999999999999
+no_cfd,3,2045,planner,gas_ccs,9.236920508364797
+no_cfd,3,2045,agents,ccgt,36.49290958051338
+no_cfd,3,2045,agents,ocgt,6.5302517738847286
+no_cfd,3,2045,agents,biomass,0.3241505343038563
+no_cfd,3,2045,agents,wind_onshore,29.033065883394706
+no_cfd,3,2045,agents,wind_offshore,6.035849270541991
+no_cfd,3,2045,agents,solar,5.964148767029336
+no_cfd,3,2045,agents,hydro,1.5
+no_cfd,3,2045,agents,pumped_hydro,2.9000000000000004
+no_cfd,3,2045,agents,nuclear,6.459999999999999
+no_cfd,3,2045,agents,gas_ccs,18.400000000000006
+no_cfd,3,2045,agents,battery,8.0
+no_cfd,3,2050,planner,wind_offshore,43.0726630653831
+no_cfd,3,2050,planner,solar,33.964148767029336
+no_cfd,3,2050,planner,hydro,1.5
+no_cfd,3,2050,planner,pumped_hydro,2.9000000000000004
+no_cfd,3,2050,planner,nuclear,6.459999999999999
+no_cfd,3,2050,planner,wind_onshore,57.5
+no_cfd,3,2050,planner,ccgt,8.038914217912664
+no_cfd,3,2050,planner,ocgt,9.856060725720402
+no_cfd,3,2050,planner,gas_ccs,14.405883893415607
+no_cfd,3,2050,agents,wind_offshore,1.1783635519367623
+no_cfd,3,2050,agents,solar,5.964148767029336
+no_cfd,3,2050,agents,hydro,1.5
+no_cfd,3,2050,agents,pumped_hydro,2.9000000000000004
+no_cfd,3,2050,agents,nuclear,6.459999999999999
+no_cfd,3,2050,agents,ccgt,24.00000000000001
+no_cfd,3,2050,agents,gas_ccs,35.2
+no_cfd,3,2050,agents,wind_onshore,27.0
+no_cfd,3,2050,agents,ocgt,10.800000000000004
+no_capacity_market,1,2025,planner,ccgt,30.000000000000004
+no_capacity_market,1,2025,planner,ocgt,1.9999999999999996
+no_capacity_market,1,2025,planner,biomass,3.8000000000000007
+no_capacity_market,1,2025,planner,wind_onshore,14.999999999999996
+no_capacity_market,1,2025,planner,wind_offshore,15.499999999999998
+no_capacity_market,1,2025,planner,solar,18.000000000000004
+no_capacity_market,1,2025,planner,hydro,1.5
+no_capacity_market,1,2025,planner,battery,5.000000000000002
+no_capacity_market,1,2025,planner,pumped_hydro,2.9000000000000004
+no_capacity_market,1,2025,planner,nuclear,5.9
+no_capacity_market,1,2025,agents,ccgt,30.000000000000004
+no_capacity_market,1,2025,agents,ocgt,1.9999999999999996
+no_capacity_market,1,2025,agents,biomass,3.8000000000000007
+no_capacity_market,1,2025,agents,wind_onshore,14.999999999999996
+no_capacity_market,1,2025,agents,wind_offshore,15.499999999999998
+no_capacity_market,1,2025,agents,solar,18.000000000000004
+no_capacity_market,1,2025,agents,hydro,1.5
+no_capacity_market,1,2025,agents,battery,5.000000000000002
+no_capacity_market,1,2025,agents,pumped_hydro,2.9000000000000004
+no_capacity_market,1,2025,agents,nuclear,5.9
+no_capacity_market,1,2030,planner,ccgt,32.28902190621284
+no_capacity_market,1,2030,planner,ocgt,1.5577318848741128
+no_capacity_market,1,2030,planner,biomass,3.475849465696145
+no_capacity_market,1,2030,planner,wind_onshore,20.61550381737093
+no_capacity_market,1,2030,planner,wind_offshore,19.289480362407264
+no_capacity_market,1,2030,planner,solar,44.48916669264582
+no_capacity_market,1,2030,planner,hydro,1.5
+no_capacity_market,1,2030,planner,battery,3.0347349177330902
+no_capacity_market,1,2030,planner,pumped_hydro,2.9000000000000004
+no_capacity_market,1,2030,planner,nuclear,5.2299999999999995
+no_capacity_market,1,2030,agents,ccgt,25.00775287456357
+no_capacity_market,1,2030,agents,biomass,3.475849465696145
+no_capacity_market,1,2030,agents,wind_onshore,17.61550381737093
+no_capacity_market,1,2030,agents,wind_offshore,17.289480362407264
+no_capacity_market,1,2030,agents,solar,21.989166692645817
+no_capacity_market,1,2030,agents,hydro,1.5
+no_capacity_market,1,2030,agents,battery,5.03473491773309
+no_capacity_market,1,2030,agents,pumped_hydro,2.9000000000000004
+no_capacity_market,1,2030,agents,nuclear,5.2299999999999995
+no_capacity_market,1,2035,planner,ccgt,29.385994271494866
+no_capacity_market,1,2035,planner,ocgt,1.4021112555929842
+no_capacity_market,1,2035,planner,biomass,1.7785906767848851
+no_capacity_market,1,2035,planner,wind_onshore,30.088469056078097
+no_capacity_market,1,2035,planner,wind_offshore,46.185830943528984
+no_capacity_market,1,2035,planner,solar,41.644792218723694
+no_capacity_market,1,2035,planner,hydro,1.5
+no_capacity_market,1,2035,planner,battery,1.7138939670932358
+no_capacity_market,1,2035,planner,pumped_hydro,2.9000000000000004
+no_capacity_market,1,2035,planner,nuclear,4.46
+no_capacity_market,1,2035,agents,ccgt,18.33195654622339
+no_capacity_market,1,2035,agents,biomass,1.6712270920448098
+no_capacity_market,1,2035,agents,wind_onshore,22.088469056078097
+no_capacity_market,1,2035,agents,wind_offshore,34.36323877196203
+no_capacity_market,1,2035,agents,solar,26.644792218723694
+no_capacity_market,1,2035,agents,hydro,1.5
+no_capacity_market,1,2035,agents,battery,9.213893967093236
+no_capacity_market,1,2035,agents,pumped_hydro,2.9000000000000004
+no_capacity_market,1,2035,agents,nuclear,4.46
+no_capacity_market,1,2035,agents,gas_ccs,8.799999999999999
+no_capacity_market,1,2040,planner,ccgt,20.141846635146713
+no_capacity_market,1,2040,planner,ocgt,7.211972404510306
+no_capacity_market,1,2040,planner,biomass,1.6347984099943218
+no_capacity_market,1,2040,planner,wind_onshore,39.12068183536171
+no_capacity_market,1,2040,planner,wind_offshore,49.453490235113605
+no_capacity_market,1,2040,planner,solar,39.84471739875924
+no_capacity_market,1,2040,planner,hydro,1.5
+no_capacity_market,1,2040,planner,pumped_hydro,2.9000000000000004
+no_capacity_market,1,2040,planner,nuclear,6.459999999999999
+no_capacity_market,1,2040,planner,gas_ccs,2.4133521517383896
+no_capacity_market,1,2040,agents,ccgt,12.002336510796892
+no_capacity_market,1,2040,agents,wind_onshore,26.120681835361705
+no_capacity_market,1,2040,agents,wind_offshore,53.10160307981383
+no_capacity_market,1,2040,agents,solar,32.34471739875924
+no_capacity_market,1,2040,agents,hydro,1.5
+no_capacity_market,1,2040,agents,pumped_hydro,2.9000000000000004
+no_capacity_market,1,2040,agents,nuclear,6.459999999999999
+no_capacity_market,1,2040,agents,gas_ccs,8.799999999999999
+no_capacity_market,1,2040,agents,battery,12.5
+no_capacity_market,1,2040,agents,ocgt,5.099999999999999
+no_capacity_market,1,2045,planner,ccgt,14.408129002783683
+no_capacity_market,1,2045,planner,ocgt,8.695943270645307
+no_capacity_market,1,2045,planner,biomass,1.5878354240875538
+no_capacity_market,1,2045,planner,wind_onshore,47.537525782102094
+no_capacity_market,1,2045,planner,wind_offshore,49.46023580637536
+no_capacity_market,1,2045,planner,solar,37.28353649032017
+no_capacity_market,1,2045,planner,hydro,1.5
+no_capacity_market,1,2045,planner,pumped_hydro,2.9000000000000004
+no_capacity_market,1,2045,planner,nuclear,6.459999999999999
+no_capacity_market,1,2045,planner,gas_ccs,7.639484644483566
+no_capacity_market,1,2045,agents,ccgt,6.268618878433862
+no_capacity_market,1,2045,agents,wind_onshore,29.537525782102094
+no_capacity_market,1,2045,agents,wind_offshore,71.29907508396056
+no_capacity_market,1,2045,agents,solar,37.28353649032017
+no_capacity_market,1,2045,agents,hydro,1.5
+no_capacity_market,1,2045,agents,pumped_hydro,2.9000000000000004
+no_capacity_market,1,2045,agents,nuclear,6.459999999999999
+no_capacity_market,1,2045,agents,gas_ccs,8.799999999999999
+no_capacity_market,1,2045,agents,battery,14.0
+no_capacity_market,1,2045,agents,ocgt,11.700000000000006
+no_capacity_market,1,2050,planner,wind_offshore,46.416274610913334
+no_capacity_market,1,2050,planner,solar,33.43461159113335
+no_capacity_market,1,2050,planner,hydro,1.5
+no_capacity_market,1,2050,planner,pumped_hydro,2.9000000000000004
+no_capacity_market,1,2050,planner,nuclear,6.459999999999999
+no_capacity_market,1,2050,planner,wind_onshore,57.5
+no_capacity_market,1,2050,planner,ccgt,9.73951012434982
+no_capacity_market,1,2050,planner,ocgt,9.9948489051817
+no_capacity_market,1,2050,planner,gas_ccs,13.145313703601953
+no_capacity_market,1,2050,agents,wind_offshore,87.47056520847056
+no_capacity_market,1,2050,agents,solar,40.89243071359541
+no_capacity_market,1,2050,agents,hydro,1.5
+no_capacity_market,1,2050,agents,pumped_hydro,2.9000000000000004
+no_capacity_market,1,2050,agents,nuclear,6.459999999999999
+no_capacity_market,1,2050,agents,wind_onshore,34.5
+no_capacity_market,1,2050,agents,gas_ccs,8.799999999999999
+no_capacity_market,1,2050,agents,ccgt,1.6
+no_capacity_market,1,2050,agents,ocgt,16.200000000000017
+no_capacity_market,1,2050,agents,battery,17.5
+no_capacity_market,2,2025,planner,ccgt,30.000000000000004
+no_capacity_market,2,2025,planner,ocgt,1.9999999999999996
+no_capacity_market,2,2025,planner,biomass,3.8000000000000007
+no_capacity_market,2,2025,planner,wind_onshore,14.999999999999996
+no_capacity_market,2,2025,planner,wind_offshore,15.499999999999998
+no_capacity_market,2,2025,planner,solar,18.000000000000004
+no_capacity_market,2,2025,planner,hydro,1.5
+no_capacity_market,2,2025,planner,battery,5.000000000000002
+no_capacity_market,2,2025,planner,pumped_hydro,2.9000000000000004
+no_capacity_market,2,2025,planner,nuclear,5.9
+no_capacity_market,2,2025,agents,ccgt,30.000000000000004
+no_capacity_market,2,2025,agents,ocgt,1.9999999999999996
+no_capacity_market,2,2025,agents,biomass,3.8000000000000007
+no_capacity_market,2,2025,agents,wind_onshore,14.999999999999996
+no_capacity_market,2,2025,agents,wind_offshore,15.499999999999998
+no_capacity_market,2,2025,agents,solar,18.000000000000004
+no_capacity_market,2,2025,agents,hydro,1.5
+no_capacity_market,2,2025,agents,battery,5.000000000000002
+no_capacity_market,2,2025,agents,pumped_hydro,2.9000000000000004
+no_capacity_market,2,2025,agents,nuclear,5.9
+no_capacity_market,2,2030,planner,ccgt,30.68378264920597
+no_capacity_market,2,2030,planner,ocgt,3.394586731813444
+no_capacity_market,2,2030,planner,biomass,0.4664911465592897
+no_capacity_market,2,2030,planner,wind_onshore,20.761125449499474
+no_capacity_market,2,2030,planner,wind_offshore,20.75758074792393
+no_capacity_market,2,2030,planner,solar,40.65034136608785
+no_capacity_market,2,2030,planner,hydro,1.5
+no_capacity_market,2,2030,planner,battery,4.643510054844609
+no_capacity_market,2,2030,planner,pumped_hydro,2.9000000000000004
+no_capacity_market,2,2030,planner,nuclear,5.2299999999999995
+no_capacity_market,2,2030,agents,ccgt,26.483782649205974
+no_capacity_market,2,2030,agents,biomass,0.4664911465592897
+no_capacity_market,2,2030,agents,wind_onshore,17.761125449499474
+no_capacity_market,2,2030,agents,wind_offshore,18.75758074792393
+no_capacity_market,2,2030,agents,solar,18.15034136608785
+no_capacity_market,2,2030,agents,hydro,1.5
+no_capacity_market,2,2030,agents,battery,4.643510054844609
+no_capacity_market,2,2030,agents,pumped_hydro,2.9000000000000004
+no_capacity_market,2,2030,agents,nuclear,5.2299999999999995
+no_capacity_market,2,2035,planner,ccgt,28.390589650612142
+no_capacity_market,2,2035,planner,ocgt,2.9821956478239695
+no_capacity_market,2,2035,planner,biomass,0.3107129213773166
+no_capacity_market,2,2035,planner,wind_onshore,30.51772080818116
+no_capacity_market,2,2035,planner,wind_offshore,46.60526797496374
+no_capacity_market,2,2035,planner,solar,40.03616298282258
+no_capacity_market,2,2035,planner,hydro,1.5
+no_capacity_market,2,2035,planner,battery,2.024680073126143
+no_capacity_market,2,2035,planner,pumped_hydro,2.9000000000000004
+no_capacity_market,2,2035,planner,nuclear,4.46
+no_capacity_market,2,2035,agents,ccgt,20.39236999191129
+no_capacity_market,2,2035,agents,biomass,0.3107129213773166
+no_capacity_market,2,2035,agents,wind_onshore,22.51772080818116
+no_capacity_market,2,2035,agents,wind_offshore,34.705031154498236
+no_capacity_market,2,2035,agents,solar,25.03616298282258
+no_capacity_market,2,2035,agents,hydro,1.5
+no_capacity_market,2,2035,agents,battery,7.524680073126143
+no_capacity_market,2,2035,agents,pumped_hydro,2.9000000000000004
+no_capacity_market,2,2035,agents,nuclear,4.46
+no_capacity_market,2,2035,agents,gas_ccs,9.6
+no_capacity_market,2,2040,planner,ccgt,24.771404050562996
+no_capacity_market,2,2040,planner,ocgt,3.6901419822931825
+no_capacity_market,2,2040,planner,biomass,0.26374993547054876
+no_capacity_market,2,2040,planner,wind_onshore,37.131788386985306
+no_capacity_market,2,2040,planner,wind_offshore,50.77021079369973
+no_capacity_market,2,2040,planner,solar,37.612463759079716
+no_capacity_market,2,2040,planner,hydro,1.5
+no_capacity_market,2,2040,planner,pumped_hydro,2.9000000000000004
+no_capacity_market,2,2040,planner,nuclear,6.459999999999999
+no_capacity_market,2,2040,planner,gas_ccs,3.1988847346070823
+no_capacity_market,2,2040,agents,ccgt,18.249425087286394
+no_capacity_market,2,2040,agents,wind_onshore,24.131788386985303
+no_capacity_market,2,2040,agents,wind_offshore,51.073696316534026
+no_capacity_market,2,2040,agents,solar,30.112463759079713
+no_capacity_market,2,2040,agents,hydro,1.5
+no_capacity_market,2,2040,agents,pumped_hydro,2.9000000000000004
+no_capacity_market,2,2040,agents,nuclear,6.459999999999999
+no_capacity_market,2,2040,agents,gas_ccs,9.6
+no_capacity_market,2,2040,agents,battery,11.0
+no_capacity_market,2,2045,planner,ccgt,14.927342084904176
+no_capacity_market,2,2045,planner,ocgt,9.11128636000641
+no_capacity_market,2,2045,planner,wind_onshore,46.73126140621794
+no_capacity_market,2,2045,planner,wind_offshore,50.373266310259666
+no_capacity_market,2,2045,planner,solar,35.79508682233376
+no_capacity_market,2,2045,planner,hydro,1.5
+no_capacity_market,2,2045,planner,pumped_hydro,2.9000000000000004
+no_capacity_market,2,2045,planner,nuclear,6.459999999999999
+no_capacity_market,2,2045,planner,gas_ccs,9.073576962270467
+no_capacity_market,2,2045,agents,ccgt,8.405363121627571
+no_capacity_market,2,2045,agents,wind_onshore,28.73126140621794
+no_capacity_market,2,2045,agents,wind_offshore,70.67675183309396
+no_capacity_market,2,2045,agents,solar,35.79508682233376
+no_capacity_market,2,2045,agents,hydro,1.5
+no_capacity_market,2,2045,agents,pumped_hydro,2.9000000000000004
+no_capacity_market,2,2045,agents,nuclear,6.459999999999999
+no_capacity_market,2,2045,agents,gas_ccs,9.6
+no_capacity_market,2,2045,agents,battery,11.0
+no_capacity_market,2,2045,agents,ocgt,8.7
+no_capacity_market,2,2050,planner,wind_offshore,48.54864399780759
+no_capacity_market,2,2050,planner,solar,32.78541130017809
+no_capacity_market,2,2050,planner,hydro,1.5
+no_capacity_market,2,2050,planner,pumped_hydro,2.9000000000000004
+no_capacity_market,2,2050,planner,nuclear,6.459999999999999
+no_capacity_market,2,2050,planner,wind_onshore,57.5
+no_capacity_market,2,2050,planner,ccgt,11.321978963276605
+no_capacity_market,2,2050,planner,ocgt,9.896252258728913
+no_capacity_market,2,2050,planner,gas_ccs,12.381791387476433
+no_capacity_market,2,2050,agents,wind_offshore,88.85212952064188
+no_capacity_market,2,2050,agents,solar,40.043878791657576
+no_capacity_market,2,2050,agents,hydro,1.5
+no_capacity_market,2,2050,agents,pumped_hydro,2.9000000000000004
+no_capacity_market,2,2050,agents,nuclear,6.459999999999999
+no_capacity_market,2,2050,agents,wind_onshore,34.5
+no_capacity_market,2,2050,agents,gas_ccs,9.6
+no_capacity_market,2,2050,agents,ccgt,4.8
+no_capacity_market,2,2050,agents,battery,16.5
+no_capacity_market,2,2050,agents,ocgt,12.90000000000001
+no_capacity_market,3,2025,planner,ccgt,30.000000000000004
+no_capacity_market,3,2025,planner,ocgt,1.9999999999999996
+no_capacity_market,3,2025,planner,biomass,3.8000000000000007
+no_capacity_market,3,2025,planner,wind_onshore,14.999999999999996
+no_capacity_market,3,2025,planner,wind_offshore,15.499999999999998
+no_capacity_market,3,2025,planner,solar,18.000000000000004
+no_capacity_market,3,2025,planner,hydro,1.5
+no_capacity_market,3,2025,planner,battery,5.000000000000002
+no_capacity_market,3,2025,planner,pumped_hydro,2.9000000000000004
+no_capacity_market,3,2025,planner,nuclear,5.9
+no_capacity_market,3,2025,agents,ccgt,30.000000000000004
+no_capacity_market,3,2025,agents,ocgt,1.9999999999999996
+no_capacity_market,3,2025,agents,biomass,3.8000000000000007
+no_capacity_market,3,2025,agents,wind_onshore,14.999999999999996
+no_capacity_market,3,2025,agents,wind_offshore,15.499999999999998
+no_capacity_market,3,2025,agents,solar,18.000000000000004
+no_capacity_market,3,2025,agents,hydro,1.5
+no_capacity_market,3,2025,agents,battery,5.000000000000002
+no_capacity_market,3,2025,agents,pumped_hydro,2.9000000000000004
+no_capacity_market,3,2025,agents,nuclear,5.9
+no_capacity_market,3,2030,planner,ccgt,31.835829762370544
+no_capacity_market,3,2030,planner,ocgt,1.4014354899812627
+no_capacity_market,3,2030,planner,biomass,3.5347984099943224
+no_capacity_market,3,2030,planner,wind_onshore,20.39051110655162
+no_capacity_market,3,2030,planner,wind_offshore,20.5532083193849
+no_capacity_market,3,2030,planner,solar,45.746983820182685
+no_capacity_market,3,2030,planner,hydro,1.5
+no_capacity_market,3,2030,planner,battery,3.7020109689213903
+no_capacity_market,3,2030,planner,pumped_hydro,2.9000000000000004
+no_capacity_market,3,2030,planner,nuclear,5.2299999999999995
+no_capacity_market,3,2030,agents,ccgt,25.46695198992495
+no_capacity_market,3,2030,agents,biomass,3.5347984099943224
+no_capacity_market,3,2030,agents,wind_onshore,17.39051110655162
+no_capacity_market,3,2030,agents,wind_offshore,18.5532083193849
+no_capacity_market,3,2030,agents,solar,23.246983820182685
+no_capacity_market,3,2030,agents,hydro,1.5
+no_capacity_market,3,2030,agents,battery,5.202010968921391
+no_capacity_market,3,2030,agents,pumped_hydro,2.9000000000000004
+no_capacity_market,3,2030,agents,nuclear,5.2299999999999995
+no_capacity_market,3,2035,planner,ccgt,29.134917478794712
+no_capacity_market,3,2035,planner,ocgt,0.900908188026662
+no_capacity_market,3,2035,planner,biomass,2.0543265706468437
+no_capacity_market,3,2035,planner,wind_onshore,27.948446594602768
+no_capacity_market,3,2035,planner,wind_offshore,47.03121443430463
+no_capacity_market,3,2035,planner,solar,41.94528790098825
+no_capacity_market,3,2035,planner,hydro,1.5
+no_capacity_market,3,2035,planner,battery,2.394881170018282
+no_capacity_market,3,2035,planner,pumped_hydro,2.9000000000000004
+no_capacity_market,3,2035,planner,nuclear,4.46
+no_capacity_market,3,2035,agents,ccgt,16.888568298401715
+no_capacity_market,3,2035,agents,biomass,2.0543265706468437
+no_capacity_market,3,2035,agents,wind_onshore,19.948446594602768
+no_capacity_market,3,2035,agents,wind_offshore,35.91109629277669
+no_capacity_market,3,2035,agents,solar,26.945287900988248
+no_capacity_market,3,2035,agents,hydro,1.5
+no_capacity_market,3,2035,agents,battery,9.394881170018282
+no_capacity_market,3,2035,agents,pumped_hydro,2.9000000000000004
+no_capacity_market,3,2035,agents,nuclear,4.46
+no_capacity_market,3,2035,agents,gas_ccs,7.199999999999999
+no_capacity_market,3,2035,agents,ocgt,1.8
+no_capacity_market,3,2040,planner,ccgt,24.020754045905413
+no_capacity_market,3,2040,planner,ocgt,4.038740165419457
+no_capacity_market,3,2040,planner,biomass,0.5268917453925972
+no_capacity_market,3,2040,planner,wind_onshore,39.53219658110429
+no_capacity_market,3,2040,planner,wind_offshore,49.152975646214315
+no_capacity_market,3,2040,planner,solar,37.241730835177854
+no_capacity_market,3,2040,planner,hydro,1.5
+no_capacity_market,3,2040,planner,pumped_hydro,2.9000000000000004
+no_capacity_market,3,2040,planner,nuclear,6.459999999999999
+no_capacity_market,3,2040,planner,gas_ccs,2.665657782982737
+no_capacity_market,3,2040,agents,ccgt,16.888568298401715
+no_capacity_market,3,2040,agents,biomass,0.5268917453925972
+no_capacity_market,3,2040,agents,wind_onshore,26.532196581104284
+no_capacity_market,3,2040,agents,wind_offshore,50.68210803105731
+no_capacity_market,3,2040,agents,solar,29.741730835177854
+no_capacity_market,3,2040,agents,hydro,1.5
+no_capacity_market,3,2040,agents,pumped_hydro,2.9000000000000004
+no_capacity_market,3,2040,agents,nuclear,6.459999999999999
+no_capacity_market,3,2040,agents,gas_ccs,7.199999999999999
+no_capacity_market,3,2040,agents,battery,12.5
+no_capacity_market,3,2040,agents,ocgt,2.9999999999999996
+no_capacity_market,3,2045,planner,ccgt,19.683260317215066
+no_capacity_market,3,2045,planner,ocgt,4.418055168661379
+no_capacity_market,3,2045,planner,biomass,0.3241505343038563
+no_capacity_market,3,2045,planner,wind_onshore,48.533065883394706
+no_capacity_market,3,2045,planner,wind_offshore,48.96644006700846
+no_capacity_market,3,2045,planner,solar,33.964148767029336
+no_capacity_market,3,2045,planner,hydro,1.5
+no_capacity_market,3,2045,planner,pumped_hydro,2.9000000000000004
+no_capacity_market,3,2045,planner,nuclear,6.459999999999999
+no_capacity_market,3,2045,planner,gas_ccs,8.136829667340539
+no_capacity_market,3,2045,agents,ccgt,14.892909580513379
+no_capacity_market,3,2045,agents,biomass,0.3241505343038563
+no_capacity_market,3,2045,agents,wind_onshore,30.533065883394706
+no_capacity_market,3,2045,agents,wind_offshore,70.03584927054199
+no_capacity_market,3,2045,agents,solar,33.964148767029336
+no_capacity_market,3,2045,agents,hydro,1.5
+no_capacity_market,3,2045,agents,pumped_hydro,2.9000000000000004
+no_capacity_market,3,2045,agents,nuclear,6.459999999999999
+no_capacity_market,3,2045,agents,gas_ccs,7.199999999999999
+no_capacity_market,3,2045,agents,battery,15.0
+no_capacity_market,3,2045,agents,ocgt,6.299999999999998
+no_capacity_market,3,2050,planner,wind_offshore,45.972529511232324
+no_capacity_market,3,2050,planner,solar,33.964148767029336
+no_capacity_market,3,2050,planner,hydro,1.5
+no_capacity_market,3,2050,planner,pumped_hydro,2.9000000000000004
+no_capacity_market,3,2050,planner,nuclear,6.459999999999999
+no_capacity_market,3,2050,planner,wind_onshore,57.5
+no_capacity_market,3,2050,planner,ccgt,7.664181733430764
+no_capacity_market,3,2050,planner,ocgt,11.824146349629048
+no_capacity_market,3,2050,planner,gas_ccs,13.543959956959286
+no_capacity_market,3,2050,agents,wind_offshore,85.17836355193677
+no_capacity_market,3,2050,agents,solar,41.464148767029336
+no_capacity_market,3,2050,agents,hydro,1.5
+no_capacity_market,3,2050,agents,pumped_hydro,2.9000000000000004
+no_capacity_market,3,2050,agents,nuclear,6.459999999999999
+no_capacity_market,3,2050,agents,wind_onshore,34.5
+no_capacity_market,3,2050,agents,gas_ccs,7.199999999999999
+no_capacity_market,3,2050,agents,ccgt,2.4000000000000004
+no_capacity_market,3,2050,agents,ocgt,14.400000000000013
+no_capacity_market,3,2050,agents,battery,10.0
+heat_push,1,2025,planner,ccgt,30.000000000000004
+heat_push,1,2025,planner,ocgt,1.9999999999999996
+heat_push,1,2025,planner,biomass,3.8000000000000007
+heat_push,1,2025,planner,wind_onshore,14.999999999999996
+heat_push,1,2025,planner,wind_offshore,15.499999999999998
+heat_push,1,2025,planner,solar,18.000000000000004
+heat_push,1,2025,planner,hydro,1.5
+heat_push,1,2025,planner,battery,5.000000000000002
+heat_push,1,2025,planner,pumped_hydro,2.9000000000000004
+heat_push,1,2025,planner,nuclear,5.9
+heat_push,1,2025,agents,ccgt,30.000000000000004
+heat_push,1,2025,agents,ocgt,1.9999999999999996
+heat_push,1,2025,agents,biomass,3.8000000000000007
+heat_push,1,2025,agents,wind_onshore,14.999999999999996
+heat_push,1,2025,agents,wind_offshore,15.499999999999998
+heat_push,1,2025,agents,solar,18.000000000000004
+heat_push,1,2025,agents,hydro,1.5
+heat_push,1,2025,agents,battery,5.000000000000002
+heat_push,1,2025,agents,pumped_hydro,2.9000000000000004
+heat_push,1,2025,agents,nuclear,5.9
+heat_push,1,2030,planner,ccgt,32.40775287456357
+heat_push,1,2030,planner,ocgt,3.9345096329458773
+heat_push,1,2030,planner,biomass,3.475849465696145
+heat_push,1,2030,planner,wind_onshore,20.61550381737093
+heat_push,1,2030,planner,wind_offshore,19.289480362407264
+heat_push,1,2030,planner,solar,44.48916669264582
+heat_push,1,2030,planner,hydro,1.5
+heat_push,1,2030,planner,battery,3.0347349177330902
+heat_push,1,2030,planner,pumped_hydro,2.9000000000000004
+heat_push,1,2030,planner,nuclear,5.2299999999999995
+heat_push,1,2030,agents,ccgt,37.807752874563555
+heat_push,1,2030,agents,ocgt,1.5577318848741128
+heat_push,1,2030,agents,biomass,3.475849465696145
+heat_push,1,2030,agents,wind_onshore,17.61550381737093
+heat_push,1,2030,agents,wind_offshore,17.289480362407264
+heat_push,1,2030,agents,solar,21.989166692645817
+heat_push,1,2030,agents,hydro,1.5
+heat_push,1,2030,agents,battery,5.03473491773309
+heat_push,1,2030,agents,pumped_hydro,2.9000000000000004
+heat_push,1,2030,agents,nuclear,5.2299999999999995
+heat_push,1,2035,planner,ccgt,38.37296209586166
+heat_push,1,2035,planner,ocgt,3.778889003664749
+heat_push,1,2035,planner,biomass,1.7785906767848851
+heat_push,1,2035,planner,wind_onshore,30.088469056078097
+heat_push,1,2035,planner,wind_offshore,46.36323877196203
+heat_push,1,2035,planner,solar,41.644792218723694
+heat_push,1,2035,planner,hydro,1.5
+heat_push,1,2035,planner,battery,1.7138939670932358
+heat_push,1,2035,planner,pumped_hydro,2.9000000000000004
+heat_push,1,2035,planner,nuclear,4.46
+heat_push,1,2035,planner,gas_ccs,0.41352108285691846
+heat_push,1,2035,agents,ccgt,34.9047252398456
+heat_push,1,2035,agents,ocgt,11.90211125559299
+heat_push,1,2035,agents,biomass,1.7785906767848851
+heat_push,1,2035,agents,wind_onshore,22.088469056078097
+heat_push,1,2035,agents,wind_offshore,34.36323877196203
+heat_push,1,2035,agents,solar,26.644792218723694
+heat_push,1,2035,agents,hydro,1.5
+heat_push,1,2035,agents,battery,12.213893967093236
+heat_push,1,2035,agents,pumped_hydro,2.9000000000000004
+heat_push,1,2035,agents,nuclear,4.46
+heat_push,1,2035,agents,gas_ccs,9.6
+heat_push,1,2040,planner,ccgt,31.176185567416546
+heat_push,1,2040,planner,ocgt,8.765793329210329
+heat_push,1,2040,planner,biomass,1.6347984099943218
+heat_push,1,2040,planner,wind_onshore,39.12068183536171
+heat_push,1,2040,planner,wind_offshore,65.69264410442057
+heat_push,1,2040,planner,solar,39.84471739875924
+heat_push,1,2040,planner,hydro,1.5
+heat_push,1,2040,planner,pumped_hydro,2.9000000000000004
+heat_push,1,2040,planner,nuclear,6.459999999999999
+heat_push,1,2040,planner,gas_ccs,7.913521082856919
+heat_push,1,2040,agents,ccgt,24.802336510796902
+heat_push,1,2040,agents,ocgt,23.92311323169549
+heat_push,1,2040,agents,biomass,1.6347984099943218
+heat_push,1,2040,agents,wind_onshore,26.120681835361705
+heat_push,1,2040,agents,wind_offshore,53.10160307981383
+heat_push,1,2040,agents,solar,32.34471739875924
+heat_push,1,2040,agents,hydro,1.5
+heat_push,1,2040,agents,pumped_hydro,2.9000000000000004
+heat_push,1,2040,agents,nuclear,6.459999999999999
+heat_push,1,2040,agents,battery,15.5
+heat_push,1,2040,agents,gas_ccs,9.6
+heat_push,1,2045,planner,ccgt,25.442467935053514
+heat_push,1,2045,planner,ocgt,10.920994552868915
+heat_push,1,2045,planner,biomass,1.5878354240875538
+heat_push,1,2045,planner,wind_onshore,47.537525782102094
+heat_push,1,2045,planner,wind_offshore,65.70888570133873
+heat_push,1,2045,planner,solar,37.28353649032017
+heat_push,1,2045,planner,hydro,1.5
+heat_push,1,2045,planner,pumped_hydro,2.9000000000000004
+heat_push,1,2045,planner,nuclear,6.459999999999999
+heat_push,1,2045,planner,gas_ccs,15.413521082856919
+heat_push,1,2045,agents,ccgt,19.06861887843387
+heat_push,1,2045,agents,ocgt,37.64692680229761
+heat_push,1,2045,agents,biomass,1.5878354240875538
+heat_push,1,2045,agents,wind_onshore,29.537525782102094
+heat_push,1,2045,agents,wind_offshore,71.29907508396056
+heat_push,1,2045,agents,solar,37.28353649032017
+heat_push,1,2045,agents,hydro,1.5
+heat_push,1,2045,agents,pumped_hydro,2.9000000000000004
+heat_push,1,2045,agents,nuclear,6.459999999999999
+heat_push,1,2045,agents,gas_ccs,9.6
+heat_push,1,2045,agents,battery,22.0
+heat_push,1,2050,planner,wind_offshore,62.49122148560397
+heat_push,1,2050,planner,solar,33.39243071359541
+heat_push,1,2050,planner,hydro,1.5
+heat_push,1,2050,planner,pumped_hydro,2.9000000000000004
+heat_push,1,2050,planner,nuclear,6.459999999999999
+heat_push,1,2050,planner,wind_onshore,57.5
+heat_push,1,2050,planner,ccgt,20.773849056619653
+heat_push,1,2050,planner,ocgt,12.184024769632787
+heat_push,1,2050,planner,gas_ccs,21.356001771862303
+heat_push,1,2050,agents,wind_offshore,87.47056520847056
+heat_push,1,2050,agents,solar,40.89243071359541
+heat_push,1,2050,agents,hydro,1.5
+heat_push,1,2050,agents,pumped_hydro,2.9000000000000004
+heat_push,1,2050,agents,nuclear,6.459999999999999
+heat_push,1,2050,agents,wind_onshore,34.5
+heat_push,1,2050,agents,ccgt,14.400000000000004
+heat_push,1,2050,agents,gas_ccs,9.6
+heat_push,1,2050,agents,ocgt,49.19999999999989
+heat_push,1,2050,agents,battery,27.0
+heat_push,2,2025,planner,ccgt,30.000000000000004
+heat_push,2,2025,planner,ocgt,1.9999999999999996
+heat_push,2,2025,planner,biomass,3.8000000000000007
+heat_push,2,2025,planner,wind_onshore,14.999999999999996
+heat_push,2,2025,planner,wind_offshore,15.499999999999998
+heat_push,2,2025,planner,solar,18.000000000000004
+heat_push,2,2025,planner,hydro,1.5
+heat_push,2,2025,planner,battery,5.000000000000002
+heat_push,2,2025,planner,pumped_hydro,2.9000000000000004
+heat_push,2,2025,planner,nuclear,5.9
+heat_push,2,2025,agents,ccgt,30.000000000000004
+heat_push,2,2025,agents,ocgt,1.9999999999999996
+heat_push,2,2025,agents,biomass,3.8000000000000007
+heat_push,2,2025,agents,wind_onshore,14.999999999999996
+heat_push,2,2025,agents,wind_offshore,15.499999999999998
+heat_push,2,2025,agents,solar,18.000000000000004
+heat_push,2,2025,agents,hydro,1.5
+heat_push,2,2025,agents,battery,5.000000000000002
+heat_push,2,2025,agents,pumped_hydro,2.9000000000000004
+heat_push,2,2025,agents,nuclear,5.9
+heat_push,2,2030,planner,ccgt,30.68378264920597
+heat_push,2,2030,planner,ocgt,7.225238283523245
+heat_push,2,2030,planner,biomass,0.4664911465592897
+heat_push,2,2030,planner,wind_onshore,20.761125449499474
+heat_push,2,2030,planner,wind_offshore,20.75758074792393
+heat_push,2,2030,planner,solar,40.65034136608785
+heat_push,2,2030,planner,hydro,1.5
+heat_push,2,2030,planner,battery,4.643510054844609
+heat_push,2,2030,planner,pumped_hydro,2.9000000000000004
+heat_push,2,2030,planner,nuclear,5.2299999999999995
+heat_push,2,2030,agents,ccgt,41.683782649205945
+heat_push,2,2030,agents,ocgt,1.6610113958655428
+heat_push,2,2030,agents,biomass,0.4664911465592897
+heat_push,2,2030,agents,wind_onshore,17.761125449499474
+heat_push,2,2030,agents,wind_offshore,18.75758074792393
+heat_push,2,2030,agents,solar,18.15034136608785
+heat_push,2,2030,agents,hydro,1.5
+heat_push,2,2030,agents,battery,6.643510054844609
+heat_push,2,2030,agents,pumped_hydro,2.9000000000000004
+heat_push,2,2030,agents,nuclear,5.2299999999999995
+heat_push,2,2035,planner,ccgt,35.86128854305126
+heat_push,2,2035,planner,ocgt,6.8128471995337705
+heat_push,2,2035,planner,biomass,0.3107129213773166
+heat_push,2,2035,planner,wind_onshore,30.51772080818116
+heat_push,2,2035,planner,wind_offshore,46.705031154498236
+heat_push,2,2035,planner,solar,40.03616298282258
+heat_push,2,2035,planner,hydro,1.5
+heat_push,2,2035,planner,battery,2.024680073126143
+heat_push,2,2035,planner,pumped_hydro,2.9000000000000004
+heat_push,2,2035,planner,nuclear,4.46
+heat_push,2,2035,planner,gas_ccs,1.8404707690373596
+heat_push,2,2035,agents,ccgt,37.06861068733553
+heat_push,2,2035,agents,ocgt,10.548620311876071
+heat_push,2,2035,agents,biomass,0.3107129213773166
+heat_push,2,2035,agents,wind_onshore,22.51772080818116
+heat_push,2,2035,agents,wind_offshore,34.705031154498236
+heat_push,2,2035,agents,solar,25.03616298282258
+heat_push,2,2035,agents,hydro,1.5
+heat_push,2,2035,agents,battery,14.024680073126143
+heat_push,2,2035,agents,pumped_hydro,2.9000000000000004
+heat_push,2,2035,agents,nuclear,4.46
+heat_push,2,2035,agents,gas_ccs,7.199999999999999
+heat_push,2,2040,planner,ccgt,33.59242687155509
+heat_push,2,2040,planner,ocgt,6.733018476556804
+heat_push,2,2040,planner,biomass,0.26374993547054876
+heat_push,2,2040,planner,wind_onshore,37.131788386985306
+heat_push,2,2040,planner,wind_offshore,67.11147215185355
+heat_push,2,2040,planner,solar,37.612463759079716
+heat_push,2,2040,planner,hydro,1.5
+heat_push,2,2040,planner,pumped_hydro,2.9000000000000004
+heat_push,2,2040,planner,nuclear,6.459999999999999
+heat_push,2,2040,planner,gas_ccs,9.34047076903736
+heat_push,2,2040,agents,ccgt,33.4494250872864
+heat_push,2,2040,agents,ocgt,23.753249306316395
+heat_push,2,2040,agents,biomass,0.26374993547054876
+heat_push,2,2040,agents,wind_onshore,24.131788386985303
+heat_push,2,2040,agents,wind_offshore,51.073696316534026
+heat_push,2,2040,agents,solar,30.112463759079713
+heat_push,2,2040,agents,hydro,1.5
+heat_push,2,2040,agents,pumped_hydro,2.9000000000000004
+heat_push,2,2040,agents,nuclear,6.459999999999999
+heat_push,2,2040,agents,battery,15.0
+heat_push,2,2040,agents,gas_ccs,7.199999999999999
+heat_push,2,2045,planner,ccgt,25.26805339788829
+heat_push,2,2045,planner,ocgt,11.735922684086137
+heat_push,2,2045,planner,wind_onshore,46.73126140621794
+heat_push,2,2045,planner,wind_offshore,66.71452766841348
+heat_push,2,2045,planner,solar,35.79508682233376
+heat_push,2,2045,planner,hydro,1.5
+heat_push,2,2045,planner,pumped_hydro,2.9000000000000004
+heat_push,2,2045,planner,nuclear,6.459999999999999
+heat_push,2,2045,planner,gas_ccs,16.84047076903736
+heat_push,2,2045,agents,ccgt,24.405363121627584
+heat_push,2,2045,agents,ocgt,36.02634359609696
+heat_push,2,2045,agents,wind_onshore,28.73126140621794
+heat_push,2,2045,agents,wind_offshore,70.67675183309396
+heat_push,2,2045,agents,solar,35.79508682233376
+heat_push,2,2045,agents,hydro,1.5
+heat_push,2,2045,agents,pumped_hydro,2.9000000000000004
+heat_push,2,2045,agents,nuclear,6.459999999999999
+heat_push,2,2045,agents,gas_ccs,7.199999999999999
+heat_push,2,2045,agents,battery,21.5
+heat_push,2,2050,planner,wind_offshore,64.8899053559614
+heat_push,2,2050,planner,solar,32.543878791657576
+heat_push,2,2050,planner,hydro,1.5
+heat_push,2,2050,planner,pumped_hydro,2.9000000000000004
+heat_push,2,2050,planner,nuclear,6.459999999999999
+heat_push,2,2050,planner,wind_onshore,57.5
+heat_push,2,2050,planner,ccgt,21.662690276260715
+heat_push,2,2050,planner,ocgt,12.3204610323613
+heat_push,2,2050,planner,gas_ccs,21.005930344045534
+heat_push,2,2050,agents,wind_offshore,88.85212952064188
+heat_push,2,2050,agents,solar,40.043878791657576
+heat_push,2,2050,agents,hydro,1.5
+heat_push,2,2050,agents,pumped_hydro,2.9000000000000004
+heat_push,2,2050,agents,nuclear,6.459999999999999
+heat_push,2,2050,agents,wind_onshore,34.5
+heat_push,2,2050,agents,ccgt,21.60000000000001
+heat_push,2,2050,agents,gas_ccs,7.199999999999999
+heat_push,2,2050,agents,ocgt,45.89999999999992
+heat_push,2,2050,agents,battery,27.5
+heat_push,3,2025,planner,ccgt,30.000000000000004
+heat_push,3,2025,planner,ocgt,1.9999999999999996
+heat_push,3,2025,planner,biomass,3.8000000000000007
+heat_push,3,2025,planner,wind_onshore,14.999999999999996
+heat_push,3,2025,planner,wind_offshore,15.499999999999998
+heat_push,3,2025,planner,solar,18.000000000000004
+heat_push,3,2025,planner,hydro,1.5
+heat_push,3,2025,planner,battery,5.000000000000002
+heat_push,3,2025,planner,pumped_hydro,2.9000000000000004
+heat_push,3,2025,planner,nuclear,5.9
+heat_push,3,2025,agents,ccgt,30.000000000000004
+heat_push,3,2025,agents,ocgt,1.9999999999999996
+heat_push,3,2025,agents,biomass,3.8000000000000007
+heat_push,3,2025,agents,wind_onshore,14.999999999999996
+heat_push,3,2025,agents,wind_offshore,15.499999999999998
+heat_push,3,2025,agents,solar,18.000000000000004
+heat_push,3,2025,agents,hydro,1.5
+heat_push,3,2025,agents,battery,5.000000000000002
+heat_push,3,2025,agents,pumped_hydro,2.9000000000000004
+heat_push,3,2025,agents,nuclear,5.9
+heat_push,3,2030,planner,ccgt,33.645479025668855
+heat_push,3,2030,planner,ocgt,3.045865336101789
+heat_push,3,2030,planner,biomass,3.5347984099943224
+heat_push,3,2030,planner,wind_onshore,20.39051110655162
+heat_push,3,2030,planner,wind_offshore,20.5532083193849
+heat_push,3,2030,planner,solar,45.746983820182685
+heat_push,3,2030,planner,hydro,1.5
+heat_push,3,2030,planner,battery,3.7020109689213903
+heat_push,3,2030,planner,pumped_hydro,2.9000000000000004
+heat_push,3,2030,planner,nuclear,5.2299999999999995
+heat_push,3,2030,agents,ccgt,37.445479025668845
+heat_push,3,2030,agents,ocgt,1.4014354899812627
+heat_push,3,2030,agents,biomass,3.5347984099943224
+heat_push,3,2030,agents,wind_onshore,17.39051110655162
+heat_push,3,2030,agents,wind_offshore,18.5532083193849
+heat_push,3,2030,agents,solar,23.246983820182685
+heat_push,3,2030,agents,hydro,1.5
+heat_push,3,2030,agents,battery,5.702010968921391
+heat_push,3,2030,agents,pumped_hydro,2.9000000000000004
+heat_push,3,2030,agents,nuclear,5.2299999999999995
+heat_push,3,2035,planner,ccgt,38.58877169077003
+heat_push,3,2035,planner,ocgt,2.5453380341471883
+heat_push,3,2035,planner,biomass,2.0543265706468437
+heat_push,3,2035,planner,wind_onshore,27.948446594602768
+heat_push,3,2035,planner,wind_offshore,47.91109629277669
+heat_push,3,2035,planner,solar,41.94528790098825
+heat_push,3,2035,planner,hydro,1.5
+heat_push,3,2035,planner,battery,2.394881170018282
+heat_push,3,2035,planner,pumped_hydro,2.9000000000000004
+heat_push,3,2035,planner,nuclear,4.46
+heat_push,3,2035,planner,gas_ccs,0.7702448765203188
+heat_push,3,2035,agents,ccgt,34.74456674209303
+heat_push,3,2035,agents,ocgt,9.600908188026663
+heat_push,3,2035,agents,biomass,2.0543265706468437
+heat_push,3,2035,agents,wind_onshore,19.948446594602768
+heat_push,3,2035,agents,wind_offshore,35.91109629277669
+heat_push,3,2035,agents,solar,26.945287900988248
+heat_push,3,2035,agents,hydro,1.5
+heat_push,3,2035,agents,battery,13.394881170018282
+heat_push,3,2035,agents,pumped_hydro,2.9000000000000004
+heat_push,3,2035,agents,nuclear,4.46
+heat_push,3,2035,agents,gas_ccs,9.6
+heat_push,3,2040,planner,ccgt,33.47460825788073
+heat_push,3,2040,planner,ocgt,7.387668750789754
+heat_push,3,2040,planner,biomass,0.5268917453925972
+heat_push,3,2040,planner,wind_onshore,39.53219658110429
+heat_push,3,2040,planner,wind_offshore,66.00036750035201
+heat_push,3,2040,planner,solar,37.241730835177854
+heat_push,3,2040,planner,hydro,1.5
+heat_push,3,2040,planner,pumped_hydro,2.9000000000000004
+heat_push,3,2040,planner,nuclear,6.459999999999999
+heat_push,3,2040,planner,gas_ccs,8.27024487652032
+heat_push,3,2040,agents,ccgt,29.630403309203736
+heat_push,3,2040,agents,ocgt,22.669360172832207
+heat_push,3,2040,agents,biomass,0.5268917453925972
+heat_push,3,2040,agents,wind_onshore,26.532196581104284
+heat_push,3,2040,agents,wind_offshore,50.68210803105731
+heat_push,3,2040,agents,solar,29.741730835177854
+heat_push,3,2040,agents,hydro,1.5
+heat_push,3,2040,agents,pumped_hydro,2.9000000000000004
+heat_push,3,2040,agents,nuclear,6.459999999999999
+heat_push,3,2040,agents,battery,14.5
+heat_push,3,2040,agents,gas_ccs,9.6
+heat_push,3,2045,planner,ccgt,29.137114529190384
+heat_push,3,2045,planner,ocgt,8.192014804796504
+heat_push,3,2045,planner,biomass,0.3241505343038563
+heat_push,3,2045,planner,wind_onshore,48.533065883394706
+heat_push,3,2045,planner,wind_offshore,66.18153754997475
+heat_push,3,2045,planner,solar,33.964148767029336
+heat_push,3,2045,planner,hydro,1.5
+heat_push,3,2045,planner,pumped_hydro,2.9000000000000004
+heat_push,3,2045,planner,nuclear,6.459999999999999
+heat_push,3,2045,planner,gas_ccs,15.77024487652032
+heat_push,3,2045,agents,ccgt,25.29290958051339
+heat_push,3,2045,agents,ocgt,35.330251773884754
+heat_push,3,2045,agents,biomass,0.3241505343038563
+heat_push,3,2045,agents,wind_onshore,30.533065883394706
+heat_push,3,2045,agents,wind_offshore,70.03584927054199
+heat_push,3,2045,agents,solar,33.964148767029336
+heat_push,3,2045,agents,hydro,1.5
+heat_push,3,2045,agents,pumped_hydro,2.9000000000000004
+heat_push,3,2045,agents,nuclear,6.459999999999999
+heat_push,3,2045,agents,gas_ccs,9.6
+heat_push,3,2045,agents,battery,20.5
+heat_push,3,2050,planner,wind_offshore,62.588223174623316
+heat_push,3,2050,planner,solar,33.964148767029336
+heat_push,3,2050,planner,hydro,1.5
+heat_push,3,2050,planner,pumped_hydro,2.9000000000000004
+heat_push,3,2050,planner,nuclear,6.459999999999999
+heat_push,3,2050,planner,wind_onshore,57.5
+heat_push,3,2050,planner,ccgt,20.693983567921368
+heat_push,3,2050,planner,ocgt,12.517387331351209
+heat_push,3,2050,planner,gas_ccs,21.71344080214815
+heat_push,3,2050,agents,wind_offshore,85.17836355193677
+heat_push,3,2050,agents,solar,41.464148767029336
+heat_push,3,2050,agents,hydro,1.5
+heat_push,3,2050,agents,pumped_hydro,2.9000000000000004
+heat_push,3,2050,agents,nuclear,6.459999999999999
+heat_push,3,2050,agents,wind_onshore,34.5
+heat_push,3,2050,agents,ccgt,15.200000000000005
+heat_push,3,2050,agents,gas_ccs,9.6
+heat_push,3,2050,agents,ocgt,47.399999999999906
+heat_push,3,2050,agents,battery,27.5
+high_carbon,1,2025,planner,ccgt,30.000000000000004
+high_carbon,1,2025,planner,ocgt,1.9999999999999996
+high_carbon,1,2025,planner,biomass,3.8000000000000007
+high_carbon,1,2025,planner,wind_onshore,14.999999999999996
+high_carbon,1,2025,planner,wind_offshore,15.499999999999998
+high_carbon,1,2025,planner,solar,18.000000000000004
+high_carbon,1,2025,planner,hydro,1.5
+high_carbon,1,2025,planner,battery,5.000000000000002
+high_carbon,1,2025,planner,pumped_hydro,2.9000000000000004
+high_carbon,1,2025,planner,nuclear,5.9
+high_carbon,1,2025,agents,ccgt,30.000000000000004
+high_carbon,1,2025,agents,ocgt,1.9999999999999996
+high_carbon,1,2025,agents,biomass,3.8000000000000007
+high_carbon,1,2025,agents,wind_onshore,14.999999999999996
+high_carbon,1,2025,agents,wind_offshore,15.499999999999998
+high_carbon,1,2025,agents,solar,18.000000000000004
+high_carbon,1,2025,agents,hydro,1.5
+high_carbon,1,2025,agents,battery,5.000000000000002
+high_carbon,1,2025,agents,pumped_hydro,2.9000000000000004
+high_carbon,1,2025,agents,nuclear,5.9
+high_carbon,1,2030,planner,ccgt,30.300311538925133
+high_carbon,1,2030,planner,ocgt,1.5577318848741128
+high_carbon,1,2030,planner,biomass,3.475849465696145
+high_carbon,1,2030,planner,wind_onshore,20.61550381737093
+high_carbon,1,2030,planner,wind_offshore,19.289480362407264
+high_carbon,1,2030,planner,solar,44.48916669264582
+high_carbon,1,2030,planner,hydro,1.5
+high_carbon,1,2030,planner,battery,3.0347349177330902
+high_carbon,1,2030,planner,pumped_hydro,2.9000000000000004
+high_carbon,1,2030,planner,nuclear,5.2299999999999995
+high_carbon,1,2030,agents,ccgt,36.20775287456356
+high_carbon,1,2030,agents,ocgt,1.5577318848741128
+high_carbon,1,2030,agents,biomass,3.475849465696145
+high_carbon,1,2030,agents,wind_onshore,17.61550381737093
+high_carbon,1,2030,agents,wind_offshore,17.289480362407264
+high_carbon,1,2030,agents,solar,21.989166692645817
+high_carbon,1,2030,agents,hydro,1.5
+high_carbon,1,2030,agents,battery,5.03473491773309
+high_carbon,1,2030,agents,pumped_hydro,2.9000000000000004
+high_carbon,1,2030,agents,nuclear,5.2299999999999995
+high_carbon,1,2035,planner,ccgt,27.39728390420716
+high_carbon,1,2035,planner,ocgt,1.4021112555929842
+high_carbon,1,2035,planner,biomass,1.7785906767848851
+high_carbon,1,2035,planner,wind_onshore,30.088469056078097
+high_carbon,1,2035,planner,wind_offshore,46.36323877196203
+high_carbon,1,2035,planner,solar,41.73874532639098
+high_carbon,1,2035,planner,hydro,1.5
+high_carbon,1,2035,planner,battery,1.7138939670932358
+high_carbon,1,2035,planner,pumped_hydro,2.9000000000000004
+high_carbon,1,2035,planner,nuclear,4.46
+high_carbon,1,2035,planner,gas_ccs,6.130777194410684
+high_carbon,1,2035,agents,ccgt,33.3047252398456
+high_carbon,1,2035,agents,ocgt,3.8021112555929832
+high_carbon,1,2035,agents,biomass,1.7785906767848851
+high_carbon,1,2035,agents,wind_onshore,22.088469056078097
+high_carbon,1,2035,agents,wind_offshore,34.36323877196203
+high_carbon,1,2035,agents,solar,26.644792218723694
+high_carbon,1,2035,agents,hydro,1.5
+high_carbon,1,2035,agents,battery,15.213893967093236
+high_carbon,1,2035,agents,pumped_hydro,2.9000000000000004
+high_carbon,1,2035,agents,nuclear,4.46
+high_carbon,1,2035,agents,gas_ccs,9.6
+high_carbon,1,2040,planner,ccgt,17.29489517515845
+high_carbon,1,2040,planner,ocgt,0.956958548151198
+high_carbon,1,2040,planner,biomass,1.6347984099943218
+high_carbon,1,2040,planner,wind_onshore,39.12068183536171
+high_carbon,1,2040,planner,wind_offshore,53.71517984098958
+high_carbon,1,2040,planner,solar,39.938670506426526
+high_carbon,1,2040,planner,hydro,1.5
+high_carbon,1,2040,planner,pumped_hydro,2.9000000000000004
+high_carbon,1,2040,planner,nuclear,6.459999999999999
+high_carbon,1,2040,planner,gas_ccs,13.630777194410683
+high_carbon,1,2040,agents,ccgt,23.2023365107969
+high_carbon,1,2040,agents,ocgt,14.623113231695468
+high_carbon,1,2040,agents,biomass,1.6347984099943218
+high_carbon,1,2040,agents,wind_onshore,26.120681835361705
+high_carbon,1,2040,agents,wind_offshore,53.10160307981383
+high_carbon,1,2040,agents,solar,32.34471739875924
+high_carbon,1,2040,agents,hydro,1.5
+high_carbon,1,2040,agents,pumped_hydro,2.9000000000000004
+high_carbon,1,2040,agents,nuclear,6.459999999999999
+high_carbon,1,2040,agents,battery,19.0
+high_carbon,1,2040,agents,gas_ccs,9.6
+high_carbon,1,2045,planner,ccgt,11.561177542795424
+high_carbon,1,2045,planner,ocgt,1.6323297795228713
+high_carbon,1,2045,planner,biomass,1.5878354240875538
+high_carbon,1,2045,planner,wind_onshore,47.537525782102094
+high_carbon,1,2045,planner,wind_offshore,53.403639928137196
+high_carbon,1,2045,planner,solar,37.377489597987456
+high_carbon,1,2045,planner,hydro,1.5
+high_carbon,1,2045,planner,pumped_hydro,2.9000000000000004
+high_carbon,1,2045,planner,nuclear,6.459999999999999
+high_carbon,1,2045,planner,gas_ccs,20.90390271124774
+high_carbon,1,2045,agents,ccgt,17.46861887843387
+high_carbon,1,2045,agents,ocgt,21.446926802297632
+high_carbon,1,2045,agents,biomass,1.5878354240875538
+high_carbon,1,2045,agents,wind_onshore,29.537525782102094
+high_carbon,1,2045,agents,wind_offshore,71.29907508396056
+high_carbon,1,2045,agents,solar,37.28353649032017
+high_carbon,1,2045,agents,hydro,1.5
+high_carbon,1,2045,agents,pumped_hydro,2.9000000000000004
+high_carbon,1,2045,agents,nuclear,6.459999999999999
+high_carbon,1,2045,agents,gas_ccs,9.6
+high_carbon,1,2045,agents,battery,26.0
+high_carbon,1,2050,planner,wind_offshore,50.604526089522665
+high_carbon,1,2050,planner,solar,38.8281417707476
+high_carbon,1,2050,planner,hydro,1.5
+high_carbon,1,2050,planner,pumped_hydro,2.9000000000000004
+high_carbon,1,2050,planner,nuclear,6.459999999999999
+high_carbon,1,2050,planner,wind_onshore,57.5
+high_carbon,1,2050,planner,ccgt,6.8925586643615615
+high_carbon,1,2050,planner,gas_ccs,25.025421443682056
+high_carbon,1,2050,planner,ocgt,4.733543615601895
+high_carbon,1,2050,agents,wind_offshore,87.47056520847056
+high_carbon,1,2050,agents,solar,40.89243071359541
+high_carbon,1,2050,agents,hydro,1.5
+high_carbon,1,2050,agents,pumped_hydro,2.9000000000000004
+high_carbon,1,2050,agents,nuclear,6.459999999999999
+high_carbon,1,2050,agents,wind_onshore,34.5
+high_carbon,1,2050,agents,ccgt,12.800000000000002
+high_carbon,1,2050,agents,gas_ccs,9.6
+high_carbon,1,2050,agents,ocgt,27.000000000000043
+high_carbon,1,2050,agents,battery,30.0
+high_carbon,2,2025,planner,ccgt,30.000000000000004
+high_carbon,2,2025,planner,ocgt,1.9999999999999996
+high_carbon,2,2025,planner,biomass,3.8000000000000007
+high_carbon,2,2025,planner,wind_onshore,14.999999999999996
+high_carbon,2,2025,planner,wind_offshore,15.499999999999998
+high_carbon,2,2025,planner,solar,18.000000000000004
+high_carbon,2,2025,planner,hydro,1.5
+high_carbon,2,2025,planner,battery,5.000000000000002
+high_carbon,2,2025,planner,pumped_hydro,2.9000000000000004
+high_carbon,2,2025,planner,nuclear,5.9
+high_carbon,2,2025,agents,ccgt,30.000000000000004
+high_carbon,2,2025,agents,ocgt,1.9999999999999996
+high_carbon,2,2025,agents,biomass,3.8000000000000007
+high_carbon,2,2025,agents,wind_onshore,14.999999999999996
+high_carbon,2,2025,agents,wind_offshore,15.499999999999998
+high_carbon,2,2025,agents,solar,18.000000000000004
+high_carbon,2,2025,agents,hydro,1.5
+high_carbon,2,2025,agents,battery,5.000000000000002
+high_carbon,2,2025,agents,pumped_hydro,2.9000000000000004
+high_carbon,2,2025,agents,nuclear,5.9
+high_carbon,2,2030,planner,ccgt,30.68378264920597
+high_carbon,2,2030,planner,ocgt,1.6610113958655428
+high_carbon,2,2030,planner,biomass,0.4664911465592897
+high_carbon,2,2030,planner,wind_onshore,20.761125449499474
+high_carbon,2,2030,planner,wind_offshore,20.75758074792393
+high_carbon,2,2030,planner,solar,40.65034136608785
+high_carbon,2,2030,planner,hydro,1.5
+high_carbon,2,2030,planner,battery,4.643510054844609
+high_carbon,2,2030,planner,pumped_hydro,2.9000000000000004
+high_carbon,2,2030,planner,nuclear,5.2299999999999995
+high_carbon,2,2030,agents,ccgt,40.08378264920595
+high_carbon,2,2030,agents,ocgt,1.6610113958655428
+high_carbon,2,2030,agents,biomass,0.4664911465592897
+high_carbon,2,2030,agents,wind_onshore,17.761125449499474
+high_carbon,2,2030,agents,wind_offshore,18.75758074792393
+high_carbon,2,2030,agents,solar,18.15034136608785
+high_carbon,2,2030,agents,hydro,1.5
+high_carbon,2,2030,agents,battery,6.643510054844609
+high_carbon,2,2030,agents,pumped_hydro,2.9000000000000004
+high_carbon,2,2030,agents,nuclear,5.2299999999999995
+high_carbon,2,2035,planner,ccgt,26.068610687335536
+high_carbon,2,2035,planner,ocgt,1.2486203118760688
+high_carbon,2,2035,planner,biomass,0.3107129213773166
+high_carbon,2,2035,planner,wind_onshore,30.51772080818116
+high_carbon,2,2035,planner,wind_offshore,46.705031154498236
+high_carbon,2,2035,planner,solar,40.433585004521916
+high_carbon,2,2035,planner,hydro,1.5
+high_carbon,2,2035,planner,battery,2.024680073126143
+high_carbon,2,2035,planner,pumped_hydro,2.9000000000000004
+high_carbon,2,2035,planner,nuclear,4.46
+high_carbon,2,2035,planner,gas_ccs,7.5
+high_carbon,2,2035,agents,ccgt,35.468610687335534
+high_carbon,2,2035,agents,ocgt,3.9486203118760677
+high_carbon,2,2035,agents,biomass,0.3107129213773166
+high_carbon,2,2035,agents,wind_onshore,22.51772080818116
+high_carbon,2,2035,agents,wind_offshore,34.705031154498236
+high_carbon,2,2035,agents,solar,25.03616298282258
+high_carbon,2,2035,agents,hydro,1.5
+high_carbon,2,2035,agents,battery,18.02468007312614
+high_carbon,2,2035,agents,pumped_hydro,2.9000000000000004
+high_carbon,2,2035,agents,nuclear,4.46
+high_carbon,2,2035,agents,gas_ccs,7.199999999999999
+high_carbon,2,2040,planner,ccgt,22.44942508728639
+high_carbon,2,2040,planner,ocgt,0.9532493063163607
+high_carbon,2,2040,planner,biomass,0.26374993547054876
+high_carbon,2,2040,planner,wind_onshore,37.131788386985306
+high_carbon,2,2040,planner,wind_offshore,54.90587037735244
+high_carbon,2,2040,planner,solar,38.00988578077905
+high_carbon,2,2040,planner,hydro,1.5
+high_carbon,2,2040,planner,pumped_hydro,2.9000000000000004
+high_carbon,2,2040,planner,nuclear,6.459999999999999
+high_carbon,2,2040,planner,gas_ccs,13.403073001841788
+high_carbon,2,2040,agents,ccgt,32.6494250872864
+high_carbon,2,2040,agents,ocgt,8.153249306316358
+high_carbon,2,2040,agents,biomass,0.26374993547054876
+high_carbon,2,2040,agents,wind_onshore,24.131788386985303
+high_carbon,2,2040,agents,wind_offshore,51.073696316534026
+high_carbon,2,2040,agents,solar,30.112463759079713
+high_carbon,2,2040,agents,hydro,1.5
+high_carbon,2,2040,agents,pumped_hydro,2.9000000000000004
+high_carbon,2,2040,agents,nuclear,6.459999999999999
+high_carbon,2,2040,agents,battery,16.0
+high_carbon,2,2040,agents,gas_ccs,12.000000000000002
+high_carbon,2,2045,planner,ccgt,12.60536312162757
+high_carbon,2,2045,planner,ocgt,2.2081736084979875
+high_carbon,2,2045,planner,wind_onshore,46.73126140621794
+high_carbon,2,2045,planner,wind_offshore,54.50892589391238
+high_carbon,2,2045,planner,solar,36.51639317663044
+high_carbon,2,2045,planner,hydro,1.5
+high_carbon,2,2045,planner,pumped_hydro,2.9000000000000004
+high_carbon,2,2045,planner,nuclear,6.459999999999999
+high_carbon,2,2045,planner,gas_ccs,20.90307300184179
+high_carbon,2,2045,agents,ccgt,22.805363121627583
+high_carbon,2,2045,agents,ocgt,16.526343596096957
+high_carbon,2,2045,agents,wind_onshore,28.73126140621794
+high_carbon,2,2045,agents,wind_offshore,70.67675183309396
+high_carbon,2,2045,agents,solar,35.79508682233376
+high_carbon,2,2045,agents,hydro,1.5
+high_carbon,2,2045,agents,pumped_hydro,2.9000000000000004
+high_carbon,2,2045,agents,nuclear,6.459999999999999
+high_carbon,2,2045,agents,gas_ccs,12.000000000000002
+high_carbon,2,2045,agents,battery,24.5
+high_carbon,2,2050,planner,wind_offshore,52.6843035814603
+high_carbon,2,2050,planner,solar,35.62825011204307
+high_carbon,2,2050,planner,hydro,1.5
+high_carbon,2,2050,planner,pumped_hydro,2.9000000000000004
+high_carbon,2,2050,planner,nuclear,6.459999999999999
+high_carbon,2,2050,planner,wind_onshore,57.5
+high_carbon,2,2050,planner,ccgt,9.0
+high_carbon,2,2050,planner,gas_ccs,24.41975281416583
+high_carbon,2,2050,planner,ocgt,3.5685418310845236
+high_carbon,2,2050,agents,wind_offshore,88.85212952064188
+high_carbon,2,2050,agents,solar,40.043878791657576
+high_carbon,2,2050,agents,hydro,1.5
+high_carbon,2,2050,agents,pumped_hydro,2.9000000000000004
+high_carbon,2,2050,agents,nuclear,6.459999999999999
+high_carbon,2,2050,agents,wind_onshore,34.5
+high_carbon,2,2050,agents,ccgt,19.200000000000006
+high_carbon,2,2050,agents,gas_ccs,12.000000000000002
+high_carbon,2,2050,agents,ocgt,19.200000000000024
+high_carbon,2,2050,agents,battery,25.0
+high_carbon,3,2025,planner,ccgt,30.000000000000004
+high_carbon,3,2025,planner,ocgt,1.9999999999999996
+high_carbon,3,2025,planner,biomass,3.8000000000000007
+high_carbon,3,2025,planner,wind_onshore,14.999999999999996
+high_carbon,3,2025,planner,wind_offshore,15.499999999999998
+high_carbon,3,2025,planner,solar,18.000000000000004
+high_carbon,3,2025,planner,hydro,1.5
+high_carbon,3,2025,planner,battery,5.000000000000002
+high_carbon,3,2025,planner,pumped_hydro,2.9000000000000004
+high_carbon,3,2025,planner,nuclear,5.9
+high_carbon,3,2025,agents,ccgt,30.000000000000004
+high_carbon,3,2025,agents,ocgt,1.9999999999999996
+high_carbon,3,2025,agents,biomass,3.8000000000000007
+high_carbon,3,2025,agents,wind_onshore,14.999999999999996
+high_carbon,3,2025,agents,wind_offshore,15.499999999999998
+high_carbon,3,2025,agents,solar,18.000000000000004
+high_carbon,3,2025,agents,hydro,1.5
+high_carbon,3,2025,agents,battery,5.000000000000002
+high_carbon,3,2025,agents,pumped_hydro,2.9000000000000004
+high_carbon,3,2025,agents,nuclear,5.9
+high_carbon,3,2030,planner,ccgt,28.88464441682836
+high_carbon,3,2030,planner,ocgt,1.4014354899812627
+high_carbon,3,2030,planner,biomass,3.5347984099943224
+high_carbon,3,2030,planner,wind_onshore,20.39051110655162
+high_carbon,3,2030,planner,wind_offshore,20.5532083193849
+high_carbon,3,2030,planner,solar,45.746983820182685
+high_carbon,3,2030,planner,hydro,1.5
+high_carbon,3,2030,planner,battery,3.7020109689213903
+high_carbon,3,2030,planner,pumped_hydro,2.9000000000000004
+high_carbon,3,2030,planner,nuclear,5.2299999999999995
+high_carbon,3,2030,agents,ccgt,35.84547902566885
+high_carbon,3,2030,agents,ocgt,1.4014354899812627
+high_carbon,3,2030,agents,biomass,3.5347984099943224
+high_carbon,3,2030,agents,wind_onshore,17.39051110655162
+high_carbon,3,2030,agents,wind_offshore,18.5532083193849
+high_carbon,3,2030,agents,solar,23.246983820182685
+high_carbon,3,2030,agents,hydro,1.5
+high_carbon,3,2030,agents,battery,7.702010968921391
+high_carbon,3,2030,agents,pumped_hydro,2.9000000000000004
+high_carbon,3,2030,agents,nuclear,5.2299999999999995
+high_carbon,3,2035,planner,ccgt,26.18373213325253
+high_carbon,3,2035,planner,ocgt,0.900908188026662
+high_carbon,3,2035,planner,biomass,2.0543265706468437
+high_carbon,3,2035,planner,wind_onshore,27.948446594602768
+high_carbon,3,2035,planner,wind_offshore,47.91109629277669
+high_carbon,3,2035,planner,solar,41.94528790098825
+high_carbon,3,2035,planner,hydro,1.5
+high_carbon,3,2035,planner,battery,2.394881170018282
+high_carbon,3,2035,planner,pumped_hydro,2.9000000000000004
+high_carbon,3,2035,planner,nuclear,4.46
+high_carbon,3,2035,planner,gas_ccs,6.428779404367631
+high_carbon,3,2035,agents,ccgt,33.14456674209303
+high_carbon,3,2035,agents,ocgt,3.600908188026661
+high_carbon,3,2035,agents,biomass,2.0543265706468437
+high_carbon,3,2035,agents,wind_onshore,19.948446594602768
+high_carbon,3,2035,agents,wind_offshore,35.91109629277669
+high_carbon,3,2035,agents,solar,26.945287900988248
+high_carbon,3,2035,agents,hydro,1.5
+high_carbon,3,2035,agents,battery,15.894881170018282
+high_carbon,3,2035,agents,pumped_hydro,2.9000000000000004
+high_carbon,3,2035,agents,nuclear,4.46
+high_carbon,3,2035,agents,gas_ccs,9.6
+high_carbon,3,2040,planner,ccgt,21.069568700363227
+high_carbon,3,2040,planner,ocgt,0.4693601728321746
+high_carbon,3,2040,planner,biomass,0.5268917453925972
+high_carbon,3,2040,planner,wind_onshore,39.53219658110429
+high_carbon,3,2040,planner,wind_offshore,53.060374377816316
+high_carbon,3,2040,planner,solar,37.241730835177854
+high_carbon,3,2040,planner,hydro,1.5
+high_carbon,3,2040,planner,pumped_hydro,2.9000000000000004
+high_carbon,3,2040,planner,nuclear,6.459999999999999
+high_carbon,3,2040,planner,gas_ccs,13.703768261654812
+high_carbon,3,2040,agents,ccgt,28.030403309203734
+high_carbon,3,2040,agents,ocgt,14.869360172832188
+high_carbon,3,2040,agents,biomass,0.5268917453925972
+high_carbon,3,2040,agents,wind_onshore,26.532196581104284
+high_carbon,3,2040,agents,wind_offshore,50.68210803105731
+high_carbon,3,2040,agents,solar,29.741730835177854
+high_carbon,3,2040,agents,hydro,1.5
+high_carbon,3,2040,agents,pumped_hydro,2.9000000000000004
+high_carbon,3,2040,agents,nuclear,6.459999999999999
+high_carbon,3,2040,agents,battery,18.0
+high_carbon,3,2040,agents,gas_ccs,9.6
+high_carbon,3,2045,planner,ccgt,16.73207497167288
+high_carbon,3,2045,planner,ocgt,0.23025177388473073
+high_carbon,3,2045,planner,biomass,0.3241505343038563
+high_carbon,3,2045,planner,wind_onshore,48.533065883394706
+high_carbon,3,2045,planner,wind_offshore,53.23944962033218
+high_carbon,3,2045,planner,solar,36.00971096043228
+high_carbon,3,2045,planner,hydro,1.5
+high_carbon,3,2045,planner,pumped_hydro,2.9000000000000004
+high_carbon,3,2045,planner,nuclear,6.459999999999999
+high_carbon,3,2045,planner,gas_ccs,19.418312928509074
+high_carbon,3,2045,agents,ccgt,23.692909580513387
+high_carbon,3,2045,agents,ocgt,18.530251773884753
+high_carbon,3,2045,agents,biomass,0.3241505343038563
+high_carbon,3,2045,agents,wind_onshore,30.533065883394706
+high_carbon,3,2045,agents,wind_offshore,70.03584927054199
+high_carbon,3,2045,agents,solar,33.964148767029336
+high_carbon,3,2045,agents,hydro,1.5
+high_carbon,3,2045,agents,pumped_hydro,2.9000000000000004
+high_carbon,3,2045,agents,nuclear,6.459999999999999
+high_carbon,3,2045,agents,gas_ccs,9.6
+high_carbon,3,2045,agents,battery,24.5
+high_carbon,3,2050,planner,wind_offshore,49.88536394303468
+high_carbon,3,2050,planner,solar,37.29528339536244
+high_carbon,3,2050,planner,hydro,1.5
+high_carbon,3,2050,planner,pumped_hydro,2.9000000000000004
+high_carbon,3,2050,planner,nuclear,6.459999999999999
+high_carbon,3,2050,planner,wind_onshore,57.5
+high_carbon,3,2050,planner,ccgt,4.239165391159502
+high_carbon,3,2050,planner,gas_ccs,25.197068279559026
+high_carbon,3,2050,planner,ocgt,6.9236843894768265
+high_carbon,3,2050,agents,wind_offshore,85.17836355193677
+high_carbon,3,2050,agents,solar,41.464148767029336
+high_carbon,3,2050,agents,hydro,1.5
+high_carbon,3,2050,agents,pumped_hydro,2.9000000000000004
+high_carbon,3,2050,agents,nuclear,6.459999999999999
+high_carbon,3,2050,agents,wind_onshore,34.5
+high_carbon,3,2050,agents,ccgt,11.200000000000001
+high_carbon,3,2050,agents,gas_ccs,9.6
+high_carbon,3,2050,agents,ocgt,27.600000000000044
+high_carbon,3,2050,agents,battery,29.5
+high_gas,1,2025,planner,ccgt,30.000000000000004
+high_gas,1,2025,planner,ocgt,1.9999999999999996
+high_gas,1,2025,planner,biomass,3.8000000000000007
+high_gas,1,2025,planner,wind_onshore,14.999999999999996
+high_gas,1,2025,planner,wind_offshore,15.499999999999998
+high_gas,1,2025,planner,solar,18.000000000000004
+high_gas,1,2025,planner,hydro,1.5
+high_gas,1,2025,planner,battery,5.000000000000002
+high_gas,1,2025,planner,pumped_hydro,2.9000000000000004
+high_gas,1,2025,planner,nuclear,5.9
+high_gas,1,2025,agents,ccgt,30.000000000000004
+high_gas,1,2025,agents,ocgt,1.9999999999999996
+high_gas,1,2025,agents,biomass,3.8000000000000007
+high_gas,1,2025,agents,wind_onshore,14.999999999999996
+high_gas,1,2025,agents,wind_offshore,15.499999999999998
+high_gas,1,2025,agents,solar,18.000000000000004
+high_gas,1,2025,agents,hydro,1.5
+high_gas,1,2025,agents,battery,5.000000000000002
+high_gas,1,2025,agents,pumped_hydro,2.9000000000000004
+high_gas,1,2025,agents,nuclear,5.9
+high_gas,1,2030,planner,ccgt,32.40775287456357
+high_gas,1,2030,planner,ocgt,1.5577318848741128
+high_gas,1,2030,planner,biomass,3.475849465696145
+high_gas,1,2030,planner,wind_onshore,20.61550381737093
+high_gas,1,2030,planner,wind_offshore,19.289480362407264
+high_gas,1,2030,planner,solar,44.48916669264582
+high_gas,1,2030,planner,hydro,1.5
+high_gas,1,2030,planner,battery,3.0347349177330902
+high_gas,1,2030,planner,pumped_hydro,2.9000000000000004
+high_gas,1,2030,planner,nuclear,5.2299999999999995
+high_gas,1,2030,agents,ccgt,37.807752874563555
+high_gas,1,2030,agents,ocgt,1.5577318848741128
+high_gas,1,2030,agents,biomass,3.475849465696145
+high_gas,1,2030,agents,wind_onshore,17.61550381737093
+high_gas,1,2030,agents,wind_offshore,17.289480362407264
+high_gas,1,2030,agents,solar,21.989166692645817
+high_gas,1,2030,agents,hydro,1.5
+high_gas,1,2030,agents,battery,7.03473491773309
+high_gas,1,2030,agents,pumped_hydro,2.9000000000000004
+high_gas,1,2030,agents,nuclear,5.2299999999999995
+high_gas,1,2035,planner,ccgt,33.46801646748076
+high_gas,1,2035,planner,ocgt,1.4021112555929842
+high_gas,1,2035,planner,biomass,1.7785906767848851
+high_gas,1,2035,planner,wind_onshore,30.088469056078097
+high_gas,1,2035,planner,wind_offshore,46.36323877196203
+high_gas,1,2035,planner,solar,46.10220648556774
+high_gas,1,2035,planner,hydro,1.5
+high_gas,1,2035,planner,battery,1.7138939670932358
+high_gas,1,2035,planner,pumped_hydro,2.9000000000000004
+high_gas,1,2035,planner,nuclear,4.46
+high_gas,1,2035,agents,ccgt,34.9047252398456
+high_gas,1,2035,agents,ocgt,10.102111255592986
+high_gas,1,2035,agents,biomass,1.7785906767848851
+high_gas,1,2035,agents,wind_onshore,22.088469056078097
+high_gas,1,2035,agents,wind_offshore,34.36323877196203
+high_gas,1,2035,agents,solar,26.644792218723694
+high_gas,1,2035,agents,hydro,1.5
+high_gas,1,2035,agents,battery,14.213893967093236
+high_gas,1,2035,agents,pumped_hydro,2.9000000000000004
+high_gas,1,2035,agents,nuclear,4.46
+high_gas,1,2035,agents,gas_ccs,2.4000000000000004
+high_gas,1,2040,planner,ccgt,29.238738686164204
+high_gas,1,2040,planner,ocgt,4.082731976442556
+high_gas,1,2040,planner,biomass,1.6347984099943218
+high_gas,1,2040,planner,wind_onshore,39.12068183536171
+high_gas,1,2040,planner,wind_offshore,62.68453954830393
+high_gas,1,2040,planner,solar,44.302131665603284
+high_gas,1,2040,planner,hydro,1.5
+high_gas,1,2040,planner,pumped_hydro,2.9000000000000004
+high_gas,1,2040,planner,nuclear,6.459999999999999
+high_gas,1,2040,agents,ccgt,24.802336510796902
+high_gas,1,2040,agents,ocgt,22.123113231695484
+high_gas,1,2040,agents,biomass,1.6347984099943218
+high_gas,1,2040,agents,wind_onshore,26.120681835361705
+high_gas,1,2040,agents,wind_offshore,53.10160307981383
+high_gas,1,2040,agents,solar,32.34471739875924
+high_gas,1,2040,agents,hydro,1.5
+high_gas,1,2040,agents,pumped_hydro,2.9000000000000004
+high_gas,1,2040,agents,nuclear,6.459999999999999
+high_gas,1,2040,agents,battery,21.5
+high_gas,1,2040,agents,gas_ccs,2.4000000000000004
+high_gas,1,2045,planner,ccgt,28.400368763068325
+high_gas,1,2045,planner,ocgt,7.1735666125840245
+high_gas,1,2045,planner,biomass,1.5878354240875538
+high_gas,1,2045,planner,wind_onshore,47.537525782102094
+high_gas,1,2045,planner,wind_offshore,67.24474312685328
+high_gas,1,2045,planner,solar,41.740950757164214
+high_gas,1,2045,planner,hydro,1.5
+high_gas,1,2045,planner,pumped_hydro,2.9000000000000004
+high_gas,1,2045,planner,nuclear,6.459999999999999
+high_gas,1,2045,agents,ccgt,19.06861887843387
+high_gas,1,2045,agents,ocgt,31.646926802297656
+high_gas,1,2045,agents,biomass,1.5878354240875538
+high_gas,1,2045,agents,wind_onshore,29.537525782102094
+high_gas,1,2045,agents,wind_offshore,71.29907508396056
+high_gas,1,2045,agents,solar,37.28353649032017
+high_gas,1,2045,agents,hydro,1.5
+high_gas,1,2045,agents,pumped_hydro,2.9000000000000004
+high_gas,1,2045,agents,nuclear,6.459999999999999
+high_gas,1,2045,agents,gas_ccs,2.4000000000000004
+high_gas,1,2045,agents,battery,30.0
+high_gas,1,2050,planner,wind_offshore,68.42838373576161
+high_gas,1,2050,planner,solar,38.83620125234005
+high_gas,1,2050,planner,hydro,1.5
+high_gas,1,2050,planner,pumped_hydro,2.9000000000000004
+high_gas,1,2050,planner,nuclear,6.459999999999999
+high_gas,1,2050,planner,wind_onshore,57.5
+high_gas,1,2050,planner,ccgt,23.731749884634464
+high_gas,1,2050,planner,ocgt,10.885468287063421
+high_gas,1,2050,planner,gas_ccs,4.451941695447668
+high_gas,1,2050,agents,wind_offshore,87.47056520847056
+high_gas,1,2050,agents,solar,40.89243071359541
+high_gas,1,2050,agents,hydro,1.5
+high_gas,1,2050,agents,pumped_hydro,2.9000000000000004
+high_gas,1,2050,agents,nuclear,6.459999999999999
+high_gas,1,2050,agents,wind_onshore,34.5
+high_gas,1,2050,agents,ccgt,14.400000000000004
+high_gas,1,2050,agents,gas_ccs,2.4000000000000004
+high_gas,1,2050,agents,ocgt,38.39999999999999
+high_gas,1,2050,agents,battery,37.5
+high_gas,2,2025,planner,ccgt,30.000000000000004
+high_gas,2,2025,planner,ocgt,1.9999999999999996
+high_gas,2,2025,planner,biomass,3.8000000000000007
+high_gas,2,2025,planner,wind_onshore,14.999999999999996
+high_gas,2,2025,planner,wind_offshore,15.499999999999998
+high_gas,2,2025,planner,solar,18.000000000000004
+high_gas,2,2025,planner,hydro,1.5
+high_gas,2,2025,planner,battery,5.000000000000002
+high_gas,2,2025,planner,pumped_hydro,2.9000000000000004
+high_gas,2,2025,planner,nuclear,5.9
+high_gas,2,2025,agents,ccgt,30.000000000000004
+high_gas,2,2025,agents,ocgt,1.9999999999999996
+high_gas,2,2025,agents,biomass,3.8000000000000007
+high_gas,2,2025,agents,wind_onshore,14.999999999999996
+high_gas,2,2025,agents,wind_offshore,15.499999999999998
+high_gas,2,2025,agents,solar,18.000000000000004
+high_gas,2,2025,agents,hydro,1.5
+high_gas,2,2025,agents,battery,5.000000000000002
+high_gas,2,2025,agents,pumped_hydro,2.9000000000000004
+high_gas,2,2025,agents,nuclear,5.9
+high_gas,2,2030,planner,ccgt,30.68378264920597
+high_gas,2,2030,planner,ocgt,4.917103117183158
+high_gas,2,2030,planner,biomass,0.4664911465592897
+high_gas,2,2030,planner,wind_onshore,20.761125449499474
+high_gas,2,2030,planner,wind_offshore,20.75758074792393
+high_gas,2,2030,planner,solar,40.65034136608785
+high_gas,2,2030,planner,hydro,1.5
+high_gas,2,2030,planner,battery,4.643510054844609
+high_gas,2,2030,planner,pumped_hydro,2.9000000000000004
+high_gas,2,2030,planner,nuclear,5.2299999999999995
+high_gas,2,2030,agents,ccgt,40.08378264920595
+high_gas,2,2030,agents,ocgt,1.6610113958655428
+high_gas,2,2030,agents,biomass,0.4664911465592897
+high_gas,2,2030,agents,wind_onshore,17.761125449499474
+high_gas,2,2030,agents,wind_offshore,18.75758074792393
+high_gas,2,2030,agents,solar,18.15034136608785
+high_gas,2,2030,agents,hydro,1.5
+high_gas,2,2030,agents,battery,6.643510054844609
+high_gas,2,2030,agents,pumped_hydro,2.9000000000000004
+high_gas,2,2030,agents,nuclear,5.2299999999999995
+high_gas,2,2035,planner,ccgt,31.673608712435744
+high_gas,2,2035,planner,ocgt,4.504712033193684
+high_gas,2,2035,planner,biomass,0.3107129213773166
+high_gas,2,2035,planner,wind_onshore,30.51772080818116
+high_gas,2,2035,planner,wind_offshore,46.705031154498236
+high_gas,2,2035,planner,solar,46.54799844702583
+high_gas,2,2035,planner,hydro,1.5
+high_gas,2,2035,planner,battery,2.024680073126143
+high_gas,2,2035,planner,pumped_hydro,2.9000000000000004
+high_gas,2,2035,planner,nuclear,4.46
+high_gas,2,2035,agents,ccgt,35.468610687335534
+high_gas,2,2035,agents,ocgt,5.448620311876067
+high_gas,2,2035,agents,biomass,0.3107129213773166
+high_gas,2,2035,agents,wind_onshore,22.51772080818116
+high_gas,2,2035,agents,wind_offshore,34.705031154498236
+high_gas,2,2035,agents,solar,25.03616298282258
+high_gas,2,2035,agents,hydro,1.5
+high_gas,2,2035,agents,battery,15.024680073126143
+high_gas,2,2035,agents,pumped_hydro,2.9000000000000004
+high_gas,2,2035,agents,nuclear,4.46
+high_gas,2,2035,agents,gas_ccs,7.199999999999999
+high_gas,2,2040,planner,ccgt,30.908754624394206
+high_gas,2,2040,planner,ocgt,4.209341027633976
+high_gas,2,2040,planner,biomass,0.26374993547054876
+high_gas,2,2040,planner,wind_onshore,37.131788386985306
+high_gas,2,2040,planner,wind_offshore,65.04079222130827
+high_gas,2,2040,planner,solar,44.12429922328297
+high_gas,2,2040,planner,hydro,1.5
+high_gas,2,2040,planner,pumped_hydro,2.9000000000000004
+high_gas,2,2040,planner,nuclear,6.459999999999999
+high_gas,2,2040,agents,ccgt,31.849425087286406
+high_gas,2,2040,agents,ocgt,15.053249306316374
+high_gas,2,2040,agents,biomass,0.26374993547054876
+high_gas,2,2040,agents,wind_onshore,24.131788386985303
+high_gas,2,2040,agents,wind_offshore,51.073696316534026
+high_gas,2,2040,agents,solar,30.112463759079713
+high_gas,2,2040,agents,hydro,1.5
+high_gas,2,2040,agents,pumped_hydro,2.9000000000000004
+high_gas,2,2040,agents,nuclear,6.459999999999999
+high_gas,2,2040,agents,battery,18.5
+high_gas,2,2040,agents,gas_ccs,7.199999999999999
+high_gas,2,2045,planner,ccgt,29.101966162090896
+high_gas,2,2045,planner,ocgt,8.33440952138081
+high_gas,2,2045,planner,wind_onshore,46.73126140621794
+high_gas,2,2045,planner,wind_offshore,69.69964537786481
+high_gas,2,2045,planner,solar,42.30692228653701
+high_gas,2,2045,planner,hydro,1.5
+high_gas,2,2045,planner,pumped_hydro,2.9000000000000004
+high_gas,2,2045,planner,nuclear,6.459999999999999
+high_gas,2,2045,agents,ccgt,22.005363121627582
+high_gas,2,2045,agents,ocgt,25.82634359609698
+high_gas,2,2045,agents,wind_onshore,28.73126140621794
+high_gas,2,2045,agents,wind_offshore,70.67675183309396
+high_gas,2,2045,agents,solar,35.79508682233376
+high_gas,2,2045,agents,hydro,1.5
+high_gas,2,2045,agents,pumped_hydro,2.9000000000000004
+high_gas,2,2045,agents,nuclear,6.459999999999999
+high_gas,2,2045,agents,gas_ccs,7.199999999999999
+high_gas,2,2045,agents,battery,27.5
+high_gas,2,2050,planner,wind_offshore,69.76035274318971
+high_gas,2,2050,planner,solar,39.05571425586083
+high_gas,2,2050,planner,hydro,1.5
+high_gas,2,2050,planner,pumped_hydro,2.9000000000000004
+high_gas,2,2050,planner,nuclear,6.459999999999999
+high_gas,2,2050,planner,wind_onshore,57.5
+high_gas,2,2050,planner,ccgt,25.496603040463327
+high_gas,2,2050,planner,ocgt,9.890229570771366
+high_gas,2,2050,planner,gas_ccs,4.444565775016861
+high_gas,2,2050,agents,wind_offshore,88.85212952064188
+high_gas,2,2050,agents,solar,40.043878791657576
+high_gas,2,2050,agents,hydro,1.5
+high_gas,2,2050,agents,pumped_hydro,2.9000000000000004
+high_gas,2,2050,agents,nuclear,6.459999999999999
+high_gas,2,2050,agents,wind_onshore,34.5
+high_gas,2,2050,agents,ccgt,18.400000000000006
+high_gas,2,2050,agents,gas_ccs,7.199999999999999
+high_gas,2,2050,agents,ocgt,31.200000000000053
+high_gas,2,2050,agents,battery,30.0
+high_gas,3,2025,planner,ccgt,30.000000000000004
+high_gas,3,2025,planner,ocgt,1.9999999999999996
+high_gas,3,2025,planner,biomass,3.8000000000000007
+high_gas,3,2025,planner,wind_onshore,14.999999999999996
+high_gas,3,2025,planner,wind_offshore,15.499999999999998
+high_gas,3,2025,planner,solar,18.000000000000004
+high_gas,3,2025,planner,hydro,1.5
+high_gas,3,2025,planner,battery,5.000000000000002
+high_gas,3,2025,planner,pumped_hydro,2.9000000000000004
+high_gas,3,2025,planner,nuclear,5.9
+high_gas,3,2025,agents,ccgt,30.000000000000004
+high_gas,3,2025,agents,ocgt,1.9999999999999996
+high_gas,3,2025,agents,biomass,3.8000000000000007
+high_gas,3,2025,agents,wind_onshore,14.999999999999996
+high_gas,3,2025,agents,wind_offshore,15.499999999999998
+high_gas,3,2025,agents,solar,18.000000000000004
+high_gas,3,2025,agents,hydro,1.5
+high_gas,3,2025,agents,battery,5.000000000000002
+high_gas,3,2025,agents,pumped_hydro,2.9000000000000004
+high_gas,3,2025,agents,nuclear,5.9
+high_gas,3,2030,planner,ccgt,33.645479025668855
+high_gas,3,2030,planner,ocgt,1.4014354899812627
+high_gas,3,2030,planner,biomass,3.5347984099943224
+high_gas,3,2030,planner,wind_onshore,20.39051110655162
+high_gas,3,2030,planner,wind_offshore,20.5532083193849
+high_gas,3,2030,planner,solar,45.746983820182685
+high_gas,3,2030,planner,hydro,1.5
+high_gas,3,2030,planner,battery,3.7020109689213903
+high_gas,3,2030,planner,pumped_hydro,2.9000000000000004
+high_gas,3,2030,planner,nuclear,5.2299999999999995
+high_gas,3,2030,agents,ccgt,36.64547902566885
+high_gas,3,2030,agents,ocgt,1.4014354899812627
+high_gas,3,2030,agents,biomass,3.5347984099943224
+high_gas,3,2030,agents,wind_onshore,17.39051110655162
+high_gas,3,2030,agents,wind_offshore,18.5532083193849
+high_gas,3,2030,agents,solar,23.246983820182685
+high_gas,3,2030,agents,hydro,1.5
+high_gas,3,2030,agents,battery,8.70201096892139
+high_gas,3,2030,agents,pumped_hydro,2.9000000000000004
+high_gas,3,2030,agents,nuclear,5.2299999999999995
+high_gas,3,2035,planner,ccgt,33.768727625006406
+high_gas,3,2035,planner,ocgt,0.900908188026662
+high_gas,3,2035,planner,biomass,2.0543265706468437
+high_gas,3,2035,planner,wind_onshore,27.948446594602768
+high_gas,3,2035,planner,wind_offshore,47.91109629277669
+high_gas,3,2035,planner,solar,47.7869935854387
+high_gas,3,2035,planner,hydro,1.5
+high_gas,3,2035,planner,battery,2.394881170018282
+high_gas,3,2035,planner,pumped_hydro,2.9000000000000004
+high_gas,3,2035,planner,nuclear,4.46
+high_gas,3,2035,agents,ccgt,33.94456674209303
+high_gas,3,2035,agents,ocgt,6.900908188026659
+high_gas,3,2035,agents,biomass,2.0543265706468437
+high_gas,3,2035,agents,wind_onshore,19.948446594602768
+high_gas,3,2035,agents,wind_offshore,35.91109629277669
+high_gas,3,2035,agents,solar,26.945287900988248
+high_gas,3,2035,agents,hydro,1.5
+high_gas,3,2035,agents,battery,13.394881170018282
+high_gas,3,2035,agents,pumped_hydro,2.9000000000000004
+high_gas,3,2035,agents,nuclear,4.46
+high_gas,3,2035,agents,gas_ccs,7.199999999999999
+high_gas,3,2040,planner,ccgt,32.90523410751685
+high_gas,3,2040,planner,ocgt,2.0866828305909797
+high_gas,3,2040,planner,biomass,0.5268917453925972
+high_gas,3,2040,planner,wind_onshore,39.53219658110429
+high_gas,3,2040,planner,wind_offshore,63.9663777271265
+high_gas,3,2040,planner,solar,43.08343651962831
+high_gas,3,2040,planner,hydro,1.5
+high_gas,3,2040,planner,pumped_hydro,2.9000000000000004
+high_gas,3,2040,planner,nuclear,6.459999999999999
+high_gas,3,2040,agents,ccgt,28.830403309203735
+high_gas,3,2040,agents,ocgt,18.769360172832197
+high_gas,3,2040,agents,biomass,0.5268917453925972
+high_gas,3,2040,agents,wind_onshore,26.532196581104284
+high_gas,3,2040,agents,wind_offshore,50.68210803105731
+high_gas,3,2040,agents,solar,29.741730835177854
+high_gas,3,2040,agents,hydro,1.5
+high_gas,3,2040,agents,pumped_hydro,2.9000000000000004
+high_gas,3,2040,agents,nuclear,6.459999999999999
+high_gas,3,2040,agents,battery,18.5
+high_gas,3,2040,agents,gas_ccs,7.199999999999999
+high_gas,3,2045,planner,ccgt,31.497315162628603
+high_gas,3,2045,planner,ocgt,6.079804673343647
+high_gas,3,2045,planner,biomass,0.3241505343038563
+high_gas,3,2045,planner,wind_onshore,48.533065883394706
+high_gas,3,2045,planner,wind_offshore,69.09399470797102
+high_gas,3,2045,planner,solar,39.80585445147979
+high_gas,3,2045,planner,hydro,1.5
+high_gas,3,2045,planner,pumped_hydro,2.9000000000000004
+high_gas,3,2045,planner,nuclear,6.459999999999999
+high_gas,3,2045,agents,ccgt,24.492909580513388
+high_gas,3,2045,agents,ocgt,27.230251773884774
+high_gas,3,2045,agents,biomass,0.3241505343038563
+high_gas,3,2045,agents,wind_onshore,30.533065883394706
+high_gas,3,2045,agents,wind_offshore,70.03584927054199
+high_gas,3,2045,agents,solar,33.964148767029336
+high_gas,3,2045,agents,hydro,1.5
+high_gas,3,2045,agents,pumped_hydro,2.9000000000000004
+high_gas,3,2045,agents,nuclear,6.459999999999999
+high_gas,3,2045,agents,gas_ccs,7.199999999999999
+high_gas,3,2045,agents,battery,24.5
+high_gas,3,2050,planner,wind_offshore,69.40517351031033
+high_gas,3,2050,planner,solar,39.80585445147979
+high_gas,3,2050,planner,hydro,1.5
+high_gas,3,2050,planner,pumped_hydro,2.9000000000000004
+high_gas,3,2050,planner,nuclear,6.459999999999999
+high_gas,3,2050,planner,wind_onshore,57.5
+high_gas,3,2050,planner,ccgt,23.95933205065731
+high_gas,3,2050,planner,ocgt,11.121552598428256
+high_gas,3,2050,planner,gas_ccs,4.607337223856683
+high_gas,3,2050,agents,wind_offshore,85.17836355193677
+high_gas,3,2050,agents,solar,41.464148767029336
+high_gas,3,2050,agents,hydro,1.5
+high_gas,3,2050,agents,pumped_hydro,2.9000000000000004
+high_gas,3,2050,agents,nuclear,6.459999999999999
+high_gas,3,2050,agents,wind_onshore,34.5
+high_gas,3,2050,agents,ccgt,12.000000000000002
+high_gas,3,2050,agents,gas_ccs,7.199999999999999
+high_gas,3,2050,agents,ocgt,36.60000000000001
+high_gas,3,2050,agents,battery,34.0
