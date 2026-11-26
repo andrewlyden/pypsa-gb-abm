@@ -50,7 +50,7 @@ ukabm/outturn.py       model-vs-outturn comparison (data/outturn: NESO generatio
 ## 2025 calibration (baseline, seed 42) vs GB outturn
 | | model | outturn 2025 |
 |---|---|---|
-| price, demand-weighted (£/MWh) | 85.6 | 80.9 (Elexon MID) |
+| price, time-weighted mean (£/MWh) | 84.6 | 79.9 (Elexon MID) |
 | carbon intensity, NESO basis: wholesale / after BM redispatch (g/kWh) | 112 / 125 | 130 (NESO, generation-weighted) |
 | gas / wind after BM redispatch (TWh) | 78 / 85 | 77 / 86 |
 | nuclear / biomass (TWh) | 35 / 20 | 34 / 20 |

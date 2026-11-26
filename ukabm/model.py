@@ -197,7 +197,7 @@ class GBMarketModel(ModelBase):
         for k, (mkt, mw) in enumerate(sorted(caps.items())):
             fp = ref * decarb * IC_PRICE_LEVEL[mkt if mkt in IC_PRICE_LEVEL else "continent"] * shape[mkt].values
             imports.append(Block(-1 - k, fp + IC_SPREAD, IC_AVAILABILITY * mw))
-            exports.append(Block(-11 - k, fp - IC_SPREAD, IC_AVAILABILITY * mw))
+            exports.append(Block(-11 - k, fp - IC_SPREAD, IC_AVAILABILITY * mw, demand_bid=True))
         return imports, exports, sum(caps.values()), ref
 
     def blocks(self, plants, year, carbon=None):
@@ -207,7 +207,9 @@ class GBMarketModel(ModelBase):
                 continue
             t = TECHS[p.tech]
             prof = self.cf_profile(p.tech)
-            avail = p.mw * (prof if prof is not None else (p.availability or t.availability))
+            if prof is None:
+                prof = t.availability if p.availability is None else p.availability
+            avail = p.mw * prof
             out.append(Block(p.pid, p.owner.offer_price(p, self.plant_srmc(p, year, carbon), year), avail))
         return out
 

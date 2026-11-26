@@ -16,8 +16,9 @@ CONSTRAINTS = OUTTURN.with_name("gb_constraints.csv")   # hand-entered from cite
 
 # (label, model column or callable on the annual record, outturn column)
 METRICS = [
-    ("price, demand-weighted (GBP/MWh)", "price_twa", "price_mid_volume_weighted"),
     ("price, time-weighted mean (GBP/MWh)", "price_mean", "price_mid_mean"),
+    # not like-for-like: the model weights by GB demand, MID by its own traded volume
+    ("price, model demand-weighted vs MID volume-weighted (GBP/MWh)", "price_twa", "price_mid_volume_weighted"),
     ("price p05 (GBP/MWh)", "price_p05", "price_mid_p05"),
     ("price p50 (GBP/MWh)", "price_p50", "price_mid_p50"),
     ("price p95 (GBP/MWh)", "price_p95", "price_mid_p95"),
