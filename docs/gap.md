@@ -84,20 +84,25 @@ no risk aversion or budget limit, no mark-up) and then restores them one group a
 
 ![ladder](figures/gap_ladder.svg)
 
-* **Ideal agents still leave £37bn.** The largest part of the gap is not agent frictions but the
-  market and plan design and the decision procedure: sequential, myopic NPV investment by firms that
-  do not anticipate each other's cannibalisation; CfD pots that allocate 60 % to offshore wind; and a
-  CM target ~25 % above the published one. The roadmap decomposes this residual (item 4).
+* **Ideal agents still leave £37bn, largely because the agents do not decide volumes.** Each CfD round
+  procures a fixed 6 GW (60 % offshore, 20 % onshore, 20 % solar), and the firms' bids (levelised cost
+  ± noise, around £50–60/MWh) never reach the administrative caps, so every round fills: 3.6 GW of
+  offshore wind a year is the 88 GW reached by 2050. The CM target is a fixed formula (~25 % above the
+  published target) and sets most of the firm capacity. Firms only decide who builds, at what strike
+  price (a transfer), and a few merchant gas and battery projects. The residual therefore measures the
+  fixed plan (CfD volumes, CM target) and the decision procedure (sequential, myopic NPV), not
+  decentralised choice. The roadmap now starts by making the government, the system operator and the
+  firms' bids real decisions ([roadmap](roadmap.md), README items 1–6).
 * **Frictions narrow the gap.** Restoring the cost of capital and risk *reduces* the gap by £5bn: in a
   system where policy already pushes too much capacity, dearer capital curbs over-build. This is a
   second-best result: removing one distortion while others remain need not help.
-* **Expectations and mark-ups barely move it.** Biased or myopic price forecasts change little,
-  probably because CfD and CM revenues dominate investment (not yet tested); strategic mark-ups are
-  transfers: they change prices, not the merit order or the build.
+* **Expectations and mark-ups barely move it.** CfD bids do not use the price forecast at all, and CfD
+  and CM volumes are fixed, so expectations can only act on the few merchant decisions; strategic
+  mark-ups are transfers: they change prices, not the merit order or the build.
 * **Operation (~£3bn)** comes from heuristic storage, EV and electrolyser dispatch and trade, not from
   mark-ups (the operation gap is the same with and without them).
 
-The order of the ladder matters; the reverse ladder (roadmap item 3) checks it.
+The order of the ladder matters; README item 17 runs every order, with government and firm rungs.
 
 ## Which market designs close it?
 
@@ -118,15 +123,15 @@ The order of the ladder matters; the reverse ladder (roadmap item 3) checks it.
 
 * **No reserve or response in the optimum (overstates the gap).** The agents' batteries earn ancillary
   and intraday/BM revenue that the planner does not need to provide; 24 GW of batteries cost about
-  £1.5bn/yr in 2050. Roadmap item 1 adds a reserve/response requirement to both the planner and the
+  £1.5bn/yr in 2050. README item 8 adds a reserve/response requirement to both the planner and the
   evaluator.
 * **One weather year, copperplate (overstates the gap).** The planner's onshore-heavy fleet with no
   storage is not stress-tested against other years, and neither pathway pays for network reinforcement
-  (offshore wind and onshore wind sit in different places). Roadmap items 6 and 13.
+  (offshore wind and onshore wind sit in different places). README items 20 and 30.
 * **Build limits shape the optimum.** The planner may build 2.5 GW/yr of onshore wind and 6 GW/yr of
-  solar; tighter planning constraints would raise its cost and shrink the gap. Roadmap item 2 tests the
+  solar; tighter planning constraints would raise its cost and shrink the gap. README item 16 tests the
   sensitivity.
 * **Demand is held at the agents' values**, so the optimum does not choose heat-pump uptake or EV
-  charging; a multi-sector optimum is roadmap item 12.
+  charging; a multi-sector optimum is README item 29.
 * **3 seeds; investment model not validated after 2025.** Treat the numbers as an order of magnitude
   and the comparisons between runs as the result.

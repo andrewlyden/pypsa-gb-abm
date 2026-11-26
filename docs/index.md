@@ -20,7 +20,9 @@ linked to [PyPSA-GB](https://github.com/andrewlyden/PyPSA-GB), with heat, gas, E
 How far the system the agents build is from the least-cost plan, where the gap comes from, and which
 market designs close it: [the gap](gap.md). First measurement (illustrative, 3 seeds): the baseline costs
 about £32bn (10 %) more than the optimum over 2025–54, mostly in what is built; without CfDs the gap
-nearly doubles, without the Capacity Market it halves.
+nearly doubles, without the Capacity Market it halves. CfD volumes and the Capacity Market target are still
+fixed parameters, so the next step is to make the government, the system operator and the firms' bids real
+decisions: [roadmap](roadmap.md).
 
 ![Gap over time](figures/gap_over_time.svg)
 ![Gap ladder](figures/gap_ladder.svg)
