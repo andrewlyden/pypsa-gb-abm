@@ -7,7 +7,7 @@ import pandas as pd
 
 from ukabm import GBMarketModel
 from ukabm.data import PyPSAGBData
-from ukabm.data.pypsagb import BOUNDARY_LINKS, BOUNDARY_MW, HVDC_STEPS
+from ukabm.data.pypsagb import AVAIL_B5, AVAIL_SCOT, BOUNDARY_LINKS, BOUNDARY_MW, BOUNDARY_NORTH, HVDC_STEPS
 from ukabm.network import redispatch
 
 warnings.filterwarnings("ignore")
@@ -81,6 +81,50 @@ def test_boundary_capabilities_by_year():
     assert set(HVDC_STEPS) <= set(l31.index)
 
 
+def test_boundary_cuts_match_listed_crossings():
+    # every link with capacity that crosses a boundary cut is listed, so no route bypasses a boundary
+    d = PyPSAGBData()
+    for y in range(2025, 2041):
+        links = d.links_for_year(y)
+        links = links[links.p_nom > 0]
+        for bnd, north in BOUNDARY_NORTH.items():
+            cut = links[links.bus0.isin(north) != links.bus1.isin(north)]
+            ac, hvdc = BOUNDARY_LINKS[bnd]
+            assert set(cut.name) <= {ac, *hvdc}, (y, bnd, set(cut.name))
+            ys, mw = zip(*BOUNDARY_MW[bnd])
+            assert cut.p_nom.sum() >= float(np.interp(y, ys, mw)) - 1e-6
+    l25 = d.links_for_year(2025).set_index("name")
+    b5 = [n for n in l25.index if (l25.bus0[n] in BOUNDARY_NORTH["B5"]) != (l25.bus1[n] in BOUNDARY_NORTH["B5"])
+          and l25.p_nom[n] > 0]
+    assert np.isclose(l25.p_nom[b5].sum(), 4300.0)            # B5 2025 capability, nothing on top
+
+
+def test_b5_available_share_over_whole_cut():
+    d = PyPSAGBData()
+    hours = np.array([24 * k * 30 + 12 for k in range(12)])
+    for y in (2025, 2029, 2031, 2036):
+        links = d.links_for_year(y)
+        cap = links.set_index("name").p_nom
+        a = d.link_availability(y, links, hours)
+        ac, hvdc = BOUNDARY_LINKS["B5"]
+        total = cap[ac] + sum(cap[h] for h in hvdc)
+        avail = a[ac] * cap[ac] + sum(a[h] * cap[h] for h in hvdc)
+        month = pd.to_datetime(f"{d.profile_year}-01-01") + pd.to_timedelta(d.profiles.doy.values[hours] - 1, unit="D")
+        frac = np.asarray(AVAIL_B5)[month.month - 1] * (0.76 if y == 2025 else 1.0)
+        # exact where the AC link can absorb the difference; never above the B5 share
+        assert (avail.values <= frac * total + 1e-6).all()
+        ok = a[ac].values > 0
+        assert np.allclose(avail.values[ok], (frac * total)[ok])
+
+
+def test_network_sample_skips_empty_strata():
+    m = GBMarketModel(end=2025, network_every=0, network_hours=96)
+    m.prof = m.prof.copy()
+    m.prof["wind_cf"] = 0.3                                          # flat: every hour in one stratum
+    hours, w = m.network_sample(2025)
+    assert len(hours) == 12 and np.isclose(w.sum(), m.H)
+
+
 def test_link_availability_profile():
     d = PyPSAGBData()
     links = d.links_for_year(2025)
@@ -89,6 +133,7 @@ def test_link_availability_profile():
     assert a25.shape == (3, len(links)) and ((a25 > 0) & (a25 <= 1)).all().all()
     scot = BOUNDARY_LINKS["B6"][0]
     assert np.allclose(a25[scot], 0.76 * a26[scot])                   # 2025 upgrade outages
+    assert np.allclose(a26[scot], np.asarray(AVAIL_SCOT)[[0, 6, 11]])
     assert a26[scot].iloc[1] < a26[scot].iloc[0]                      # summer maintenance
     assert np.allclose(a25["Z10-Z8"], a26["Z10-Z8"])                 # English link: no 2025 derate
 
@@ -116,7 +161,11 @@ def test_bm_bid_prices_by_support():
         elif p.tech.startswith("wind") and p.support == "ro":
             assert np.allclose(bids[:, j], -m.policy.ro_value)
         elif p.tech.startswith("wind") and p.support == "cfd" and p.cfd_end >= 2025:
-            assert np.allclose(bids[:, j], -max(p.strike - 60.0, 0.0))
+            assert np.allclose(bids[:, j], -(p.strike - 60.0))
+    # above the strike the CfD bid is positive: turning down saves the payback
+    cfd = [j for j, p in enumerate(plants) if p.support == "cfd" and p.tech.startswith("wind") and p.cfd_end >= 2025]
+    hi = m.bm_bids(plants, blocks, np.full(4, 500.0), 2025)
+    assert cfd and all(np.allclose(hi[:, j], 500.0 - plants[j].strike) and hi[0, j] > 0 for j in cfd)
 
 
 def test_network_stage_2025_constraint_cost_and_post_bm_mix():
