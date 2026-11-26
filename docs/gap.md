@@ -92,7 +92,7 @@ no risk aversion or budget limit, no mark-up) and then restores them one group a
   price (a transfer), and a few merchant gas and battery projects. The residual therefore measures the
   fixed plan (CfD volumes, CM target) and the decision procedure (sequential, myopic NPV), not
   decentralised choice. The roadmap now starts by making the government, the system operator and the
-  firms' bids real decisions ([roadmap](roadmap.md), README items 1–6).
+  firms' bids real decisions ([roadmap](roadmap.md), README items 1–7).
 * **Frictions narrow the gap.** Restoring the cost of capital and risk *reduces* the gap by £5bn: in a
   system where policy already pushes too much capacity, dearer capital curbs over-build. This is a
   second-best result: removing one distortion while others remain need not help.
@@ -102,7 +102,7 @@ no risk aversion or budget limit, no mark-up) and then restores them one group a
 * **Operation (~£3bn)** comes from heuristic storage, EV and electrolyser dispatch and trade, not from
   mark-ups (the operation gap is the same with and without them).
 
-The order of the ladder matters; README item 17 runs every order, with government and firm rungs.
+The order of the ladder matters; README item 21 runs every order, with government and firm rungs.
 
 ## Which market designs close it?
 
@@ -123,15 +123,15 @@ The order of the ladder matters; README item 17 runs every order, with governmen
 
 * **No reserve or response in the optimum (overstates the gap).** The agents' batteries earn ancillary
   and intraday/BM revenue that the planner does not need to provide; 24 GW of batteries cost about
-  £1.5bn/yr in 2050. README item 8 adds a reserve/response requirement to both the planner and the
+  £1.5bn/yr in 2050. README item 9 adds a reserve/response requirement to both the planner and the
   evaluator.
 * **One weather year, copperplate (overstates the gap).** The planner's onshore-heavy fleet with no
   storage is not stress-tested against other years, and neither pathway pays for network reinforcement
-  (offshore wind and onshore wind sit in different places). README items 20 and 30.
+  (offshore wind and onshore wind sit in different places). README items 26 and 17.
 * **Build limits shape the optimum.** The planner may build 2.5 GW/yr of onshore wind and 6 GW/yr of
-  solar; tighter planning constraints would raise its cost and shrink the gap. README item 16 tests the
+  solar; tighter planning constraints would raise its cost and shrink the gap. README item 20 tests the
   sensitivity.
 * **Demand is held at the agents' values**, so the optimum does not choose heat-pump uptake or EV
-  charging; a multi-sector optimum is README item 29.
+  charging; a multi-energy optimum is README items 14–15.
 * **3 seeds; investment model not validated after 2025.** Treat the numbers as an order of magnitude
   and the comparisons between runs as the result.

@@ -34,22 +34,23 @@ What is missing:
   administrative strike prices. It would respond to targets (Clean Power 2030, carbon budgets), the
   previous round's result (AR5 drew no offshore bids, and AR6 raised the offshore cap by about two-thirds)
   and the bill impact. With it, volumes come from the interaction of the government's budget and the
-  firms' bids, and "plan design" becomes a behaviour that can be studied and varied. [items 2, 3]
+  firms' bids, and "plan design" becomes a behaviour that can be studied and varied. [items 2, 3, 6]
 * **A system operator agent** (NESO) that sets the CM target from the 3 h LOLE reliability standard on
   its own demand forecast, with a T-1 holdback. [item 5]
 * **Rules that change over time.** Reforms triggered by outcomes (a failed round, a price spike) and
   options such as those in the review of electricity market arrangements (REMA). This is the deck's
-  "emergent institutions" theme. [items 2, 18]
+  "emergent institutions" theme. [items 2, 22]
 * **Later:** a carbon market whose price emerges from a cap (UK ETS), and nuclear and transmission
-  treated as government decisions. [item 27]
+  treated as government decisions. [item 33]
 
-What the government maximises is a research choice, not an engineering one. [*needs human*, item 28]
+What the government maximises is a research choice. Decided: several objectives (targets, least cost,
+bills, political), compared as levers. [items 2, 6]
 
 ## 2. What do firms decide?
 
 * **No project pipeline.** Every firm bids every technology every year. Real projects pass through
   seabed leasing, consent and the grid connection queue over several years, with development costs sunk
-  before any auction, and many drop out. [item 14]
+  before any auction, and many drop out. [item 18]
 * **CfD bids ignore expectations.** The price forecast is passed to `cfd_bid` but not used. There is no
   capture-price or reference-price risk, no cost inflation, no view of competitors, no option to abstain
   and no non-delivery. [item 3]
@@ -60,7 +61,7 @@ What the government maximises is a research choice, not an engineering one. [*ne
   life, so cannibalisation over the life of a plant is missed. [item 4]
 * **Finance.** Each firm has a fixed WACC, and CfD de-risking is a flat −2.5 points. The cost of capital
   does not depend on how much revenue is merchant, contracted or capacity payments. There are no balance
-  sheets, and the same five firms exist for 25 years. [item 26]
+  sheets, and the same five firms exist for 25 years. [item 32]
 * **Lumpy, strategic, ageing.** Blocks of 300–1,600 MW; a fixed bid mark-up with no withholding and no
   strategic investment such as pre-empting rivals; plants retire after two loss-making years or at end of
   life, with no life-extension or mothballing decisions.
@@ -70,33 +71,36 @@ What the government maximises is a research choice, not an engineering one. [*ne
 * **No convergence test.** Under textbook conditions (energy-only market priced at VoLL in scarcity,
   price-taking firms, perfect foresight, divisible investment) a competitive market reproduces the
   least-cost plan. The model has never been checked against this. Until ideal agents in an ideal market
-  land close to the planner, part of every gap may be an artefact of the decision procedure. [item 6]
+  land close to the planner, part of every gap may be an artefact of the decision procedure. [item 7]
 * **Different ambitions.** The planner values carbon at the carbon price. The agents' system emits *less*
   than the optimum after 2035, because policy buys low-carbon capacity, so part of the gap pays for
   ambition rather than waste. An optimum with the agents' emissions (and reliability) as constraints
-  separates efficiency from ambition. [item 9]
+  separates efficiency from ambition. [item 10]
 * **Different information.** The planner has perfect foresight and the agents do not, so the gap mixes
   the value of information with the cost of decentralised decisions. A rolling-horizon planner (a
-  planner with the agents' information) splits the two. [item 10]
+  planner with the agents' information) splits the two. [item 11]
 * **No "planned" pathway.** The deck contrasts optimal and emergent. The actual plan (Clean Power 2030,
-  FES) is a third pathway, so the comparison becomes optimal vs planned vs emergent. [item 11]
-* **Reserve and response, option set, build limits, multi-sector optimum:** items 8, 16 and 29.
+  FES) is a third pathway, so the comparison becomes optimal vs planned vs emergent. [item 12]
+* **Reserve and response, option set, build limits:** items 9 and 20.
+* **Electricity only.** The planner holds heat-pump uptake, EV charging and electrolysers at the agents'
+  values, so household and hydrogen decisions sit outside the gap. Decided: a multi-energy optimum with
+  heat and hydrogen. [items 14, 15]
 
 ## 4. Physics and economics that bias the gap
 
 * **Technology costs are constant 2025–2050.** There is no learning for solar, batteries or offshore
   wind, so waiting has no value and the timing of investment cannot matter as it should. This affects
-  path dependence directly. [item 15]
+  path dependence directly. [item 19]
 * **One weather year.** There is no prolonged cold, still spell (dunkelflaute), so the planner gives no
-  value to the insurance a capacity market buys. [item 30]
+  value to the insurance a capacity market buys. [item 17]
 * **Neighbouring markets are frozen.** Interconnector prices are 2024 shapes, so Europe does not
   decarbonise or depress prices when its own wind blows. Net trade is worth £17bn PV to the optimum, so
-  the gap is sensitive to this. [item 22]
-* **No network in the planner; transmission exogenous.** [items 20, 21]
-* **Price formation:** no negative prices and no unit commitment. [item 24]
+  the gap is sensitive to this. [item 28]
+* **No network in the planner; transmission exogenous.** [items 26, 27]
+* **Price formation:** no negative prices and no unit commitment. [item 30]
 * **Demand side and long-duration storage.** No price-responsive demand beyond EV valley-filling (no heat
   or industrial flexibility), no hydrogen storage or other long-duration storage, and an exogenous
-  hydrogen price. These shape the 2050 system in both pathways. [item 23]
+  hydrogen price. These shape the 2050 system in both pathways. [items 15, 29]
 * **Supply chain.** The planner has build-rate limits; the agents are limited only by the CfD volume and
   six merchant decisions a year. Neither faces cost inflation when building fast.
 
@@ -104,7 +108,7 @@ What the government maximises is a research choice, not an engineering one. [*ne
 
 * **Who pays.** Transfers cancel in system cost, but they decide bills, profits and the public purse, and
   so the politics that change the rules. Report consumer cost, producer surplus and policy cost for both
-  pathways. [item 12]
+  pathways. [item 13]
 * **Risk.** Spread of bills and loss of load across seeds and weather years, not only medians.
 * **Emissions.** Cumulative emissions against the carbon budgets, not only the 2050 value.
 
@@ -113,23 +117,25 @@ What the government maximises is a research choice, not an engineering one. [*ne
 * **Auction history.** CfD rounds AR1–AR6 (2015–2024) and CM T-4 auctions (2014–2025) give clearing
   prices and volumes by technology. Back-casting the government and firm logic over that history is the
   only direct test of the emergent investment pathway; the 2025 calibration tests operation only.
-  [item 13]
-* **Operation back-casts 2020–24 and weather years.** [*needs human*, item 30]
-* **Tolerance test** on the 2025 calibration. [item 25]
+  [item 16]
+* **Weather years.** Decided: 4–6 historical years in both runs; operation back-casts 2020–24 not yet.
+  [item 17]
+* **Tolerance test** on the 2025 calibration. [item 31]
 
 ## 7. The experiments the deck asks for
 
 Once sections 1–3 are in place:
 
 * **Where the gap comes from:** a ladder with government rungs and firm rungs, run in several orders.
-  [item 17]
+  [item 21]
 * **Which designs close it:** sweeps of CfD budget and pot split, reliability standard, zonal pricing
-  and REMA options. [item 18; zonal pricing needs item 20]
-* **How it moves over time:** tipping points, lock-in, multiple equilibria. [item 19]
-* **Other decision makers:** Q-learning and LLM agents behind the decision interface. [items 1, 31]
+  and REMA options. [item 22; zonal pricing needs item 26]
+* **How it moves over time:** tipping points, lock-in, multiple equilibria. [item 23]
+* **Other decision makers:** Q-learning and LLM agents behind the decision interface, compared with the
+  rule-based agents and each other. [items 24, 25]
 
 ## 8. Practical
 
 A 27-run gap batch takes about 2 hours on 12 cores, and the experiments above need tens of batches.
 Each merchant decision re-clears a full 8,760-hour market as a forecast, up to seven times a year per
-run. Profiling and speeding up the runs comes before the experiments. [item 7]
+run. Profiling and speeding up the runs comes before the experiments. [item 8]
