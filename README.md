@@ -50,13 +50,13 @@ ukabm/outturn.py       model-vs-outturn comparison (data/outturn: NESO generatio
 ## 2025 calibration (baseline, seed 42) vs GB outturn
 | | model | outturn 2025 |
 |---|---|---|
-| price, time-weighted mean (£/MWh) | 84.6 | 79.9 (Elexon MID) |
-| carbon intensity, NESO basis: wholesale / after BM redispatch (g/kWh) | 112 / 123 | 130 (NESO, generation-weighted) |
+| price, time-weighted mean (£/MWh) | 83.9 | 79.9 (Elexon MID) |
+| carbon intensity, NESO basis: wholesale / after BM redispatch (g/kWh) | 113 / 124 | 130 (NESO, generation-weighted) |
 | gas / wind after BM redispatch (TWh) | 76 / 87 | 77 / 86 |
 | nuclear / biomass (TWh) | 35 / 20 | 34 / 20 |
 | imports / exports (TWh) | 45 / 15 | 44 / 15 (Elexon FUELHH) |
 | constraint cost (£bn) | 1.04 | 1.83, of which ~0.54 BM premia not modelled (LCP Delta 2026, NESO data) |
-| renewable turn-down in the BM (TWh) | 7.9 | 10.4 |
+| renewable turn-down in the BM (TWh) | 7.8 | 10.4 |
 
 The network stage redispatches the copperplate schedule on the PyPSA-GB zones with dated ETYS boundary
 capabilities. It turns down Scottish wind behind B4/B6 and turns up gas in England, which closes most of the CI gap.
@@ -95,7 +95,7 @@ and carbon intensity until the fleet catches up.
 | T-4 Capacity Market with sloping demand curve | ✅ works (no T-1, no penalties) |
 | Retirement on persistent losses / end of life | ✅ works |
 | PyPSA-GB link: zonal network, ESPENI profiles, DUKES siting, IC register, CM/CfD data | ✅ works (bundled snapshot or live clone) |
-| Network stage: BM-style redispatch (bids/offers) on PyPSA-GB zones with dated ETYS boundary capabilities and monthly availability, 96 wind-stratified hours | ✅ 2025: £1.04bn vs £1.29bn outturn excl. BM premia; 7.9 vs 10.4 TWh turn-down; post-BM gas/wind within 1.5 TWh, CI 7 g/kWh low. Boundary cuts tested for bypass routes. ⚠️ Single GB wind shape for all zones; ~£0 in 2030–35 (see roadmap); redispatch is reported only, not settled |
+| Network stage: BM-style redispatch (bids/offers) on PyPSA-GB zones with dated ETYS boundary capabilities and monthly availability, 96 wind-stratified hours | ✅ 2025: £1.04bn vs £1.29bn outturn excl. BM premia; 7.8 vs 10.4 TWh turn-down; post-BM gas/wind within 1.5 TWh, CI 6 g/kWh low. Boundary cuts tested for bypass routes. ⚠️ Single GB wind shape for all zones; ~£0 in 2030–35 (see roadmap); redispatch is reported only, not settled |
 | Heat-pump household agents + gas network tariff feedback | ✅ works (stylised, synthetic temperature) |
 | Hydrogen: electrolysers + H2 turbine tech | ⚠️ stub-level: exogenous H2 price, no H2 storage/network |
 | Batteries: revenue stack (day-ahead arbitrage + ancillary and intraday/BM pots shared across the fleet + CM) | ✅ 2025 stack £64k/MW/yr before CM (Modo index £73k incl. CM); batteries enter via CM and merchant NPV, 12 GW by 2030 and 26–42 GW by 2050. ⚠️ Stylised pots; low against Clean Power 2030 (23–27 GW by 2030) |
