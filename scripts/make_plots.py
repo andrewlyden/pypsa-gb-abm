@@ -111,4 +111,48 @@ if det_p.exists():
         plt.colorbar(sc, label="zonal price GBP/MWh (weighted median of sample hours)")
         ax.set_title(f"PyPSA-GB zonal redispatch, {net.get('year')}\n(line width = mean flow)")
         fig.tight_layout(); fig.savefig(FIG / "zonal_network.png", dpi=130); plt.close(fig)
+
+ens = {p.stem.replace("ensemble_", ""): pd.read_csv(p, index_col=0) for p in sorted(RES.glob("ensemble_*.csv"))}
+if ens:  # multi-seed bands: median line, shaded min-max across seeds
+    from ukabm import bands
+    for df in ens.values():
+        df["policy_cost_bn"] = df.cfd_cost_bn + df.cm_cost_bn + df.ro_cost_bn
+        df["lole_cum_h"] = df.groupby("seed").lole_h.cumsum()
+    panels = [("price_twa", "Demand-weighted wholesale price (GBP/MWh)"), ("intensity_g_kwh", "Carbon intensity (gCO2/kWh)"),
+              ("policy_cost_bn", "Policy cost CfD+RO+CM (GBP bn/yr)"), ("hp_homes_m", "Homes with heat pumps (million)"),
+              ("cap_wind_offshore", "Offshore wind capacity (GW)"), ("lole_cum_h", "Cumulative loss-of-load hours")]
+    fig, axs = plt.subplots(2, 3, figsize=(14, 7))
+    for k, (name, df) in enumerate(ens.items()):
+        b = bands(df, [c for c, _ in panels])
+        n = df.seed.nunique()
+        for ax, (c, _) in zip(axs.flat, panels):
+            ax.fill_between(b.index, b[(c, "min")], b[(c, "max")], color=f"C{k}", alpha=.2, lw=0)
+            ax.plot(b.index, b[(c, "median")], color=f"C{k}", label=f"{name} (median, min-max of {n} seeds)")
+    for ax, (_, title) in zip(axs.flat, panels):
+        ax.set_title(title, fontsize=10); ax.grid(alpha=.3)
+    axs[0, 0].legend(fontsize=7)
+    fig.tight_layout(); fig.savefig(FIG / "ensemble_bands.png", dpi=130); plt.close(fig)
+
+    def cell(s, fmt="{:.0f}"):
+        return f"{fmt.format(s.median())} [{fmt.format(s.min())}–{fmt.format(s.max())}]"
+    # common reporting horizon so every row compares the same years; headers built from it
+    y0 = max(df.index.min() for df in ens.values())
+    y1 = min(df.index.max() for df in ens.values())
+    if any(df.index.min() != y0 or df.index.max() != y1 for df in ens.values()):
+        print(f"ensemble files cover different years; summary table restricted to {y0}-{y1}")
+    ymid = 2030 if y0 < 2030 < y1 else None
+    head = ["scenario", "seeds"] + ([f"price {ymid} (£/MWh)"] if ymid else []) + [
+        f"price {y1} (£/MWh)", f"CI {y0} (g/kWh)", f"CI {y1} (g/kWh)", f"LOLE total {y0}-{y1} (h)",
+        f"HP homes {y1} (m)", f"offshore wind {y1} (GW)"]
+    rows = ["| " + " | ".join(head) + " |", "|---" * len(head) + "|"]
+    for name, df in ens.items():
+        df = df.loc[(df.index >= y0) & (df.index <= y1)]
+        at = lambda y, c: df.loc[df.index == y, c]  # noqa: E731
+        cells = [name, str(df.seed.nunique())] + ([cell(at(ymid, "price_twa"))] if ymid else []) + [
+            cell(at(y1, "price_twa")), cell(at(y0, "intensity_g_kwh")), cell(at(y1, "intensity_g_kwh")),
+            cell(df.groupby("seed").lole_h.sum()), cell(at(y1, "hp_homes_m"), "{:.1f}"),
+            cell(at(y1, "cap_wind_offshore"))]
+        rows.append("| " + " | ".join(cells) + " |")
+    (RES / "ensemble_summary.md").write_text("median [min–max] across seeds\n\n" + "\n".join(rows) + "\n")
+    print("\n".join(rows))
 print("figures:", sorted(p.name for p in FIG.glob("*.png")))

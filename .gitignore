@@ -4,3 +4,4 @@ __pycache__/
 results/*.pkl
 results_*.log
 *.egg-info/
+.venv/

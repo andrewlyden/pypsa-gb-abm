@@ -16,7 +16,11 @@ linked to [PyPSA-GB](https://github.com/andrewlyden/PyPSA-GB), with heat, gas, E
 * [Architecture, agents, annual loop, extension hooks](model_design.md)
 * [Assumptions & limitations](assumptions.md)
 
-## 3. Results (baseline + 5 scenarios, 2025-2050, single seed)
+## 3. Results (baseline + 5 scenarios, 2025-2050)
+Multi-seed bands (median, min–max of 5 seeds) for baseline, no_cfd and heat_push:
+![Ensemble bands](figures/ensemble_bands.svg)
+
+Single seed, all scenarios:
 ![Scenario comparison](figures/scenario_comparison.svg)
 ![Capacity](figures/capacity_mix.svg)
 ![Generation](figures/generation_mix.svg)

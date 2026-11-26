@@ -22,6 +22,7 @@ python scripts/run_scenarios.py baseline --end 2030      # ~40 s
 python scripts/run_scenarios.py                          # all 6 scenarios 2025-2050 (~4 min each)
 python scripts/make_plots.py                             # -> docs/figures/
 python scripts/compare_outturn.py                        # 2025 vs GB outturn -> results/calibration_2025.md
+python scripts/run_ensemble.py                           # baseline, no_cfd, heat_push x 5 seeds
 # optional: rebuild the outturn reference / neighbour prices (public APIs, no key)
 python scripts/fetch_outturn.py 2024 2025 && python scripts/fetch_neighbour_prices.py 2024
 # optional: rebuild the PyPSA-GB snapshot / run on a live clone
@@ -45,6 +46,7 @@ ukabm/network.py       BM-style redispatch (bids/offers) on the PyPSA-GB zonal n
 ukabm/data/pypsagb.py  PyPSA-GB adapter (raw clone or bundled snapshot)
 ukabm/scenarios.py     baseline, high_carbon, no_cfd, heat_push, no_capacity_market, high_gas
 ukabm/outturn.py       model-vs-outturn comparison (data/outturn: NESO generation mix + CI, Elexon)
+ukabm/ensemble.py      multi-seed runs (run_ensemble, parallel) and per-year bands
 ```
 
 ## 2025 calibration (baseline, seed 42) vs GB outturn

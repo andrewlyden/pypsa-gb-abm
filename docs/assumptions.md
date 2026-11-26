@@ -28,7 +28,7 @@
   * Limitations: one GB wind shape for every zone (no Scottish vs English weather), so the model curtails by boundary capability rather than by local weather; no voltage, stability or inertia constraints (only thermal boundary limits); constraint cost in 2030+ depends strongly on the assumed network build-out dates.
 * Gas network: allowed revenue £5.5bn/yr, –1 %/yr after 2030; non-domestic demand –1.5 %/yr.
 * Retail: electricity = HP-weighted wholesale + £70 network + levies + £25 supplier; gas = wholesale + network tariff + £12.
-* Single seed in the published results; ABM outcomes are path-dependent — run several seeds.
+* Ensembles (`ukabm.ensemble`): seeds vary agent/path draws (vintages, CfD/RO split, bid noise, siting, merchant order, households), not weather, demand, fuel or carbon paths. Bands are min–max across seeds, not confidence intervals.
 
 ## 2025 calibration vs outturn
 `python scripts/compare_outturn.py` writes [results/calibration_2025.md](../results/calibration_2025.md) (outturn
