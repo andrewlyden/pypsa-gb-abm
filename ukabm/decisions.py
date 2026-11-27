@@ -23,17 +23,18 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from .config import STORAGE_TECHS, TECHS, VRE_TECHS  # noqa: F401  (STORAGE_TECHS for subclasses)
+from .config import STORAGE_TECHS, TECHS, VRE_TECHS, capex_kw, fom_kw  # noqa: F401  (STORAGE_TECHS for subclasses)
 
 if TYPE_CHECKING:  # pragma: no cover
     from .observations import Observation, Outcome
 
 
-def npv_per_mw(tech: str, margin_per_mw_yr: float, rate: float) -> float:
-    """NPV per MW of *tech* earning a flat annual margin (before FOM) over its life at *rate*."""
+def npv_per_mw(tech: str, margin_per_mw_yr: float, rate: float, online: int | None = None) -> float:
+    """NPV per MW of *tech* earning a flat annual margin (before FOM) over its life at *rate*, at the
+    costs of a plant coming online in *online* (config.COST_PATHS; None: the reference costs)."""
     t = TECHS[tech]
     annuity = (1 - (1 + rate) ** -t.life) / rate
-    return (margin_per_mw_yr - t.fom * 1000) * annuity - t.capex * 1000
+    return (margin_per_mw_yr - fom_kw(tech, online) * 1000) * annuity - capex_kw(tech, online) * 1000
 
 
 class DecisionMaker:
@@ -103,7 +104,8 @@ class RuleBased(DecisionMaker):
                 continue  # VRE goes via CfD auction when CfD is available
             margin = obs.market.expected_margin(tech, obs.forecast)
             # cannibalisation haircut for VRE capture price and for own price impact
-            npv = npv_per_mw(tech, margin * (1 - tr.risk_aversion), tr.wacc)
+            npv = npv_per_mw(tech, margin * (1 - tr.risk_aversion), tr.wacc,
+                             obs.market.year + TECHS[tech].lead_time)
             if npv > 0 and (best is None or npv > best[1]):
                 best = (tech, npv)
         if best is None:
@@ -113,10 +115,11 @@ class RuleBased(DecisionMaker):
     def cfd_bid(self, obs):
         """Strike-price bid = levelised cost at a de-risked (CfD) WACC."""
         t = TECHS[obs.tech]
+        online = obs.market.year + t.lead_time
         r = max(obs.traits.wacc - 0.025, 0.035)
         crf = r / (1 - (1 + r) ** -t.life)
         cf = obs.market.capacity_factor(obs.tech)
-        lcoe = (t.capex * 1000 * crf + t.fom * 1000) / (8760 * cf) + t.vom
+        lcoe = (capex_kw(obs.tech, online) * 1000 * crf + fom_kw(obs.tech, online) * 1000) / (8760 * cf) + t.vom
         return lcoe * (1 + 0.05 * obs.market.rng.standard_normal())
 
     def cm_bid(self, obs):
@@ -125,10 +128,11 @@ class RuleBased(DecisionMaker):
             t = TECHS[obs.tech]
             w = obs.traits.wacc
             crf = w / (1 - (1 + w) ** -15)  # 15-year CM agreement
-            missing = t.capex * crf + t.fom - obs.margin_per_kw
+            online = obs.market.year + 4    # T-4 delivery year
+            missing = capex_kw(obs.tech, online) * crf + fom_kw(obs.tech, online) - obs.margin_per_kw
             return max(missing, 0.0) / t.derating
         t = TECHS[obs.plant.tech]
-        return max(t.fom - obs.margin_per_kw, 0.0) / t.derating
+        return max(fom_kw(obs.plant.tech, obs.plant.online) - obs.margin_per_kw, 0.0) / t.derating
 
 
 REGISTRY: dict[str, type[DecisionMaker]] = {"rules": RuleBased}
@@ -203,8 +207,9 @@ class ExpectationBids(RuleBased):
         rm = tr.wacc                                              # merchant tail
         a_contract = (1 - (1 + rc) ** -n) / rc
         a_tail = ((1 - (1 + rm) ** -t.life) / rm - (1 - (1 + rm) ** -n) / rm) if t.life > n else 0.0
-        capex = t.capex * 1000
-        fom = t.fom * 1000
+        online = obs.market.year + t.lead_time
+        capex = capex_kw(tech, online) * 1000
+        fom = fom_kw(tech, online) * 1000
         tail = max(self.tail_capture(obs) - t.vom, 0.0) * gen - fom
         need = capex + fom * a_contract - tail * a_tail          # PV the contract must cover
         strike = need / (a_contract * gen * (1 - self.BASIS)) + t.vom
@@ -234,16 +239,17 @@ class ExpectationBids(RuleBased):
         optional (years, revenue per MW per year, rate) for a contracted first period."""
         t = TECHS[tech]
         ys = sorted(path)
-        npv, df = -t.capex * 1000, 1.0
+        fom = fom_kw(tech, online) * 1000
+        npv, df = -capex_kw(tech, online) * 1000, 1.0
         for k in range(1, t.life + 1):
             year = online + k - 1
             if first is not None and k <= first[0]:
                 df /= 1 + first[2]
-                npv += (first[1] - t.fom * 1000) * df
+                npv += (first[1] - fom) * df
             else:
                 df /= 1 + rate
                 margin = float(np.interp(year, ys, [path[y] for y in ys]))
-                npv += (margin * (1 - haircut) - t.fom * 1000) * df
+                npv += (margin * (1 - haircut) - fom) * df
         return npv
 
     def merchant_investment(self, obs):

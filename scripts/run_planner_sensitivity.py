@@ -17,7 +17,7 @@ import warnings
 from pathlib import Path
 
 from ukabm import GBMarketModel, get_scenario
-from ukabm.config import PLANNER_BUILD_MW_PER_YEAR as LIMITS, TECHS
+from ukabm.config import PLANNER_BUILD_MW_PER_YEAR as LIMITS, TECHS, capex_kw
 from ukabm.costs import COMPONENTS, crf, present_value, total
 from ukabm.planner import evaluate, plan
 
@@ -77,7 +77,7 @@ def main():
             ev = evaluate(m, y, units, loads[y])
             c = dict(ev["costs"])
             if capital_rate is not None:
-                c["capex"] = sum(TECHS[u.tech].capex * 1000 * u.mw * crf(capital_rate, TECHS[u.tech].life)
+                c["capex"] = sum(capex_kw(u.tech, u.online) * 1000 * u.mw * crf(capital_rate, TECHS[u.tech].life)
                                  for u in units if m.start < u.online <= y <= u.online + TECHS[u.tech].life - 1)
             annual[y] = total(c)
             detail[y] = dict(unserved_gwh=round(ev["unserved_mwh"] / 1e3, 1), emissions_mt=round(ev["emissions_t"] / 1e6, 2),

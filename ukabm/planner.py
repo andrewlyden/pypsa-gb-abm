@@ -23,7 +23,8 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
-from .config import TECHS, STORAGE_TECHS, VRE_TECHS, SOCIAL_DISCOUNT_RATE, PLANNER_BUILD_MW_PER_YEAR, RESERVE
+from .config import (capex_kw, fom_kw, CFD_TARGET_GW, PLANNER_EXTREME_DAYS, TECHS, STORAGE_TECHS, VRE_TECHS, SOCIAL_DISCOUNT_RATE,
+                     PLANNER_BUILD_MW_PER_YEAR, RESERVE)
 from .costs import COMPONENTS, Unit, crf, fixed_costs, variable_cost
 
 log = logging.getLogger(__name__)
@@ -292,44 +293,69 @@ class Plan:
     hours: np.ndarray | None = None
 
 
-def sample_days(model, loads: dict, every: int = 7):
-    """One day in every *every* days, the position within each block rotating so that every weekday is
-    sampled equally often, plus for each period the day with the highest load net of wind. Returns
-    (ordinary days, peak days), each sorted."""
+def reference_net_load(model, period: int, load: np.ndarray) -> np.ndarray:
+    """Hourly load net of wind and solar for a reference fleet: the government's capacity target path
+    (config.CFD_TARGET_GW) at *period*, on the fleet profiles. Used only to find the days on which any
+    plausible fleet is short of energy, so the reference does not depend on the agents' run or on the
+    plan being made."""
+    net = np.asarray(load, dtype=float).copy()
+    for tech, path in CFD_TARGET_GW.items():
+        ys = sorted(path)
+        gw = float(np.interp(period, ys, [path[y] for y in ys]))
+        net -= gw * 1000 * model.cf_profile(tech, model.start)
+    return net
+
+
+def sample_days(model, loads: dict, every: int = 7, extreme: int | None = None):
+    """A stratified sample of days. Returns (ordinary days, extreme days), each sorted.
+
+    * extreme days: for each period, the *extreme* days with the highest daily peak of the reference
+      net load and the *extreme* days with the highest daily mean (``reference_net_load``). They are
+      the days that set firm capacity and the cost of unserved energy; each stands for itself.
+    * ordinary days: one day in every *every* of the rest, the position within each block rotating so
+      that every weekday is sampled equally often; they share the weight of all non-extreme days.
+
+    A plain one-in-seven sample holds few or none of the scarcity days, so a plan made on it is short
+    of firm capacity on the full year (foundations review F3)."""
+    extreme = PLANNER_EXTREME_DAYS if extreme is None else extreme
     days = model.H // 24
+    ext = set()
+    for period, load in loads.items():
+        net = reference_net_load(model, period, load)[:days * 24].reshape(days, 24)
+        if extreme > 0:
+            ext |= set(np.argsort(net.max(axis=1))[-extreme:].tolist())
+            ext |= set(np.argsort(net.mean(axis=1))[-extreme:].tolist())
+        else:                              # the earlier rule: the single peak day of each period
+            ext.add(int(np.argmax(net.max(axis=1))))
     ordinary = {b + (k % every) for k, b in enumerate(range(0, days - every + 1, every))}
-    wind = model.cf_profile("wind_offshore")
-    peak = set()
-    for load in loads.values():
-        net = load[:days * 24] - 30000 * wind[:days * 24]
-        peak.add(int(np.argmax(net)) // 24)
-    return sorted(ordinary), sorted(peak - ordinary)
+    return sorted(ordinary - ext), sorted(ext)
 
 
-def sample_hours(model, loads: dict, every: int = 7) -> np.ndarray:
-    ordinary, peak = sample_days(model, loads, every)
+def sample_hours(model, loads: dict, every: int = 7, extreme: int | None = None) -> np.ndarray:
+    ordinary, peak = sample_days(model, loads, every, extreme)
     return np.concatenate([np.arange(d * 24, d * 24 + 24) for d in sorted(ordinary + peak)])
 
 
-def sample_weights(model, loads: dict, every: int = 7) -> np.ndarray:
-    """Hours represented by each sampled hour (same order as ``sample_hours``): a peak day stands for
-    itself (weight 1); the ordinary days share the rest of the year. Sums to model.H."""
-    ordinary, peak = sample_days(model, loads, every)
+def sample_weights(model, loads: dict, every: int = 7, extreme: int | None = None) -> np.ndarray:
+    """Hours represented by each sampled hour (same order as ``sample_hours``): an extreme day stands
+    for itself (weight 1); the ordinary days share the rest of the year. Sums to model.H."""
+    ordinary, peak = sample_days(model, loads, every, extreme)
     w_ord = (model.H - 24 * len(peak)) / (24 * len(ordinary))
     return np.concatenate([np.full(24, 1.0 if d in peak else w_ord) for d in sorted(ordinary + peak)])
 
 
 def plan(model, loads: dict, rate: float = SOCIAL_DISCOUNT_RATE, build_limits: dict | None = None,
-         every_nth_day: int = 7) -> Plan:
+         every_nth_day: int = 7, extreme_days: int | None = None) -> Plan:
     """Least-cost capacity expansion over investment periods = sorted(loads) (e.g. 2025, 2030, ...),
-    starting from model.initial_fleet. loads: {period: hourly inflexible load (MW)}."""
+    starting from model.initial_fleet. loads: {period: hourly inflexible load (MW)}. Solved on a
+    stratified sample of days (``sample_days``)."""
     import pypsa
     _quiet()
     limits = dict(PLANNER_BUILD_MW_PER_YEAR if build_limits is None else build_limits)
     periods = sorted(loads)
     step = periods[1] - periods[0] if len(periods) > 1 else 5
-    hours = sample_hours(model, loads, every_nth_day)
-    w = sample_weights(model, loads, every_nth_day)      # hours each sampled hour represents
+    hours = sample_hours(model, loads, every_nth_day, extreme_days)
+    w = sample_weights(model, loads, every_nth_day, extreme_days)   # hours each sampled hour represents
     n = pypsa.Network()
     snaps = pd.MultiIndex.from_product([periods, range(len(hours))], names=["period", "timestep"])
     n.set_snapshots(snaps)
@@ -383,7 +409,7 @@ def plan(model, loads: dict, rate: float = SOCIAL_DISCOUNT_RATE, build_limits: d
                 continue
             if tech in model.scenario.get("banned_techs", []):
                 continue
-            cc = t.capex * 1000 * crf(rate, t.life) + t.fom * 1000
+            cc = capex_kw(tech, p) * 1000 * crf(rate, t.life) + fom_kw(tech, p) * 1000
             name = f"new_{tech}_{p}"
             if tech in STORAGE_TECHS:
                 e = np.sqrt(t.efficiency)

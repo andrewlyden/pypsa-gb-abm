@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 from .agents import GenCo, Plant
-from .config import (NEW_BUILD_CF, VRE_PROFILE, LEGACY_CM_PRICE, CPI_2012_TO_2024, RO_LAST_ONLINE, RO_SCHEME_END, RO_YEARS, TECHS, VRE_TECHS, STORAGE_TECHS, INITIAL_FLEET_MW, EXISTING_FLEET_EFFICIENCY,
+from .config import (capex_kw, fom_kw, NEW_BUILD_CF, VRE_PROFILE, LEGACY_CM_PRICE, CPI_2012_TO_2024, RO_LAST_ONLINE, RO_SCHEME_END, RO_YEARS, TECHS, VRE_TECHS, STORAGE_TECHS, INITIAL_FLEET_MW, EXISTING_FLEET_EFFICIENCY,
                      NESO_CI_FACTORS, Policy, Fuels, BATTERY_ANCILLARY_POT, BATTERY_TRADING_PER_MW_VRE,
                      BATTERY_FLEET_FLOOR_MW)
 from .data import PyPSAGBData
@@ -382,7 +382,7 @@ class GBMarketModel(ModelBase):
                 ro_cost += self.policy.ro_value * e
             cm = p.cm_payment_price(year) * 1000 * p.mw * t.derating
             cm_cost += cm
-            profit = rev + extra + cm - var - t.fom * 1000 * p.mw
+            profit = rev + extra + cm - var - fom_kw(p.tech, p.online) * 1000 * p.mw
             acc.append((p, profit, cm))
             gen_by_tech[p.tech] = gen_by_tech.get(p.tech, 0) + e
             if t.fuel is not None:
@@ -402,7 +402,7 @@ class GBMarketModel(ModelBase):
                 cm = p.cm_payment_price(year) * 1000 * p.mw * TECHS[tech].derating
                 cm_cost += cm
                 cm_t += cm
-                acc.append((p, rev_p + cm - TECHS[tech].fom * 1000 * p.mw, cm))
+                acc.append((p, rev_p + cm - fom_kw(tech, p.online) * 1000 * p.mw, cm))
             gen_by_tech[tech] = float(np.clip(net, 0, None).sum())
             if tech == "battery" and tot > 0:
                 batt = dict(arbitrage=rev / tot, services=svc, cm=cm_t / tot)
@@ -493,7 +493,7 @@ class GBMarketModel(ModelBase):
             fields["options"] = tuple(
                 t for t in genco.tech_preference
                 if TECHS[t].investable and t not in banned and t != "nuclear"
-                and TECHS[t].capex * 1000 * TECHS[t].chunk_mw <= left)
+                and capex_kw(t, self.year + TECHS[t].lead_time) * 1000 * TECHS[t].chunk_mw <= left)
         return Observation(kind=kind, traits=traits, market=self._market_info(genco), own=own, **fields)
 
     def forecast_horizons(self, offsets=(8, 13)):
@@ -623,11 +623,12 @@ class GBMarketModel(ModelBase):
         """Expected annual gross margin (before FOM, excluding CM payments) of an existing plant, GBP/kW:
         the mean of its last two years, or, without history, its margin on the price forecast."""
         t = TECHS[p.tech]
+        fom = fom_kw(p.tech, p.online)
         if p.energy_history:
             net = float(np.mean([h for _, h in p.energy_history[-2:]]))
-            return net / (p.mw * 1000) + t.fom
+            return net / (p.mw * 1000) + fom
         if price_fc is None:
-            return t.fom
+            return fom
         if p.tech in STORAGE_TECHS:
             return self.expected_margin_per_mw(p.tech, price_fc, p.owner, include_cm=False) / 1000
         srmc = self.plant_srmc(p, self.year + 3)
@@ -865,7 +866,7 @@ class GBMarketModel(ModelBase):
                     tech, mw, npv = d
                     t = TECHS[tech]
                     self.new_plant(g, tech, self.choose_zone(tech), mw, y + t.lead_time)
-                    budgets[g.name] -= t.capex * 1000 * mw
+                    budgets[g.name] -= capex_kw(tech, y + t.lead_time) * 1000 * mw
                     done = True
                     break
             if not done:

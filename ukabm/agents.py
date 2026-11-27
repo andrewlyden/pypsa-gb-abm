@@ -110,7 +110,8 @@ class GenCo(AgentBase):
 
     # ------------------------------------------------------------- helpers
     def npv_per_mw(self, tech: str, margin_per_mw_yr: float, rate: float | None = None) -> float:
-        return decisions.npv_per_mw(tech, margin_per_mw_yr, self.wacc if rate is None else rate)
+        return decisions.npv_per_mw(tech, margin_per_mw_yr, self.wacc if rate is None else rate,
+                                    self.model.year + TECHS[tech].lead_time)
 
     def step(self):  # Mesa hook; model orchestrates phases explicitly
         pass

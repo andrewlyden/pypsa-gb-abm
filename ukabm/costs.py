@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .config import TECHS, SOCIAL_DISCOUNT_RATE
+from .config import TECHS, SOCIAL_DISCOUNT_RATE, capex_kw, fom_kw
 
 COMPONENTS = ("capex", "fom", "fuel", "carbon", "trade", "unserved", "h2_value")
 
@@ -48,10 +48,10 @@ def fixed_costs(units, year: int, start: int, rate: float = SOCIAL_DISCOUNT_RATE
     for u in units:
         t = TECHS[u.tech]
         if u.active(year):
-            fom += t.fom * 1000 * u.mw
+            fom += fom_kw(u.tech, u.online) * 1000 * u.mw
         # capital is sunk: the annuity runs over the economic life even if the plant closes early
         if u.online > start and u.online <= year <= u.online + t.life - 1:
-            capex += t.capex * 1000 * u.mw * crf(rate, t.life)
+            capex += capex_kw(u.tech, u.online) * 1000 * u.mw * crf(rate, t.life)
     return {"capex": capex, "fom": fom}
 
 

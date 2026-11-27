@@ -48,6 +48,31 @@ TECHS: dict[str, Tech] = {t.name: t for t in [
 
 STORAGE_TECHS = {"battery": 2.0, "pumped_hydro": 8.0}   # duration hours
 
+# Technology cost trajectories (README roadmap item 19): capital cost (GBP/kW) and fixed O&M
+# (GBP/kW/yr) by the year a plant comes online, real 2024 prices, linear between points and flat
+# outside them. A technology or item without a path keeps its TECHS value in every year. The same
+# paths serve the agents, the planner and the system-cost accounting, in hindcasts and in future years.
+# Values and sources: data/parameters/cost_paths.csv (loaded below) and docs/assumptions.md.
+COST_PATHS: dict[str, dict[str, dict[int, float]]] = {}
+
+
+def _path_value(tech: str, item: str, online: int | None, default: float) -> float:
+    path = COST_PATHS.get(tech, {}).get(item)
+    if not path or online is None:
+        return default
+    ys = sorted(path)
+    return float(np.interp(online, ys, [path[y] for y in ys]))
+
+
+def capex_kw(tech: str, online: int | None = None) -> float:
+    """Capital cost (GBP/kW) of *tech* coming online in *online* (None: the TECHS reference value)."""
+    return _path_value(tech, "capex", online, TECHS[tech].capex)
+
+
+def fom_kw(tech: str, online: int | None = None) -> float:
+    """Fixed O&M (GBP/kW/yr) of a *tech* plant that came online in *online*."""
+    return _path_value(tech, "fom", online, TECHS[tech].fom)
+
 # Battery revenues beyond the model's hourly day-ahead arbitrage (stylised; see docs/assumptions.md).
 # Each stream is a pot (GBP/yr) shared across the battery fleet, so revenue per MW falls as the fleet
 # grows (saturation). Calibrated to the 2025 GB 2-hour BESS revenue stack: Modo Energy ME BESS GB index
@@ -209,6 +234,12 @@ PLANNER_BUILD_MW_PER_YEAR = {
     "wind_offshore": 6000, "wind_onshore": 2500, "solar": 6000, "battery": 5000,
     "ccgt": 3000, "ocgt": 2000, "gas_ccs": 1500, "h2_turbine": 1500, "nuclear": 0,
 }
+
+
+# The planner is solved on a sample of days: one in seven, plus for every investment period this many
+# days with the highest daily peak and this many with the highest daily mean of load net of wind and
+# solar (ukabm.planner.sample_days). 0 = the earlier rule (one peak day per period).
+PLANNER_EXTREME_DAYS = 8
 
 
 @dataclass
