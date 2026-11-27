@@ -25,7 +25,7 @@ from .config import (TECHS, VRE_TECHS, STORAGE_TECHS, INITIAL_FLEET_MW, EXISTING
 from .data import PyPSAGBData
 from .costs import COMPONENTS as COST_COMPONENTS, fixed_costs, variable_cost
 from . import decisions
-from .institutions import CFD_TECHS, make_government
+from .institutions import CFD_TECHS, SystemOperator, make_government
 from .market import Block, clear, merit_order, storage_arbitrage
 from .scenarios import IDEAL_TRAITS
 from .multienergy import HeatModule, GasNetworkModule, EVModule, HydrogenModule
@@ -124,6 +124,7 @@ class GBMarketModel(ModelBase):
         # decisions go through ukabm.decisions (scenario 'decision_logic': a name, or {genco: name})
         self.gencos = [GenCo(self, decider=decisions.for_genco(self.scenario, s["name"]), **s) for s in specs]
         self.government = make_government(self)   # runs the CfD rounds (scenario "government")
+        self.operator = SystemOperator(self)       # sets the CM target (scenario "system_operator")
         self.cfd_last = dict(awarded_mw=0.0, budget_gbp=np.nan)
         self.plants: list[Plant] = []
         self._pid = 0
@@ -517,22 +518,23 @@ class GBMarketModel(ModelBase):
         self.cfd_last = dict(awarded_mw=sum(mw.values()), budget_gbp=sum(budgets) if budgets else np.nan)
         return built
 
-    def cm_auction(self, year, price_fc=None):
+    def cm_auction(self, year, price_fc=None, ahead=4):
+        """T-4 (ahead=4) or T-1 (ahead=1) Capacity Market auction. The system operator
+        (ukabm.institutions.SystemOperator) sets the target; supported (CfD/RO) plant is outside the CM
+        but counts towards security of supply."""
         if not self.policy.cm_enabled:
             return []
-        dy = year + 4
-        base, heat, ev, _ = self.demand(dy)
-        peak = float((base + heat + ev).max())
-        target = peak * (1 + self.policy.cm_reliability_margin)
-        # supported (CfD/RO) plant is outside the CM but still contributes to security of supply
-        target -= sum(p.mw * TECHS[p.tech].derating for p in self.plants
-                      if p.active(dy) and p.support in ("cfd", "ro"))
+        dy = year + ahead
+        target, peak = self.operator.cm_target(year, dy, ahead)
         offers = []   # (price, derated_mw, plant or (genco, tech))
-        _, _, ic_cap, _ = self.interconnector_blocks(dy)
-        offers.append((0.0, 0.45 * ic_cap, None))
+        if ahead == 4:
+            _, _, ic_cap, _ = self.interconnector_blocks(dy)
+            offers.append((0.0, 0.45 * ic_cap, None))
         for p in self.plants:
             if p.active(dy) and p.support not in ("cfd", "ro"):
                 if p.tech in VRE_TECHS:
+                    continue
+                if ahead == 1 and p.cm_end >= dy:      # already holds an agreement covering dy
                     continue
                 t = TECHS[p.tech]
                 margin_kw = max(np.mean([h for _, h in p.history[-2:]]) / (p.mw * 1000), 0) if p.history else 0
@@ -547,7 +549,7 @@ class GBMarketModel(ModelBase):
         batt = []
         for g in self.gencos:
             for tech in ("ocgt", "battery", "ccgt", "h2_turbine", "gas_ccs"):
-                if tech in self.scenario.get("banned_techs", []) or TECHS[tech].lead_time > 4:
+                if tech in self.scenario.get("banned_techs", []) or TECHS[tech].lead_time > ahead:
                     continue
                 if tech == "battery":
                     batt += [(g, k) for k in range(n_chunks)]
@@ -587,9 +589,11 @@ class GBMarketModel(ModelBase):
                     batt_svc = who[2]      # expected services of the marginal accepted battery chunk
                 new.append(self.new_plant(g, tech, self.choose_zone(tech), TECHS[tech].chunk_mw, dy,
                                           cm_price=clearing, cm_end=dy + 14))
-        self.cm_clearing = clearing
         self.cm_log = getattr(self, "cm_log", [])
-        self.cm_log.append(dict(year=dy, clearing=clearing, procured_mw=q, target_mw=target, peak=peak, n_offers=len(offers), offered=sum(o[1] for o in offers)))
+        self.cm_log.append(dict(year=dy, clearing=clearing, procured_mw=q, target_mw=target, peak=peak, n_offers=len(offers), offered=sum(o[1] for o in offers), ahead=ahead))
+        if ahead != 4:
+            return new
+        self.cm_clearing = clearing
         self.cm_last = dict(year=dy, clearing=clearing, procured_mw=q, target_mw=target, new_mw=sum(p.mw for p in new),
                             battery_new_mw=sum(p.mw for p in new if p.tech == "battery"),
                             battery_marginal_services=batt_svc)
@@ -720,6 +724,8 @@ class GBMarketModel(ModelBase):
         price_fc = self.forecast(y + 3)
         self.cfd_round(y, price_fc)
         self.cm_auction(y, price_fc)
+        if self.operator.t1:
+            self.cm_auction(y, price_fc, ahead=1)
         # merchant: sequential, re-forecast after each decision (captures others' pipeline)
         order = list(self.rng.permutation(len(self.gencos)))
         budgets = {g.name: g.budget for g in self.gencos}

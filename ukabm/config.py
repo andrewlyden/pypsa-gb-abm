@@ -106,6 +106,12 @@ GOVERNMENT_TARGETS = dict(
     cap_ceiling=2.0,         # caps never exceed this multiple of the policy cap
     budget_headroom=1.1,     # budget = missing MW x expected support x this
 )
+# System operator's reliability standard (ukabm.institutions.SystemOperator, "standard" mode).
+SYSTEM_OPERATOR = dict(
+    lole_h=3,                # GB reliability standard: 3 hours loss of load expectation a year
+    weather_margin=0.0,      # extra de-rated capacity for weather beyond the model's one year (share)
+    t1_holdback=0.05,        # share of the target left to the T-1 auction
+)
 
 
 @dataclass

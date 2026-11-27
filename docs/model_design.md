@@ -53,7 +53,8 @@
 | GenCo ×5 (IntegratedUtility, MerchantIPP, OilMajor, InfraFund, GreenDeveloper) | offers, CfD bids (LCOE at de-risked WACC), CM bids (net missing money), merchant NPV investment, retirement | WACC 6–10 %, myopic/adaptive/carbon-optimist beliefs, mark-ups 0–8 %, risk aversion, budgets |
 | Households ×2000 (each ≈14k homes) | heating system at boiler replacement (logit on lifecycle cost + hassle) | heat demand, discount rate, hassle cost, on/off gas grid, boiler age |
 | Government (`ukabm.institutions`) | each CfD round's pots: volume limit, £ budget, administrative strike price; reacts to the last round and to the levy | `government`: `fixed` (default) or `targets` |
-| Policy (parameters) | carbon path, CM target & curve, HP grant, levy rebalancing | scenario |
+| System operator (`ukabm.institutions`) | CM target per auction (T-4, and T-1 under `standard`) | `system_operator`: `formula` (default) or `standard` |
+| Policy (parameters) | carbon path, CM demand curve, HP grant, levy rebalancing | scenario |
 
 ### Decision interface (`ukabm.decisions`)
 Every GenCo decision goes through a `DecisionMaker`: `offer_price`, `expected_carbon`,
@@ -108,6 +109,18 @@ keeps the de-rated margin at the CM target, so investors expect an adequate syst
 scarcity prices. Wind and solar are candidates alongside CfDs, merchant or on a 15-year PPA at 10 %
 below the t+3 capture value with the cost of capital 1.5 points lower; the better of the two counts.
 Two extra market clearings per model year.
+
+### System operator and the Capacity Market target (`ukabm.institutions.SystemOperator`)
+`scenario["system_operator"]`:
+* `formula` (default): the original target, peak demand in the delivery year × 1.06 less the de-rated
+  capacity of CfD/RO plant; T-4 only. Results identical to the code before.
+* `standard`: a NESO-style reliability standard. Supported wind and solar enter through their hourly
+  output in the delivery year; the target is the 4th-highest hour of the remaining net demand (3 h LOLE
+  on the model's one weather year, `weather_margin` for more), 5 % of it held back for a T-1 auction a
+  year ahead that buys what is still missing (plants with agreements covering the year and
+  interconnectors count as held). Delivery 2029: 41.6 GW full target, 39.5 GW at T-4, against
+  39.4 GW published for 2029/30; the formula gives 49.4 GW. The first T-1 auctions are larger because
+  the model starts without the agreements earlier auctions would have signed.
 
 ## Multi-energy hooks (extension points)
 * `HeatModule.hourly_load` — swap synthetic temperature for PyPSA-GB atlite cutouts; add HP flexibility.

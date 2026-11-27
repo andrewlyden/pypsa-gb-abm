@@ -18,7 +18,7 @@ and hydrogen.
 ## Quick start
 ```bash
 pip install -e .            # numpy pandas scipy matplotlib mesa pypsa highspy
-pytest -q                   # 63 tests, ~10 min
+pytest -q                   # 67 tests, ~10 min
 python scripts/run_scenarios.py baseline --end 2030      # ~40 s
 python scripts/run_scenarios.py                          # all 6 scenarios 2025-2050 (~4 min each)
 python scripts/make_plots.py                             # -> docs/figures/
@@ -146,8 +146,8 @@ are seed-dependent (0–101 h across seeds in heat_push) and should not be quote
 | Merchant investment (5 heterogeneous GenCos, NPV on re-forecast prices) | ✅ works |
 | Decision interface (`ukabm.decisions`): every GenCo decision behind one `DecisionMaker`, selectable per scenario and GenCo | ✅ rules by default, results unchanged; ready for government, Q-learning and LLM decision makers |
 | CfD allocation rounds with pots; 2-way CfD settlement | ✅ works. ⚠️ Volume fixed at 6 GW/yr (60/20/20) with no £ budget; bids (levelised cost ± noise) never reach the caps, so the auction decides who builds, not how much (roadmap items 2–3) |
-| Government / system operator as agents (CfD budgets, CM target, rule changes) | ⚠️ CfD government done (`ukabm.institutions`: `fixed` default, `targets` with £ budget, adaptive caps, levy guard); not yet the default in the headline runs. System operator for the CM: roadmap item 5 |
-| T-4 Capacity Market with sloping demand curve | ✅ works (no T-1, no penalties); fixed Nov 2026: no acceptance beyond the end of the demand curve, new-build bids on the t+3 forecast. ⚠️ target ~25 % above published (roadmap) |
+| Government / system operator as agents (CfD budgets, CM target, rule changes) | ⚠️ CfD government done (`ukabm.institutions`: `fixed` default, `targets` with £ budget, adaptive caps, levy guard); not yet the default in the headline runs. System operator for the CM done (`standard`: reliability standard and T-1) |
+| T-4 Capacity Market with sloping demand curve | ✅ works (no T-1, no penalties); fixed Nov 2026: no acceptance beyond the end of the demand curve, new-build bids on the t+3 forecast. ⚠️ default target ~25 % above published; `system_operator: "standard"` matches it (39.5 vs 39.4 GW, delivery 2029) |
 | Retirement on persistent losses / end of life | ✅ works |
 | PyPSA-GB link: zonal network, ESPENI profiles, DUKES siting, IC register, CM/CfD data | ✅ works (bundled snapshot or live clone) |
 | Network stage: BM-style redispatch (bids/offers) on PyPSA-GB zones with dated ETYS boundary capabilities and monthly availability, 96 wind-stratified hours | ✅ 2025: £0.85bn vs £1.29bn outturn excl. BM premia; 6.4 vs 10.4 TWh turn-down; post-BM gas/wind within 3 TWh, CI 8 g/kWh low. Boundary cuts tested for bypass routes; IC flows at landing zones. Siting by resource share (national pricing); LMP siting is the `locational_signal` sensitivity. ⚠️ Single GB wind shape for all zones; ~£0 in 2030 (see roadmap); redispatch is reported only, not settled or passed to consumers (no BSUoS) |
@@ -192,10 +192,11 @@ re-run `scripts/run_gap.py` and update [docs/gap.md](docs/gap.md).
    NPV on a margin path (t+3, t+8, t+13; `GBMarketModel.forecast_horizons`, with an adequate fleet and
    wind/solar growing at their recent rate), wind and solar buildable merchant or on a 15-year PPA
    alongside CfDs. Becomes the default with items 2–3 after items 5–6.
-5. **System operator agent for the Capacity Market.** A NESO agent sets the T-4 target from the 3 h LOLE
-   reliability standard on its own peak forecast (managed heat-pump and EV peak, de-rating factors), with
-   a T-1 holdback. Reconcile with published targets: today's model target for 2029/30 is ~49 GW de-rated
-   against 39.4 GW published (2028/29: 43.7 GW target, 43.0 GW procured; Modo Energy).
+5. ✅ **System operator agent for the Capacity Market.** Done: `ukabm.institutions.SystemOperator`,
+   `system_operator: "standard"` sets the T-4 target from the 3 h LOLE standard on delivery-year net
+   demand (supported wind and solar by their hourly output) with 5 % held back for a T-1 auction:
+   39.5 GW at T-4 for delivery 2029 against 39.4 GW published (the old formula: 49.4 GW). Default
+   stays `formula` until items 2–6 switch together.
 6. **Government objectives as levers.** Add three objectives to the `Government` of item 2, each a scenario
    value: `"least_cost"` (budgets and pots from the planner's pathway: the ideal-government rung),
    `"bills"` (meet targets at the lowest levy, accept slippage when bills rise), and `"political"` (avoid

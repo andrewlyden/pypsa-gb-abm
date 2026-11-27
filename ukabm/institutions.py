@@ -1,4 +1,5 @@
-"""Institutions as agents: the government that runs CfD allocation rounds.
+"""Institutions as agents: the government that runs CfD allocation rounds, and the system operator
+that sets the Capacity Market target.
 
 Each year the government sets the round: for every technology pot, a £ budget, a volume limit and an
 administrative strike price (the cap). The auction (``GBMarketModel.cfd_round``) then clears the firms'
@@ -24,7 +25,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .config import CFD_TARGET_GW, GOVERNMENT_TARGETS, TECHS
+from .config import CFD_TARGET_GW, GOVERNMENT_TARGETS, SYSTEM_OPERATOR, TECHS
 
 CFD_TECHS = ("wind_offshore", "wind_onshore", "solar")
 
@@ -150,3 +151,68 @@ def make_government(model) -> Government:
     if spec not in GOVERNMENTS:
         raise KeyError(f"unknown government {spec!r}; registered: {sorted(GOVERNMENTS)}")
     return GOVERNMENTS[spec](model)
+
+
+# --------------------------------------------------------------------------- system operator
+class SystemOperator:
+    """Sets the Capacity Market target (de-rated MW) for each auction. ``scenario["system_operator"]``:
+
+    * ``"formula"`` (default): the original rule, peak demand in the delivery year x (1 + reliability
+      margin) less the de-rated capacity of supported (CfD/RO) plant; T-4 only.
+    * ``"standard"``: NESO-style reliability standard. Supported wind and solar enter through their
+      hourly output in the delivery year (not a de-rating factor); the target is the de-rated capacity
+      that leaves at most ``lole_h`` hours of net demand unserved (the (lole_h+1)-th highest hour of
+      demand minus supported VRE output minus supported firm plant), x (1 + ``weather_margin``) for
+      years colder or stiller than the model's one weather year. ``t1_holdback`` of it is left to a T-1
+      auction a year ahead, which buys what is still missing then (``config.SYSTEM_OPERATOR``,
+      overridable with ``system_operator_params``).
+    """
+
+    def __init__(self, model):
+        self.model = model
+        self.mode = model.scenario.get("system_operator", "formula")
+        if self.mode not in ("formula", "standard"):
+            raise KeyError(f"unknown system operator {self.mode!r}; use 'formula' or 'standard'")
+        self.params = {**SYSTEM_OPERATOR, **model.scenario.get("system_operator_params", {})}
+        self.t1 = self.mode == "standard" and self.params["t1_holdback"] > 0
+        self.log: list[dict] = []
+
+    def load(self, dy):
+        b, heat, ev, _ = self.model.demand(dy)
+        return b + heat + ev
+
+    def full_target(self, dy):
+        """De-rated MW needed for delivery year *dy*, and the peak demand."""
+        m = self.model
+        load = self.load(dy)
+        peak = float(load.max())
+        if self.mode == "formula":
+            target = peak * (1 + m.policy.cm_reliability_margin)
+            target -= sum(p.mw * TECHS[p.tech].derating for p in m.plants
+                          if p.active(dy) and p.support in ("cfd", "ro"))
+            return target, peak
+        supported = [p for p in m.plants if p.active(dy) and p.support in ("cfd", "ro")]
+        net = np.asarray(load, dtype=float).copy()
+        for tech in sorted({p.tech for p in supported}):
+            mw = sum(p.mw for p in supported if p.tech == tech)
+            cf = m.cf_profile(tech)
+            net -= mw * cf if cf is not None else mw * TECHS[tech].derating
+        k = int(self.params["lole_h"])
+        target = float(np.sort(net)[::-1][k]) * (1 + self.params["weather_margin"])
+        return target, peak
+
+    def cm_target(self, year, dy, ahead):
+        """Target for the auction held in *year* for delivery *dy* (*ahead* = 4 or 1)."""
+        target, peak = self.full_target(dy)
+        full = target
+        if ahead == 4:
+            if self.t1:
+                target *= 1 - self.params["t1_holdback"]
+        else:   # T-1: what is still missing after agreements already covering dy and interconnectors
+            m = self.model
+            _, _, ic_cap, _ = m.interconnector_blocks(dy)
+            held = sum(p.mw * TECHS[p.tech].derating for p in m.plants
+                       if p.active(dy) and p.support not in ("cfd", "ro") and p.cm_end >= dy)
+            target = max(target - held - 0.45 * ic_cap, 0.0)
+        self.log.append(dict(year=year, delivery=dy, ahead=ahead, target_mw=target, full_mw=full, peak_mw=peak))
+        return target, peak
