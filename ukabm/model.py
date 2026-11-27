@@ -358,9 +358,10 @@ class GBMarketModel(ModelBase):
         plants = [p for p in self.plants if p.active(target_year)] + list(extra)
         return self.run_market(target_year, plants)["price"]
 
-    def expected_margin_per_mw(self, tech, price, agent, include_cm=True, fleet_year=None):
+    def expected_margin_per_mw(self, tech, price, agent, include_cm=True, fleet_year=None, extra_mw=None):
         """Expected annual margin per MW. *fleet_year*: year whose (pipeline) battery fleet shares the
-        battery service pots; default = first operating year (CM new build passes its delivery year)."""
+        battery service pots; default = first operating year (CM new build passes its delivery year).
+        *extra_mw*: new battery MW added to that fleet (default: the candidate chunk itself)."""
         t = TECHS[tech]
         yr = self.year + t.lead_time
         if tech in STORAGE_TECHS:
@@ -368,7 +369,8 @@ class GBMarketModel(ModelBase):
             m = float((price * net).sum()) - t.vom * np.clip(net, 0, None).sum()
             if tech == "battery":   # services at the fleet expected when the project comes online
                 fy = fleet_year or yr
-                m += self.battery_services_per_mw([p for p in self.plants if p.active(fy)], t.chunk_mw)
+                extra = t.chunk_mw if extra_mw is None else extra_mw
+                m += self.battery_services_per_mw([p for p in self.plants if p.active(fy)], extra)
         elif tech in VRE_TECHS:
             m = float((price * self.cf_profile(tech)).sum()) * 0.85   # capture-price haircut
         else:
@@ -435,16 +437,22 @@ class GBMarketModel(ModelBase):
                 bid = p.owner.cm_bid(p, margin_kw + t.fom, new=False)   # history is net of FOM
                 offers.append((min(bid, self.policy.cm_price_cap), p.mw * t.derating, p))
         price_fc = self.last_price if self.last_price is not None else np.full(self.H, 60.0)
+        n_chunks = self.scenario.get("cm_new_chunks", 4)   # up to 4 projects per GenCo and technology
+        batt = []
         for g in self.gencos:
             for tech in ("ocgt", "battery", "ccgt", "h2_turbine", "gas_ccs"):
                 if tech in self.scenario.get("banned_techs", []) or TECHS[tech].lead_time > 4:
+                    continue
+                if tech == "battery":
+                    batt += [(g, k) for k in range(n_chunks)]
                     continue
                 t = TECHS[tech]
                 m = self.expected_margin_per_mw(tech, price_fc, g, include_cm=False, fleet_year=dy) / 1000
                 bid = g.cm_bid(tech, m, new=True)
                 if bid <= self.policy.cm_price_cap:
-                    for k in range(self.scenario.get("cm_new_chunks", 4)):   # up to 4 projects each
+                    for k in range(n_chunks):
                         offers.append((bid * (1 + 0.03 * k), t.chunk_mw * t.derating, (g, tech)))
+        offers += self._cm_battery_supply(batt, price_fc, dy)
         offers.sort(key=lambda x: x[0])
         lo, hi, cap = target - 1500, target + 1500, self.policy.cm_price_cap
 
@@ -461,19 +469,48 @@ class GBMarketModel(ModelBase):
         else:
             clearing = max(clearing, demand_price(q))
         clearing = float(np.clip(max(clearing, demand_price(q)), 0, cap))
-        new = []
+        new, batt_svc = [], None
         for who in accepted:
             if isinstance(who, Plant):
                 who.cm_price, who.cm_end = clearing, dy
             elif isinstance(who, tuple):
-                g, tech = who
+                g, tech = who[:2]
+                if tech == "battery":
+                    batt_svc = who[2]      # expected services of the marginal accepted battery chunk
                 new.append(self.new_plant(g, tech, self.choose_zone(tech), TECHS[tech].chunk_mw, dy,
                                           cm_price=clearing, cm_end=dy + 14))
         self.cm_clearing = clearing
         self.cm_log = getattr(self, "cm_log", [])
         self.cm_log.append(dict(year=dy, clearing=clearing, procured_mw=q, target_mw=target, peak=peak, n_offers=len(offers), offered=sum(o[1] for o in offers)))
-        self.cm_last = dict(year=dy, clearing=clearing, procured_mw=q, target_mw=target, new_mw=sum(p.mw for p in new))
+        self.cm_last = dict(year=dy, clearing=clearing, procured_mw=q, target_mw=target, new_mw=sum(p.mw for p in new),
+                            battery_new_mw=sum(p.mw for p in new if p.tech == "battery"),
+                            battery_marginal_services=batt_svc)
         return new
+
+    def _cm_battery_supply(self, candidates, price_fc, dy):
+        """New-build battery CM offers as a stepwise supply curve. Batteries share the service pots, so
+        each chunk's expected services revenue counts all battery MW ranked ahead of it in this auction
+        plus itself (chunks are added cheapest bid first; bids rise as the expected fleet grows).
+        Accepted chunks are a prefix of this curve, so the marginal accepted chunk expects exactly the
+        per-MW services the delivery-year fleet will share. *candidates*: (GenCo, project index k)."""
+        if not candidates:
+            return []
+        t = TECHS["battery"]
+        fleet = [p for p in self.plants if p.active(dy)]
+        g0 = candidates[0][0]
+        arb = (self.expected_margin_per_mw("battery", price_fc, g0, include_cm=False, fleet_year=dy, extra_mw=0.0)
+               - self.battery_services_per_mw(fleet))      # GenCo-independent arbitrage margin, GBP/MW/yr
+        out, cum, left = [], 0.0, list(candidates)
+        while left:
+            svc = self.battery_services_per_mw(fleet, cum + t.chunk_mw)
+            bids = [g.cm_bid("battery", (arb + svc) / 1000, new=True) * (1 + 0.03 * k) for g, k in left]
+            i = int(np.argmin(bids))
+            if bids[i] > self.policy.cm_price_cap:
+                break
+            g, _ = left.pop(i)
+            out.append((bids[i], t.chunk_mw * t.derating, (g, "battery", svc)))
+            cum += t.chunk_mw
+        return out
 
     def choose_zone(self, tech):
         """Locational choice: resource share (PyPSA-GB DUKES split) x network signal (zonal price
@@ -537,6 +574,8 @@ class GBMarketModel(ModelBase):
                    retired_mw=retired, invested_mw=invested)
         for k, v in st["battery"].items():   # battery revenue stack, kGBP/MW/yr (fleet average)
             rec[f"battery_{k}_k_per_mw"] = v / 1e3
+        # services pots paid to batteries (system cost; not yet passed to retail prices or the levy)
+        rec["battery_services_bn"] = st["battery"]["services"] * sum(p.mw for p in plants if p.tech == "battery") / 1e9
         for tech in TECHS:
             rec[f"cap_{tech}"] = sum(p.mw for p in plants if p.tech == tech) / 1e3
             rec[f"gen_{tech}"] = gen.get(tech, 0.0) / 1e6

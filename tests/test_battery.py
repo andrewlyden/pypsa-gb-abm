@@ -28,6 +28,25 @@ def test_battery_services_saturate_with_fleet_and_grow_with_vre():
     assert np.isclose(s10, (BATTERY_ANCILLARY_POT + BATTERY_TRADING_PER_MW_VRE * 50e3) / 10e3)
 
 
+def test_cm_battery_entry_expects_realised_services():
+    # Batteries in one T-4 auction share the service pots, so each chunk's bid counts the battery MW
+    # ranked ahead of it: the marginal accepted chunk expects the per-MW services the delivery-year
+    # fleet actually shares, and bids rise along the battery supply curve.
+    m = GBMarketModel(end=2025, network_every=0)
+    m.last_price = m.run_market(2025, m.active(2025))["price"]
+    m.cm_auction(2025)
+    last = m.cm_last
+    assert last["battery_new_mw"] > 0
+    realised = m.battery_services_per_mw(m.active(2029))
+    assert np.isclose(last["battery_marginal_services"], realised, rtol=1e-9)
+    curve = m._cm_battery_supply([(g, k) for g in m.gencos for k in range(4)],
+                                 m.last_price, 2029)
+    prices = [o[0] for o in curve]
+    assert prices == sorted(prices)
+    svc = [o[2][2] for o in curve]
+    assert all(a >= b for a, b in zip(svc, svc[1:]))
+
+
 def test_clear_with_reused_merit_order_is_identical():
     rng = np.random.default_rng(0)
     blocks = [Block(i, rng.uniform(0, 100, 48), rng.uniform(50, 500)) for i in range(1, 30)]
