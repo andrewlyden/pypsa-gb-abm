@@ -23,3 +23,13 @@ Last column = this repository (*ukabm v0.1*) as built for the workshop.
 | Open, Python, PyPSA-linkable | ◐ (Java, pyfame) | ○ (Java) | ● | ○ | ● | ◐ | ● | ● | ● (Mesa + PyPSA) |
 
 Machine-readable version: [capability_matrix.csv](capability_matrix.csv).
+
+**Read with care.** The matrix records whether a feature exists, not whether it is validated. The
+[foundations review](../review_2026-11_foundations.md) found that several of this model's ● entries do
+not yet reproduce GB evidence: CfD bids against AR6 and AR7 strike prices (F10), the Capacity Market
+against T-4 clearing prices and entrant types (F11), price formation against negative-price hours
+(F13), and heat-pump uptake against installations (F16). How the listed models make their investment
+decisions, and how each was validated, is compared in the
+[literature review, section 4](literature_review.md#4-how-other-models-decide-to-invest). Models added
+there and not rated here: EMLabpy, EMIS-AS (NREL), BRAIN-Energy (UCL), MUSE (Imperial) and DESNZ's
+Dynamic Dispatch Model.

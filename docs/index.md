@@ -11,6 +11,10 @@ linked to [PyPSA-GB](https://github.com/andrewlyden/PyPSA-GB), with heat, gas, E
 * [Literature & framework survey](research/literature_review.md) — AMIRIS, EMLab-Generation, ASSUME, PowerACE, ElecSim, AMES, Mesa, CNZ heat ABM, EV & H2 ABMs, PyPSA-GB.
 * [Capability vs UK challenge matrix](research/capability_matrix.md) ([CSV](research/capability_matrix.csv))
 * [Gap analysis & scope decision](research/gap_analysis.md)
+* [Foundations review, Nov 2026](review_2026-11_foundations.md): the model against other approaches
+  (investment ABMs, optimum-against-market studies, GB auction evidence, learning and LLM agents,
+  standards for reusable models), the assumptions that do not hold up, and a proposed order of work.
+  The literature survey's sections 4–8 hold the sources. [Code review, Nov 2026](review_2026-11.md).
 
 ## 2. Model design
 * [Architecture, agents, annual loop, extension hooks](model_design.md)

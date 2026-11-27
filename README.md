@@ -12,6 +12,8 @@ and hydrogen.
 * Research: [literature review](docs/research/literature_review.md) ·
   [capability-vs-challenge matrix](docs/research/capability_matrix.md) ·
   [gap analysis](docs/research/gap_analysis.md)
+* Reviews: [foundations review](docs/review_2026-11_foundations.md) (how the model compares with other
+  approaches, which assumptions do not hold up, what reuse needs) · [code review](docs/review_2026-11.md)
 * Design: [model design](docs/model_design.md) · [assumptions & limitations](docs/assumptions.md)
 * Optimal vs emergent: [the gap](docs/gap.md) · [roadmap: what the model is missing](docs/roadmap.md)
 
@@ -26,6 +28,7 @@ python scripts/compare_outturn.py                        # 2025 vs GB outturn ->
 python scripts/run_ensemble.py                           # baseline, no_cfd, heat_push x 5 seeds
 python scripts/run_gap.py                                # optimal vs emergent: planner, ladder, levers (hours)
 python scripts/run_convergence.py                        # convergence test: competitive benchmark vs the optimum
+python scripts/run_planner_sensitivity.py                # the optimum under other build limits, VoLL, carbon value, cost of capital (~90 min)
 python scripts/build_docs.py --open                      # README and docs/ as HTML in a browser (pip install markdown)
 # optional: rebuild the outturn reference / neighbour prices (public APIs, no key)
 python scripts/fetch_outturn.py 2024 2025 && python scripts/fetch_neighbour_prices.py 2024
@@ -327,7 +330,11 @@ their priority)*
 24. **Q-learning agents** (needs items 8 and 34). Q-learning implementations of firms' CfD bids, CM bids and offer mark-ups
     behind the item 1 interface (state: recent clearing prices, own margins; reward: profit), trained
     over repeated runs with fixed seeds. Compare their gap, prices and bids with the rule-based firms;
-    check for tacit collusion.
+    check for tacit collusion. *Foundations review F22–F23:* a run gives about 25 rewards per firm,
+    against hundreds of thousands of periods for tabular Q-learning to converge in a stationary game, so
+    either learn mark-ups in a fast stage game with the fleet frozen or present the table as an adaptive
+    heuristic with parameter sweeps; "collusion" needs Nash and monopoly benchmarks, forced-deviation
+    tests and an exploration sweep before the word is used. To be decided before this item starts.
 25. **LLM agents on open-weight models, compared with rules and Q-learning** (needs item 34). LLM implementations of the
     government's round settings and firms' investment and bid decisions behind the item 1 interface.
     * *Models:* open-weight, Apache-2.0 by default (e.g. Qwen3, gpt-oss, Mistral Small), with the model
@@ -344,6 +351,13 @@ their priority)*
     * *Experiments:* rules vs Q-learning vs LLM on the scenarios of items 21–22, and a model-size ladder
       (~8B, ~30B, ≥100B) as a bounded-rationality lever. Larger models and full sweeps need a GPU (university
       HPC with vLLM): the maintainer arranges access; until then run the small model locally.
+    * *Foundations review F24, to be decided before this item starts:* the literature does not support
+      model size as a scale of bounded rationality (small models are near random on economic-rationality
+      tests, not human-like), so treat the model as a nuisance factor and use item 55's behavioural
+      parameters as the lever; temperature 0 does not give reproducible outputs, so the cache is the
+      guarantee (pin weight hash, quantisation and runtime); add a gate on single-firm tasks with a
+      known optimum, permuted option order and paraphrased prompts, a fictional-country variant to test
+      for leakage of GB history, and the correlation of decisions across firms that share weights.
 
 *E. Realism*
 
@@ -369,6 +383,75 @@ their priority)*
 32. Finance: cost of capital that depends on each firm's mix of merchant, contracted and capacity revenue;
     firm entry and exit.
 33. Carbon price from a UK ETS cap; nuclear and transmission investment as government decisions.
+
+*F. Foundations and platform (from the [foundations review](docs/review_2026-11_foundations.md),
+27 Nov 2026; finding numbers F1–F33 refer to it). The review proposes an order of work in its section 9:
+benchmark first (41, 40, 20, 10, 9, 17, 11), then the residual (42, 45), then calibration and hindcast
+(44, 16, 43), with the platform items (48, 47, 51, 49, 50) in parallel because they do not change
+results. The priority among these and the items above is for the maintainer to set; they are listed
+last only to keep the numbering stable.*
+
+40. **Yardstick table (F2, F3).** Report every gap under the alternatives to its normative choices:
+    (a) discount rate: the Green Book rate (3.0 % since October 2026; the code has 3.5 %) and technology
+    hurdle rates (CEPA 2025 for DESNZ) for both the planner and the costing; (b) carbon: the market
+    price path and the Green Book appraisal values (£260 → £378/t, 2020 prices); (c) unserved energy:
+    £6,000/MWh and the £16,950/MWh behind the 3 h standard, or a planner constrained to the standard.
+    One table with each results release. First numbers: review section 2.
+41. **Separate wind profiles (F1).** Onshore, offshore and at least northern and southern profiles
+    from atlite through PyPSA-GB, in the agents, the planner and the evaluator. Today onshore and
+    offshore wind share one hourly shape, so the planner's mix is set by its build limits. No statement
+    about the wind mix before this. Extends items 17 and 27.
+42. **Close the convergence residual in steps (F17).** (i) Same fleet, market against evaluator: under
+    0.5 % of system cost, by replacing the storage, interconnector and electrolyser heuristics in the
+    benchmark; (ii) equal build limits and battery services on both sides (items 20, 9); (iii)
+    investment: under 1 %. A test for each tolerance. No gap is read below the residual.
+43. **Investment hindcast 2015–2025 (F20).** Start the model from the 2015 fleet with historical fuel
+    and carbon prices and auction parameters; compare the 2025 fleet, prices and auction results with
+    outturn. Before tuning, fix a table of patterns and tolerances: fleet by technology, CfD and T-4
+    clearing prices and volumes, negative-price hours, capture-price discounts, battery revenue against
+    fleet size, heat-pump installations (literature review section 6). Extends item 16.
+44. **Calibrate costs and hurdle rates to the auctions (F10, F11).** 2025 technology costs and
+    technology hurdle rates (CEPA 2025: 7.6 % solar and onshore, 8.9 % offshore and gas; CfD worth
+    0.8–1.5 points) such that modelled AR6 and AR7 strikes and T-4 prices are within tolerance. Capacity
+    Market: small engines, demand response and refurbishment as entrants, de-rating of batteries by
+    duration, non-delivery. Before item 19.
+45. **Investment procedure (F8, F9).** Re-draw the order of firms at every decision. Add a price
+    projection that is consistent with entry (iterate until no firm wants to enter, or fill the horizon
+    with least-cost additions). Run the convergence test across forecast horizons (t+3, t+5, t+8),
+    projection rules and block sizes, and report the spread (Tao et al. 2021).
+46. **Parameter register, sensitivity analysis, replications (F21).** One table of every assumed or
+    calibrated constant with its status (sourced, calibrated to what, assumed) and range. One factor at
+    a time, then Morris screening, then Sobol indices on the gap and on the 2050 fleet (SALib). Choose
+    the number of seeds from the stability of the outputs; report distributions. Needs item 8.
+47. **Inputs as data (F27).** Technology costs, policy parameters, calibration constants and scenarios
+    in YAML or TOML with defaults, overrides and a schema; an unknown scenario key is an error.
+48. **Data licences (F28).** The bundled 2024 profile comes from ESPENI, whose current versions are
+    CC BY-NC 4.0, in an MIT repository: rebuild it from Elexon and NESO data or fetch it at build time.
+    A table of every dataset with version, source, licence and attribution. *Needs human* to confirm
+    with the data owners.
+49. **Releases, citation, provenance, documentation (F29, F31).** `CITATION.cff`, `CHANGELOG`,
+    `CONTRIBUTING`, a tagged release with a Zenodo DOI; git hash, arguments, seed and data version
+    stamped in every output; results rebuilt by one command and archived, not committed by hand; a
+    hosted documentation site with a five-minute example and an API reference; the roadmap moved out of
+    this README; a statement of what the model can and cannot be used for.
+50. **ODD+D description and TRACE record (F30).** The model described by the ODD protocol with the
+    ODD+D additions for decisions (the theoretical and empirical basis of each rule) and a table from
+    description to code; a TRACE document recording calibration, verification and corroboration.
+51. **Verification pack and AI-use disclosure (F32).** Analytical benchmarks (a merit order checked by
+    hand; item 42's tolerances); invariants asserted in every run (energy balance; payments equal
+    receipts across firms, levy and consumers; capacity stock and flow); mutation testing of the test
+    suite; a disclosure of which code was written with AI tools and how a person verified it; one
+    independent replication of a headline number (e.g. dispatch in ASSUME or PyPSA-GB).
+52. **Real firm portfolios (F14).** Map the initial fleet to its actual owners (DUKES, REPD, TEC
+    register) and firm types, so that portfolio effects and market power can be studied.
+53. **Mesa: use it or drop it (F26).** Either agents, data collection and batch runs through Mesa, or
+    remove the dependency and say what the model is built on.
+54. **Equilibrium cross-check for the risk rung (F6).** A small stochastic equilibrium model with
+    CVaR investors and complete or incomplete risk trading (e.g. by ADMM) on the model's technologies,
+    as the exact answer that items 35 and 37 are compared with.
+55. **Behavioural decision arm (F25).** Decision makers with a hurdle-rate premium, payback rules,
+    limited foresight and imitation, behind the item 1 interface, as the baseline that Q-learning and
+    LLM agents are compared with. Before items 24 and 25.
 
 *Decided by the maintainer (26 Nov 2026)*: the government agent gets several objectives, compared as
 levers (items 2, 6); the optimum becomes multi-energy with heat and hydrogen (items 14–15); validation

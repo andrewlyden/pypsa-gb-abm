@@ -59,3 +59,46 @@ explained residuals in the 2025 comparison:
 * **Evaluator**: both fleets are dispatched at least cost over all 8,760 hours of each period year (PyPSA, perfect foresight, cyclic storage) and costed with the same definition. Investment gap = evaluator(agents' fleet) − evaluator(planner's fleet); operation gap = agents' realised cost − evaluator(agents' fleet). Present values 2025–2054 at 3.5 %, each period year standing for five years.
 * **Ladder**: agent trait groups are idealised one at a time (`scenarios.IDEAL_TRAITS`): expectations (all agents adaptive, i.e. know the carbon path), capital (WACC = 3.5 %, no risk aversion, no budget limit), strategic (no mark-up). With all three idealised, what remains is the market and plan design (CfD pots and caps, CM target, VRE only through CfDs), the agents' decision procedure (t+3 price forecasts, lumpy projects, at most 6 merchant decisions a year) and path dependence. The ladder is cumulative in one order; other orders give other attributions (interactions), so the steps are indicative.
 * Limitations: one weather year; the planner sees the 2026–28 gas spike coming, the agents see it only through forecasts made 3 years ahead; foreign prices do not respond to GB exports, so large export volumes are valued at the exogenous continental price; no network in either run.
+
+## Assumptions challenged by the foundations review (November 2026)
+The [foundations review](review_2026-11_foundations.md) found assumptions that were not written down
+here, or whose weight was understated. Finding numbers refer to it.
+
+* **Onshore and offshore wind share one hourly shape (F1).** They differ only by a factor (0.75 and
+  1.10). The planner therefore treats them as one product at two prices (£46 and £53/MWh at 3.5 %) and
+  its wind mix is set by `PLANNER_BUILD_MW_PER_YEAR`, itself an assumption. Any comparison of the wind
+  mix between the two runs is a comparison of assumptions. With the onshore limit lifted the planner
+  builds 129 GW onshore and no new offshore wind; the investment gap is £17–45bn across the limits
+  tried (default £28.5bn; review section 2).
+* **The yardstick (F2).** The social discount rate in the code is 3.5 %; the Green Book rate has been
+  3.0 % since October 2026. The cost of capital above the social rate is treated as a transfer, which
+  is one defensible convention among several (DESNZ hurdle rates are 7.6–8.9 %). Carbon is valued at the
+  market price path (£60 → £180/t), not at Green Book appraisal values (£260 → £378/t, 2020 prices).
+* **Reliability (F3).** The planner and the system cost value unserved energy at £6,000/MWh. The 3 h
+  standard that sets the agents' Capacity Market target was derived from £16,950/MWh. There are no
+  plant outages (availability is a flat derating) and one weather year, so loss of load is
+  deterministic in both runs. The planner optimises on 1,272 sampled hours per period and is costed on
+  8,760; the sample understates scarcity, so the default plan is short of firm capacity (a plan made at
+  £16,950 is £2.6bn cheaper on the default yardstick; review section 2).
+* **Firms' forecasts are the model's own run (F8).** The t+3 forecast re-clears the market on the true
+  fuel, carbon and demand paths with the committed pipeline and no later entry. Firms therefore know
+  future fundamentals exactly and assume no one builds after the pipeline.
+* **Order of moves (F9).** The order of firms is drawn once a year, and the first firm in it with a
+  positive NPV builds every merchant project until its NPV turns negative or its budget is spent.
+* **Costs and hurdle rates are not calibrated to auctions (F10).** Offshore wind at £2,500/kW gives
+  bids of £53–66/MWh against £91.20 cleared in AR7 (2024 prices). WACC varies by firm type (6–10 %),
+  not by technology; a CfD lowers it by 2.5 points against 0.8–1.5 in the DESNZ studies.
+* **Capacity Market entrants (F11).** New build is CCGT, OCGT, batteries, gas CCS and hydrogen
+  turbines; there are no small engines, demand response or refurbishment, and batteries are de-rated
+  at a flat 20 %. The auction clears at its £75 cap in most years after 2029.
+* **Every award is built, in whole blocks (F12).** No non-delivery. The "6 GW a year" CfD rule awards
+  7 GW (4 offshore, 1.5 onshore, 1.5 solar) because a pot accepts whole blocks while below its limit.
+* **Five invented firms (F14).** The initial fleet is dealt round-robin by zone, so each firm owns a
+  share of every technology. Market shares and portfolios are not those of GB companies.
+* **Uncertainty (F21).** Seed ranges describe the model's noise in one deterministic world. No
+  sensitivity analysis has been run on the several dozen assumed or tuned constants in `config.py` and
+  `model.py`.
+* **Data licence (F28).** `profiles_2024.csv` is derived from ESPENI, whose current versions are
+  CC BY-NC 4.0 (only the 2020 release was CC BY). A 2024 profile can only come from a non-commercial
+  version, which does not fit redistribution under the repository's MIT licence; to be confirmed and
+  resolved (README item 48).

@@ -181,3 +181,46 @@ Once sections 1–3 are in place:
 A 27-run gap batch takes about 2 hours on 12 cores, and the experiments above need tens of batches.
 Each merchant decision re-clears a full 8,760-hour market as a forecast, up to seven times a year per
 run. Profiling and speeding up the runs comes before the experiments. [item 8]
+
+## 9. What the foundations review adds (27 Nov 2026)
+
+The [foundations review](review_2026-11_foundations.md) compared the model with other approaches
+([literature review](research/literature_review.md), sections 4–8) and tested the optimum against its
+own assumptions. It confirms most of sections 1–8 and changes the picture in seven places. Items 40–55
+are in the README; the review's section 9 proposes their order.
+
+* **The optimum's wind mix is an artefact (F1).** Onshore and offshore wind share one hourly shape, so
+  the planner builds the cheaper one to its build limit and the other for the rest. "88 against 40 GW
+  offshore" compares a CfD pot share with an assumed limit. Separate profiles come before any statement
+  about the mix. [item 41, with 17, 20 and 10]
+* **The yardstick needs a table, not one number (F2, F3).** Three choices have official alternatives:
+  the discount rate (Green Book 3.0 % since October 2026; DESNZ hurdle rates 7.6–8.9 %), the carbon
+  value (£60–180 market path; £260–378 appraisal values) and the value of lost load (£6,000 in the
+  planner; £16,950 behind the 3 h standard the agents are held to). On one seed the investment gap is
+  £28.5bn by default, £17–45bn across build limits, £44bn with capital at 7 % and £71bn at appraisal
+  carbon values (review section 2). [item 40] This sharpens section 3 above ("The yardstick values
+  carbon at the market price").
+* **The default plan is not optimal on the full year (F3).** A plan made at a VoLL of £16,950 has no
+  loss of load and is £2.6bn cheaper than the default plan on the default yardstick: the planner's
+  1,272 sampled hours understate scarcity. "The optimum chooses some loss of load" in
+  [gap.md](gap.md) is largely this. A test should hold the planner's full-year cost at or below that
+  of any fleet the model can find. [items 40, 42]
+* **The residual comes first (F17).** The convergence test leaves 3.3 %; the headline is 9.9 %. Close
+  the residual in steps (same fleet, then same options, then investment) to under 1 % before reading
+  gaps. [item 42] Other investment models show that the price projection and the order of moves drive
+  results as much as anything firms are assumed to want (F8, F9). [item 45]
+* **The model fails auction evidence it could be tested on today (F10–F13, F20).** Offshore bids at
+  £53–66/MWh against £91 in AR7; a Capacity Market at its cap for a decade, with 14 GW of new CCGT by
+  2029 where the real 2029/30 auction brought none; no negative-price hours. Calibrate 2025 costs and
+  technology hurdle rates to the auctions [item 44], and hindcast investment from 2015 [item 43]. This
+  extends section 6.
+* **Learning and LLM agents (F22–F25).** Tabular Q-learning cannot learn from 25 annual rewards, and
+  model size is not a scale of bounded rationality. Notes are on items 24 and 25; a behavioural arm
+  (hurdle-rate premium, payback, limited foresight, imitation) comes first. [item 55]
+* **Reuse (F26–F33).** Inputs as data with a schema [47]; the licence of the bundled ESPENI profile
+  [48]; releases, citation and provenance [49]; an ODD+D description [50]; verification a reader can
+  see for code written with AI tools [51]; a decision on Mesa [53]. None of these changes results, so
+  they can run in parallel.
+
+Also new: a parameter register with sensitivity analysis and a replication count [46]; real firm
+portfolios [52]; an equilibrium model as the exact answer for the risk rung [54].
