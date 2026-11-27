@@ -243,7 +243,10 @@ class GBMarketModel(ModelBase):
             price, disp, uns = clear(d2 + x_max, allb, self.policy.voll)
         xj = [j for j, b in enumerate(allb) if b.key <= -11]
         export = x_max - disp[:, xj].sum(1)              # bought-back volume = export not taken
+        # demand = everything GB generation/imports serve (incl. exports, net storage), for the network
+        # stage; demand_domestic = GB final consumption, the volume policy costs are recovered from
         return dict(price=price, disp=disp, unserved=uns, blocks=allb, demand=d2 + export, export=export,
+                    demand_domestic=base + heat + ev + h2,
                     base=base, heat=heat, ev=ev, h2=h2, storage=stor, ic_cap=ic_cap)
 
     # ------------------------------------------------------------ settlement
@@ -445,15 +448,17 @@ class GBMarketModel(ModelBase):
         st = self.settle(y, plants, res)
         price = res["price"]
         self.last_price = price
-        dem = res["demand"].sum()
-        # policy cost pass-through to consumers (GBP/MWh)
+        dem_d = res["demand_domestic"]
+        dem = dem_d.sum()
+        # policy cost pass-through to consumers (GBP/MWh): CfD/RO/CM are recovered from GB supplier
+        # volumes only, not from interconnector exports
         self.levy = (st["cfd_cost"] + st["ro_cost"] + st["cm_cost"]) / dem
         # network stage
         constraint_cost = np.nan
         if self.network_every and (y - self.start) % self.network_every == 0:
             constraint_cost = self.network_stage(y, plants, res)
         # multi-energy feedbacks
-        twavg = float((price * res["demand"]).sum() / dem)
+        twavg = float((price * dem_d).sum() / dem)
         hp_price = float((price * self.heat.heat_shape(self.prof)).sum())
         reb = self.policy.gas_levy_rebalancing
         elec_retail = hp_price + 70 + self.levy + 25 - reb
