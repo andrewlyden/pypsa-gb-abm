@@ -79,12 +79,28 @@ bills, political), compared as levers. [items 2, 6]
 * **Different information.** The planner has perfect foresight and the agents do not, so the gap mixes
   the value of information with the cost of decentralised decisions. A rolling-horizon planner (a
   planner with the agents' information) splits the two. [item 11]
+* **Near-optimal space.** The cost surface is flat near the optimum: many different fleets cost within
+  a few per cent of it. The convergence trial cost 1.7 % more than the planner with a quarter of its
+  offshore wind. So the planner's exact mix is one point in a wide valley, and capacity differences
+  overstate the error. Report each emergent run against the near-optimal bands (minimum and maximum of
+  each technology within 2 % and 5 % of the optimal cost), alongside the £ gap. Inside the valley, choices
+  are legitimately made on criteria the model does not price (planning acceptance, land, network,
+  supply chains, distribution). [item 10]
 * **No "planned" pathway.** The deck contrasts optimal and emergent. The actual plan (Clean Power 2030,
   FES) is a third pathway, so the comparison becomes optimal vs planned vs emergent. [item 12]
 * **Reserve and response, option set, build limits:** items 9 and 20.
 * **Electricity only.** The planner holds heat-pump uptake, EV charging and electrolysers at the agents'
   values, so household and hydrogen decisions sit outside the gap. Decided: a multi-energy optimum with
   heat and hydrogen. [items 14, 15]
+
+* **FES is not used yet.** Future demand, EV, hydrogen and the government's later targets are "FES-like"
+  guesses. FES should supply exogenous drivers and a planned benchmark, but never calibration targets
+  for the agents' capacity mix (that would assume the answer). [item 12]
+* **The yardstick values carbon at the market price.** The system cost uses the carbon price the agents
+  face (£60 → £180/t). Judged at the government's appraisal values instead, low-carbon build that looks
+  like over-build may not be. Report the gap at both.
+* **Only every fifth year is costed.** The gap evaluates 2025, 2030, …, so the 2026–27 gas spike, which
+  drives real decisions in the agent run, never enters the cost comparison.
 
 ## 4. Physics and economics that bias the gap
 

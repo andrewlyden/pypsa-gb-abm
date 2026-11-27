@@ -175,6 +175,11 @@ re-run `scripts/run_gap.py` and update [docs/gap.md](docs/gap.md).
 
 *A. Who decides*
 
+0. **Fix the verified findings of the 27 Nov code review** ([docs/review_2026-11.md](docs/review_2026-11.md)),
+   highest severity first, then re-run scenarios, ensembles and the gap. The most serious: every existing
+   plant bids £0 into the Capacity Market (so loss-based retirement is effectively off), CM agreements
+   are paid from award rather than delivery and are overwritten by later auctions, and legacy CfD strike
+   prices are overstated. Every result so far carries these.
 1. ✅ **Decision interface (deck slide 16).** Done: `ukabm/decisions.py`. GenCo offers, carbon
    expectations, merchant investment, CfD and CM bids go through a `DecisionMaker`; scenario key
    `decision_logic` selects one by name, for all or named GenCos; `RuleBased` reproduces the earlier
@@ -214,14 +219,25 @@ re-run `scripts/run_gap.py` and update [docs/gap.md](docs/gap.md).
    revenue (`config.BATTERY_*` pots), but the planner and the evaluator have no reserve or response
    requirement, so those batteries count as pure cost. Add a requirement sized to the 2025 ancillary
    market to `planner.plan` and `planner.evaluate`, and report how much of the gap it removes.
-10. **Same-outcome optimum.** Planner variants with the agents' emissions per period as a cap, and with the
-    agents' loss of load as a constraint. The gap at equal emissions separates efficiency from ambition.
+10. **Same-outcome optimum and the near-optimal space.** (a) Planner variants with the agents' emissions
+    per period as a cap, and with the agents' loss of load as a constraint: the gap at equal emissions
+    separates efficiency from ambition. (b) Map the near-optimal space: for cost slack of 2 % and 5 %,
+    the minimum and maximum capacity of offshore, onshore, solar, batteries and gas (PyPSA
+    `optimize_mga`). Report each emergent run as inside or outside those bands, alongside the £ gap. The
+    convergence trial (item 7) cost 1.7 % more than the optimum with a very different fleet, so the
+    planner's exact mix is not a target; the question is whether a design keeps the system inside the
+    near-optimal region.
 11. **Planner with the agents' information.** A rolling-horizon planner that plans each period with one or
     two periods of foresight and only the fuel and carbon prices known at the time. Perfect-foresight gap
     minus rolling-horizon gap = the value of information.
-12. **Planned pathway as a third benchmark.** Encode the Clean Power 2030 action plan and the FES 2025
-    Holistic Transition capacities as a fixed pathway, cost it with the evaluator, and report optimal vs
-    planned vs emergent.
+12. **FES: inputs and the planned benchmark.** Use NESO's Future Energy Scenarios (via PyPSA-GB, which
+    already builds its future years from FES; extend `scripts/extract_pypsagb_snapshot.py`) in three
+    roles, kept apart to avoid circularity: (a) exogenous drivers, replacing today's "FES-like" guesses:
+    base demand by year, EV stock, electrolyser and hydrogen demand, interconnector and nuclear pipeline,
+    with a scenario key `fes_pathway`; (b) the government's target path (`config.CFD_TARGET_GW` after 2030);
+    (c) a third benchmark: cost the FES capacity pathways (and the Clean Power 2030 action plan) with the
+    evaluator and report optimal vs planned vs emergent. FES capacity mixes are never calibration targets
+    for the agents: they are what the agents' outcome is compared with.
 13. **Who pays.** For both pathways, report consumer cost, producer surplus, policy cost (CfD, CM, RO) and
     carbon revenue, pricing the planner's fleet through the agents' market clearing.
 14. **Multi-energy optimum (a): heat.** The planner also chooses how homes are heated each period (heat
