@@ -37,8 +37,10 @@ KINDS = ("planner", "agents_eval", "agents_realised")
 
 
 def gap_run(scenario: str = "baseline", seed: int = 42, ideal=(), label: str = "", start: int = 2025,
-            end: int = 2050, step: int = 5, network_every: int = 0, **model_kw) -> dict:
-    """One optimal-vs-emergent comparison. Returns {'costs', 'capacity', 'annual'} DataFrames:
+            end: int = 2050, step: int = 5, network_every: int = 0, overrides: dict | None = None,
+            **model_kw) -> dict:
+    """One optimal-vs-emergent comparison; *overrides* are merged into the scenario (e.g.
+    ``{"reserve": {"scale": 0}}``). Returns {'costs', 'capacity', 'annual'} DataFrames:
     costs: one row per (year, kind) with cost components and total (GBP bn/yr);
     capacity: one row per (year, pathway, tech) in GW; annual: the agent run's annual results."""
     prev = logging.root.manager.disable
@@ -47,6 +49,7 @@ def gap_run(scenario: str = "baseline", seed: int = 42, ideal=(), label: str = "
         logging.disable(logging.INFO)
         try:
             sc = with_ideal(get_scenario(scenario), ideal)
+            sc.update(overrides or {})
             m = GBMarketModel(sc, seed=seed, start=start, end=end, network_every=network_every, **model_kw)
             annual = m.run()
             years = list(range(start, end + 1, step))
@@ -64,6 +67,7 @@ def gap_run(scenario: str = "baseline", seed: int = 42, ideal=(), label: str = "
                     if extra is not None:
                         row["emissions_mt"] = extra["emissions_t"] / 1e6
                         row["unserved_gwh"] = extra["unserved_mwh"] / 1e3
+                        row["reserve_short_gwh"] = extra.get("reserve_shortfall_mwh", 0.0) / 1e3
                     else:
                         row["emissions_mt"] = annual.loc[y, "emissions_mt"]
                         row["unserved_gwh"] = annual.loc[y, "unserved_gwh"]
@@ -102,18 +106,18 @@ def summarise(costs: pd.DataFrame, rate: float = SOCIAL_DISCOUNT_RATE) -> pd.Dat
 
 
 def _task(args):
-    scenario, seed, ideal, label, kw = args
+    scenario, seed, ideal, label, overrides, kw = args
     try:
-        return gap_run(scenario, seed, ideal, label, **kw)
+        return gap_run(scenario, seed, ideal, label, overrides=overrides, **kw)
     except Exception as e:          # one failed run (e.g. a solver status) must not discard the batch
         logging.getLogger(__name__).error("gap run %s seed %s failed: %r", label or scenario, seed, e)
         return {"failed": (label or scenario, seed, repr(e))}
 
 
 def run_many(tasks, jobs: int = 1, **kw) -> dict:
-    """tasks: iterable of (scenario, seed, ideal_groups, label). Returns concatenated DataFrames, plus
-    'failed': a list of (label, seed, error) for runs that raised."""
-    args = [(s, int(seed), list(ideal), label, kw) for s, seed, ideal, label in tasks]
+    """tasks: iterable of (scenario, seed, ideal_groups, label[, scenario overrides]). Returns
+    concatenated DataFrames, plus 'failed': a list of (label, seed, error) for runs that raised."""
+    args = [(t[0], int(t[1]), list(t[2]), t[3], t[4] if len(t) > 4 else None, kw) for t in tasks]
     if jobs > 1:
         with ProcessPoolExecutor(max_workers=jobs) as ex:
             res = list(ex.map(_task, args))

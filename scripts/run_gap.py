@@ -1,6 +1,6 @@
 """Optimal vs emergent: planner benchmark, agent runs and the gap between them (ukabm.gap).
 
-    python scripts/run_gap.py                      # ladder (baseline, 4 rungs) + levers, seeds 1-3
+    python scripts/run_gap.py                      # ladder (baseline, 4 rungs) + levers + sensitivities, seeds 1-3
     python scripts/run_gap.py --only ladder --seeds 1 --jobs 4
 Writes results/gap_costs.csv, gap_capacity.csv, gap_annual.csv and gap_summary.csv.
 """
@@ -18,12 +18,14 @@ from ukabm.gap import ladder_tasks, run_many, summarise  # noqa: E402
 
 # market-design and policy levers, full model (deck slide 13)
 LEVERS = ["no_cfd", "no_capacity_market", "heat_push", "high_carbon", "high_gas"]
+# benchmark sensitivities, full model: the reserve and response requirement (config.RESERVE, item 9)
+SENSITIVITIES = [("reserve off", {"reserve": {"scale": 0}}), ("reserve x2", {"reserve": {"scale": 2}})]
 
 
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--seeds", type=int, nargs="+", default=[1, 2, 3])
-    p.add_argument("--only", choices=["ladder", "levers"], default=None)
+    p.add_argument("--only", choices=["ladder", "levers", "sensitivities"], default=None)
     p.add_argument("--jobs", type=int, default=max((os.cpu_count() or 2) - 2, 1))
     p.add_argument("--end", type=int, default=2050)
     a = p.parse_args()
@@ -32,6 +34,8 @@ def main():
         tasks += ladder_tasks("baseline", a.seeds)
     if a.only in (None, "levers"):
         tasks += [(s, seed, [], s) for s in LEVERS for seed in a.seeds]
+    if a.only in (None, "sensitivities"):
+        tasks += [("baseline", seed, [], label, ov) for label, ov in SENSITIVITIES for seed in a.seeds]
     t0 = time.time()
     out = run_many(tasks, jobs=a.jobs, end=a.end)
     res = ROOT / "results"

@@ -139,7 +139,7 @@ Three more governments, each a `TargetTracking` variant selected by `scenario["g
 * `least_cost`: at its first round it solves the planner (`ukabm.planner.plan`) on the model's expected
   inflexible demand per five-year period and tracks the planner's wind and solar pathway (existing
   fleet plus cumulative build), ignoring the levy. This is the ideal-government rung. One planner solve
-  per run (~5 minutes). On the baseline the planner's pathway reaches ~40–45 GW offshore and ~58 GW
+  per run (~10–30 minutes with the reserve requirement). On the baseline the planner's pathway reaches ~40–45 GW offshore and ~58 GW
   onshore by 2050, against the CfD rules' ~90 GW offshore.
 * `bills`: the same targets at the lowest levy: squeeze from £20/MWh, to 40 % of the budget, caps rising
   5 % after a failed round (`config.GOVERNMENT_BILLS`).
@@ -191,6 +191,14 @@ Full run (3 seeds, to 2050) pending; slow test `tests/test_convergence.py` (`UKA
      gap = agents realised − planner  =  investment (agents eval − planner)  +  operation (agents realised − agents eval)
 ```
 * `ukabm/costs.py` defines system cost (resource cost; transfers cancel) and is used by all three.
+* Reserve and response (item 9): `planner._add_reserve` is passed to PyPSA as `extra_functionality` in
+  both `plan` and `evaluate`. It adds `Generator-reserve`, `StorageUnit-response` and
+  `StorageUnit-reserve` variables (assets picked by `carrier`), headroom constraints (reserve plus
+  output within available capacity, inactive assets masked per investment period with
+  `n.get_active_assets`), an hour of stored energy behind storage response, and two hourly balance
+  constraints, `Reserve-response` and `Reserve-reserve`, each with a shortfall variable costed in the
+  objective at the snapshot × period weights. Settings: `planner.reserve_settings(model)`, from
+  `config.RESERVE` and the scenario key `reserve`.
 * `GBMarketModel.system_cost` records the realised cost every year (`syscost_*_bn` columns).
 * Agent traits are idealised by trait group through the scenario key `agents_ideal`
   (`scenarios.IDEAL_TRAITS`, `scenarios.LADDER`), which `gap.ladder_tasks` uses to attribute the gap.

@@ -221,10 +221,11 @@ re-run `scripts/run_gap.py` and update [docs/gap.md](docs/gap.md).
    wind and solar pathway; the ideal-government rung), `"bills"` (lowest levy, slips when bills
    rise) and `"political"` (ambitious announcements, little funding before elections). Parameters in
    `config.GOVERNMENT_*`, documented in `docs/model_design.md`.
-7. **Convergence test.** Built: scenario `competitive_benchmark` (`scenarios.BENCHMARKS`; energy-only,
+7. ✅ **Convergence test.** Done: scenario `competitive_benchmark` (`scenarios.BENCHMARKS`; energy-only,
    VoLL scarcity only, idealised firms on the `expectations` logic) and `scripts/run_convergence.py`.
-   First trial (seed 1, to 2035): 1.7 % gap, within the 3 % aim, with a very different fleet (see item
-   10). Still to do: the full run (3 seeds, to 2050) after the review fixes (item 0).
+   3 seeds to 2050: gap 2.6–4.1 % (median 3.3 %), mostly operation, with very different fleets at
+   nearly the same cost (item 10). An upper bound: build limits differ (item 20), battery services
+   (item 9) and heuristic storage dispatch ([docs/gap.md](docs/gap.md#convergence-test-can-the-agents-reach-the-optimum-at-all)).
 
 *B. A fair benchmark*
 
@@ -335,6 +336,8 @@ their priority)*
     either learn mark-ups in a fast stage game with the fleet frozen or present the table as an adaptive
     heuristic with parameter sweeps; "collusion" needs Nash and monopoly benchmarks, forced-deviation
     tests and an exploration sweep before the word is used. To be decided before this item starts.
+    Record each firm's states, actions and rewards per year with a Mesa `DataCollector` (agent
+    reporters), the panel that items 24 and 25 are compared on.
 25. **LLM agents on open-weight models, compared with rules and Q-learning** (needs item 34). LLM implementations of the
     government's round settings and firms' investment and bid decisions behind the item 1 interface.
     * *Models:* open-weight, Apache-2.0 by default (e.g. Qwen3, gpt-oss, Mistral Small), with the model
@@ -346,6 +349,10 @@ their priority)*
       run).
     * *Reproducibility:* temperature 0 and a seed; every response cached by (model, prompt) hash in
       `results/llm_cache/`, so a cached run repeats exactly and the cache can be published.
+    * *Framework:* evaluate Mesa-LLM (the Mesa extension for LLM-reasoning agents; LiteLLM, so Ollama
+      and hosted models; early, API may change) as the engine behind an LLM `DecisionMaker`, with the
+      item 34 `Observation`, action spaces and `validate` as the boundary, so the model never depends on
+      its API.
     * *Tests:* a fake client with canned responses, so CI needs no model. Development runs use a 4-bit
       7–8B model under Ollama (~1–3 h per run on a CPU laptop).
     * *Experiments:* rules vs Q-learning vs LLM on the scenarios of items 21–22, and a model-size ladder
