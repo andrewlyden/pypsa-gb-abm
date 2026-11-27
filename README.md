@@ -252,6 +252,38 @@ re-run `scripts/run_gap.py` and update [docs/gap.md](docs/gap.md).
     replace the exogenous electrolyser path and hydrogen price with merchant electrolyser investment and a
     hydrogen price that clears supply and demand (Dergunova and Lyden 2024).
 
+*A2. How firms decide (the deck's "limited information", "cost of capital and risk" and "strategic
+behaviour" sources; items are numbered 34–39 so existing numbers stay stable, and their place here is
+their priority)*
+
+34. **Information sets and action spaces.** Decisions receive an explicit observation of what the agent
+    knows (its own plants and history, public prices and auction results, published policy and the
+    agent's own forecasts) instead of the whole model (`agent.model`), and return actions from a declared
+    space (bid ranges, technology and block choices). The rule-based logic is ported to observations with
+    identical results. Prerequisite for limited information (36) and for Q-learning and LLM agents
+    (24, 25): a learning or LLM agent must not be able to read the true future, and needs a stable state,
+    action and reward definition. Rewards: realised profit per plant and per firm (already in settlement).
+35. **Uncertain futures.** Each seed draws a future the agents do not know in advance: fuel and carbon
+    price shocks around the central paths, demand growth, weather year (with item 17), and policy
+    events. The planner keeps perfect foresight of the drawn future, or plans over the distribution
+    (stochastic planner, with item 11). Ensembles then vary the world, not only the agents.
+36. **Expectation formation and learning.** Firms forecast with their own errors and biases and update
+    from what they observe (realised capture prices, auction clearing prices, competitors' builds):
+    adaptive, trend-following and model-based forecasters, with heterogeneous information. The ladder's
+    "expectations" rung then measures limited information, not only a carbon-price belief.
+37. **Risk-based investment and calibrated hurdle rates.** Value each project over the scenarios of
+    item 35 with a risk measure (mean–CVaR or mean–variance) instead of a flat haircut; a cost of
+    capital that rises with merchant exposure and falls with contracted revenue (CfD, CM, PPA); hurdle
+    rates per technology calibrated to published estimates (DESNZ Electricity Generation Costs hurdle
+    rates, cost-of-capital studies). This is where CfDs and the CM show their value as insurance.
+38. **Portfolio and strategic investment.** Firms value a project with its effect on their own fleet
+    (cannibalising their existing plants), may withhold or delay investment in a tight market, pre-empt
+    rivals, and shade bids in pay-as-clear auctions. Simple rules first, to test whether strategic
+    investment moves the gap at all; Q-learning (24) and LLM agents (25) then search for strategies.
+39. **Supplier agents and an emergent PPA market.** Suppliers with retail books hedge with PPAs and
+    forward contracts, so the PPA price and volume emerge (replacing the assumed 10 % discount);
+    extend to household flexibility adoption (smart tariffs, home batteries) and EV purchase decisions.
+
 *C. Evidence*
 
 16. **Auction back-cast.** Add CfD AR1–AR6 (LCCC) and CM T-4 2014–2025 (EMR Delivery Body) clearing prices
@@ -284,11 +316,11 @@ re-run `scripts/run_gap.py` and update [docs/gap.md](docs/gap.md).
     3 seeds) and plot 2050 heat-pump homes and the gap against the grant. (b) Lock-in: years between
     heat-pump/boiler lifecycle-cost parity and heat pumps passing 50 % of replacements. (c) Multiple
     equilibria: seed spread of the 2050 flexibility mix (batteries vs OCGT vs demand response).
-24. **Q-learning agents.** Q-learning implementations of firms' CfD bids, CM bids and offer mark-ups
+24. **Q-learning agents** (needs items 8 and 34). Q-learning implementations of firms' CfD bids, CM bids and offer mark-ups
     behind the item 1 interface (state: recent clearing prices, own margins; reward: profit), trained
     over repeated runs with fixed seeds. Compare their gap, prices and bids with the rule-based firms;
     check for tacit collusion.
-25. **LLM agents on open-weight models, compared with rules and Q-learning.** LLM implementations of the
+25. **LLM agents on open-weight models, compared with rules and Q-learning** (needs item 34). LLM implementations of the
     government's round settings and firms' investment and bid decisions behind the item 1 interface.
     * *Models:* open-weight, Apache-2.0 by default (e.g. Qwen3, gpt-oss, Mistral Small), with the model
       name and revision pinned in the scenario. One client for the OpenAI-compatible API, so the same code
