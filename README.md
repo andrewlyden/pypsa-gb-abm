@@ -18,7 +18,7 @@ and hydrogen.
 ## Quick start
 ```bash
 pip install -e .            # numpy pandas scipy matplotlib mesa pypsa highspy
-pytest -q                   # 73 tests (+1 slow), ~10 min
+pytest -q                   # 83 tests (+1 slow), ~11 min
 python scripts/run_scenarios.py baseline --end 2030      # ~40 s
 python scripts/run_scenarios.py                          # all 6 scenarios 2025-2050 (~4 min each)
 python scripts/make_plots.py                             # -> docs/figures/
@@ -175,11 +175,13 @@ re-run `scripts/run_gap.py` and update [docs/gap.md](docs/gap.md).
 
 *A. Who decides*
 
-0. **Fix the verified findings of the 27 Nov code review** ([docs/review_2026-11.md](docs/review_2026-11.md)),
-   highest severity first, then re-run scenarios, ensembles and the gap. The most serious: every existing
-   plant bids £0 into the Capacity Market (so loss-based retirement is effectively off), CM agreements
-   are paid from award rather than delivery and are overwritten by later auctions, and legacy CfD strike
-   prices are overstated. Every result so far carries these.
+0. **Fix the verified findings of the 27 Nov code review** ([docs/review_2026-11.md](docs/review_2026-11.md)).
+   Fixed with tests (`tests/test_review_fixes.py`): CM bids and agreements (A1, A2), smart-EV energy (A3),
+   sunk capex (A4), RO end (A5), legacy CfD strikes (A6), margin price years (A7), long-horizon forecasts
+   (A8–A10), budgets (A11), the planner's storage time step and sample (D1, D2), and B1, B2, B5, B6, B10,
+   D6, D7, D9. Still open: B3 (item 9), B4 curtailment ties, B7 interconnector CM payments, B8, B9 zonal
+   demand shares, D4 planner mothballing, D5 annual costing, calibration honesty and result provenance
+   (section C). Then re-run scenarios, ensembles, the gap and the convergence test.
 1. ✅ **Decision interface (deck slide 16).** Done: `ukabm/decisions.py`. GenCo offers, carbon
    expectations, merchant investment, CfD and CM bids go through a `DecisionMaker`; scenario key
    `decision_logic` selects one by name, for all or named GenCos; `RuleBased` reproduces the earlier

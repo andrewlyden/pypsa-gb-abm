@@ -46,11 +46,11 @@ def fixed_costs(units, year: int, start: int, rate: float = SOCIAL_DISCOUNT_RATE
     """Capex annuity (new build only) and fixed O&M of the units active in *year* (GBP/yr)."""
     capex = fom = 0.0
     for u in units:
-        if not u.active(year):
-            continue
         t = TECHS[u.tech]
-        fom += t.fom * 1000 * u.mw
-        if u.online > start:
+        if u.active(year):
+            fom += t.fom * 1000 * u.mw
+        # capital is sunk: the annuity runs over the economic life even if the plant closes early
+        if u.online > start and u.online <= year <= u.online + t.life - 1:
             capex += t.capex * 1000 * u.mw * crf(rate, t.life)
     return {"capex": capex, "fom": fom}
 

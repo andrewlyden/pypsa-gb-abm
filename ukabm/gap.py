@@ -103,18 +103,27 @@ def summarise(costs: pd.DataFrame, rate: float = SOCIAL_DISCOUNT_RATE) -> pd.Dat
 
 def _task(args):
     scenario, seed, ideal, label, kw = args
-    return gap_run(scenario, seed, ideal, label, **kw)
+    try:
+        return gap_run(scenario, seed, ideal, label, **kw)
+    except Exception as e:          # one failed run (e.g. a solver status) must not discard the batch
+        logging.getLogger(__name__).error("gap run %s seed %s failed: %r", label or scenario, seed, e)
+        return {"failed": (label or scenario, seed, repr(e))}
 
 
 def run_many(tasks, jobs: int = 1, **kw) -> dict:
-    """tasks: iterable of (scenario, seed, ideal_groups, label). Returns concatenated DataFrames."""
+    """tasks: iterable of (scenario, seed, ideal_groups, label). Returns concatenated DataFrames, plus
+    'failed': a list of (label, seed, error) for runs that raised."""
     args = [(s, int(seed), list(ideal), label, kw) for s, seed, ideal, label in tasks]
     if jobs > 1:
         with ProcessPoolExecutor(max_workers=jobs) as ex:
             res = list(ex.map(_task, args))
     else:
         res = [_task(a) for a in args]
-    return {k: pd.concat([r[k] for r in res], ignore_index=True) for k in ("costs", "capacity", "annual")}
+    ok = [r for r in res if "failed" not in r]
+    out = {k: pd.concat([r[k] for r in ok], ignore_index=True) if ok else pd.DataFrame()
+           for k in ("costs", "capacity", "annual")}
+    out["failed"] = [r["failed"] for r in res if "failed" in r]
+    return out
 
 
 def ladder_tasks(scenario: str = "baseline", seeds=(1, 2, 3)):

@@ -247,18 +247,25 @@ if gap_p.exists():   # optimal vs emergent (scripts/run_gap.py)
         ax.grid(axis="y", alpha=.3)
         fig.tight_layout(); fig.savefig(FIG / "gap_capacity.png", dpi=130); plt.close(fig)
 
-    tab = gs.groupby("run", sort=False).agg(
-        seeds=("seed", "nunique"), planner=("pv_planner_bn", "median"), agents=("pv_agents_realised_bn", "median"),
-        gap=("gap_total_bn", "median"), gap_min=("gap_total_bn", "min"), gap_max=("gap_total_bn", "max"),
-        investment=("gap_investment_bn", "median"), operation=("gap_operation_bn", "median"),
-        pct=("gap_total_pct", "median"))
+    # one seed per run (the one with the median gap), so planner + gap = agents and investment +
+    # operation = gap; the range is across seeds
+    def median_seed(g):
+        g = g.sort_values("gap_total_bn")
+        return g.iloc[(len(g) - 1) // 2]
+    tab = pd.DataFrame({r: dict(seeds=g.seed.nunique(), planner=median_seed(g).pv_planner_bn,
+                                agents=median_seed(g).pv_agents_realised_bn, gap=median_seed(g).gap_total_bn,
+                                gap_min=g.gap_total_bn.min(), gap_max=g.gap_total_bn.max(),
+                                investment=median_seed(g).gap_investment_bn, operation=median_seed(g).gap_operation_bn,
+                                pct=median_seed(g).gap_total_pct)
+                        for r, g in gs.groupby("run", sort=False)}).T
     rows = ["| run | seeds | optimal PV (£bn) | agents PV (£bn) | gap (£bn) [range] | of which investment | of which operation | gap (%) |",
             "|---|---|---|---|---|---|---|---|"]
     for r, t in tab.iterrows():
         rows.append(f"| {r} | {t.seeds:.0f} | {t.planner:.0f} | {t.agents:.0f} | {t.gap:.0f} [{t.gap_min:.0f}–{t.gap_max:.0f}] | "
                     f"{t.investment:.0f} | {t.operation:.0f} | {t.pct:.1f} |")
     (RES / "gap_summary.md").write_text(
-        "Present value of system cost 2025-2054 at 3.5 % (GBP bn, 2024 prices), median across seeds.\n"
+        "Present value of system cost 2025-2054 at 3.5 % (GBP bn, 2024 prices), for the seed with the median\n"
+        "gap (so the columns add up); range across seeds.\n"
         "Gap = agents' realised cost - planner's cost; investment = both fleets under the same least-cost\n"
         "dispatch; operation = agents' realised - least-cost dispatch of the agents' fleet.\n\n" + "\n".join(rows) + "\n",
         encoding="utf-8")

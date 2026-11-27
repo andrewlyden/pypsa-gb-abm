@@ -27,6 +27,11 @@ if TYPE_CHECKING:  # pragma: no cover
     from .agents import GenCo, Plant
 
 
+def budget_left(agent) -> float:
+    """What the agent can still spend on merchant investment this year (set by ``GBMarketModel.invest``)."""
+    return getattr(agent, "budget_left", agent.budget)
+
+
 class DecisionMaker:
     """Interface. Each method is one decision; see ``RuleBased`` for the reference behaviour."""
 
@@ -61,7 +66,7 @@ class RuleBased(DecisionMaker):
     def offer_price(self, agent, plant, srmc, year):
         p = agent.model.policy
         if plant.tech in VRE_TECHS or plant.tech == "hydro":
-            if plant.support == "ro":
+            if plant.support == "ro" and year <= plant.ro_end:
                 return -p.ro_value          # RO units bid negative up to the ROC value
             if plant.support == "cfd" and year <= plant.cfd_end:
                 return -0.01                # CfD (post-AR4 negative-price rule simplified)
@@ -91,6 +96,8 @@ class RuleBased(DecisionMaker):
                 continue  # VRE goes via CfD auction when CfD is available
             if tech == "nuclear":
                 continue  # nuclear only via government-led CfD/RAB route
+            if t.capex * 1000 * t.chunk_mw > budget_left(agent):
+                continue                    # unaffordable with what is left of this year's budget
             margin = m.expected_margin_per_mw(tech, forecast, agent)
             # cannibalisation haircut for VRE capture price and for own price impact
             npv = agent.npv_per_mw(tech, margin * (1 - agent.risk_aversion))
@@ -98,12 +105,7 @@ class RuleBased(DecisionMaker):
                 best = (tech, npv)
         if best is None:
             return None
-        tech = best[0]
-        mw = TECHS[tech].chunk_mw
-        cost = TECHS[tech].capex * 1000 * mw
-        if cost > agent.budget:
-            return None
-        return tech, mw, best[1]
+        return best[0], TECHS[best[0]].chunk_mw, best[1]
 
     def cfd_bid(self, agent, tech, forecast):
         """Strike-price bid = levelised cost at a de-risked (CfD) WACC."""
@@ -214,7 +216,8 @@ class ExpectationBids(RuleBased):
         m = agent.model
         prices = {m.year + 3: forecast, **m.forecast_horizons()}
         online = m.year + TECHS[tech].lead_time
-        return {y: m.expected_margin_per_mw(tech, p, agent, fleet_year=max(y, online))
+        fleet = max(m.year + 3, online)         # battery services: the fleet in the pipeline, not a horizon
+        return {y: m.expected_margin_per_mw(tech, p, agent, fleet_year=fleet, price_year=y, vre_haircut=0.0)
                 for y, p in sorted(prices.items())}
 
     @staticmethod
@@ -245,6 +248,8 @@ class ExpectationBids(RuleBased):
             t = TECHS[tech]
             if not t.investable or tech in m.scenario.get("banned_techs", []) or tech == "nuclear":
                 continue
+            if t.capex * 1000 * t.chunk_mw > budget_left(agent):
+                continue
             path = self.margin_path(agent, tech, forecast)
             online = m.year + t.lead_time
             npv = self.path_npv(tech, path, online, agent.wacc, agent.risk_aversion)
@@ -256,11 +261,7 @@ class ExpectationBids(RuleBased):
                 best = (tech, npv)
         if best is None:
             return None
-        tech = best[0]
-        mw = TECHS[tech].chunk_mw
-        if TECHS[tech].capex * 1000 * mw > agent.budget:
-            return None
-        return tech, mw, best[1]
+        return best[0], TECHS[best[0]].chunk_mw, best[1]
 
 
 REGISTRY["expectations"] = ExpectationBids

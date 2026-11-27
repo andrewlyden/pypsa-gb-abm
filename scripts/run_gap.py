@@ -35,8 +35,10 @@ def main():
     t0 = time.time()
     out = run_many(tasks, jobs=a.jobs, end=a.end)
     res = ROOT / "results"
-    for k, df in out.items():
-        df.to_csv(res / f"gap_{k}.csv", index=False)
+    for k in ("costs", "capacity", "annual"):
+        out[k].to_csv(res / f"gap_{k}.csv", index=False)
+    for label, seed, err in out["failed"]:
+        print(f"FAILED: {label} seed {seed}: {err}")
     s = summarise(out["costs"])
     s.to_csv(res / "gap_summary.csv", index=False)
     print(f"{len(tasks)} runs in {time.time() - t0:.0f}s")
