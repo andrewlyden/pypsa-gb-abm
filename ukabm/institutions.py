@@ -291,10 +291,9 @@ class SystemOperator:
             target -= sum(p.mw * TECHS[p.tech].derating for p in supported)
             return target, peak
         net = np.asarray(load, dtype=float).copy()
-        for tech in sorted({p.tech for p in supported}):
-            mw = sum(p.mw for p in supported if p.tech == tech)
-            cf = m.cf_profile(tech)
-            net -= mw * cf if cf is not None else mw * TECHS[tech].derating
+        for p in supported:                      # each plant on its own profile (fleet or new build)
+            cf = m.cf_profile(p.tech, p.online)
+            net -= p.mw * cf if cf is not None else p.mw * TECHS[p.tech].derating
         k = int(self.params["lole_h"])
         target = float(np.sort(net)[::-1][k]) * (1 + self.params["weather_margin"])
         return target, peak

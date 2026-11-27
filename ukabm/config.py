@@ -85,6 +85,13 @@ RESERVE = dict(
     storage=("battery", "pumped_hydro"),
 )
 VRE_TECHS = {"wind_onshore", "wind_offshore", "solar"}
+# Column of the hourly profile table that gives each technology's capacity-factor shape.
+VRE_PROFILE = {"wind_onshore": "wind_onshore_cf", "wind_offshore": "wind_offshore_cf", "solar": "solar_cf"}
+# Annual capacity factor of new wind and solar by the year a plant comes online (linear between
+# points, flat outside). The hourly profiles are measured on the existing fleet; new plant yields more
+# (larger rotors, higher hubs, sites further offshore). Empty: new build has the fleet's profile.
+# A scenario can override it with `new_build_cf`. Values and sources: docs/assumptions.md.
+NEW_BUILD_CF: dict = {}
 
 # Initial GB fleet c. 2025 (MW). Indicative, consistent in magnitude with DUKES 2025 / NESO.
 INITIAL_FLEET_MW = {

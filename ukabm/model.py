@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 from .agents import GenCo, Plant
-from .config import (LEGACY_CM_PRICE, CPI_2012_TO_2024, RO_LAST_ONLINE, RO_SCHEME_END, RO_YEARS, TECHS, VRE_TECHS, STORAGE_TECHS, INITIAL_FLEET_MW, EXISTING_FLEET_EFFICIENCY,
+from .config import (NEW_BUILD_CF, VRE_PROFILE, LEGACY_CM_PRICE, CPI_2012_TO_2024, RO_LAST_ONLINE, RO_SCHEME_END, RO_YEARS, TECHS, VRE_TECHS, STORAGE_TECHS, INITIAL_FLEET_MW, EXISTING_FLEET_EFFICIENCY,
                      NESO_CI_FACTORS, Policy, Fuels, BATTERY_ANCILLARY_POT, BATTERY_TRADING_PER_MW_VRE,
                      BATTERY_FLEET_FLOOR_MW)
 from .data import PyPSAGBData
@@ -114,6 +114,9 @@ class GBMarketModel(ModelBase):
         self.data = data or PyPSAGBData()
         self.prof = self.data.profiles
         self.H = len(self.prof)
+        nb = self.scenario.get("new_build_cf", NEW_BUILD_CF)
+        self._new_build_cf = dict(nb) if nb else {}
+        self._cf_cache = {}
         self.policy = Policy(**self.scenario.get("policy", {}))
         self.fuels = Fuels(**self.scenario.get("fuels", {}))
         self.start, self.end, self.year = start, end, start
@@ -205,18 +208,44 @@ class GBMarketModel(ModelBase):
         return [p for p in self.plants if p.active(year)]
 
     # ---------------------------------------------------------------- physics
-    def cf_profile(self, tech):
-        w, s = self.prof.wind_cf.values, self.prof.solar_cf.values
-        if tech == "wind_onshore":
-            return np.clip(w * 0.75, 0, 1)
-        if tech == "wind_offshore":
-            return np.clip(w * 1.10, 0, 1)
-        if tech == "solar":
-            return s
-        return None
+    def cf_key(self, tech, online=None):
+        """Annual capacity factor that a wind or solar plant coming online in *online* is built for
+        (config.NEW_BUILD_CF, scenario key ``new_build_cf``), or None for the measured fleet shape.
+        *online* None means a project decided this year. Plants online by the start year are the fleet
+        the profiles were measured on."""
+        path = self._new_build_cf.get(tech)
+        if not path:
+            return None
+        if online is None:
+            online = self.year + TECHS[tech].lead_time
+        if online <= self.start:
+            return None
+        ys = sorted(path)
+        return round(float(np.interp(online, ys, [path[y] for y in ys])), 3)
 
-    def capacity_factor(self, tech):
-        cf = self.cf_profile(tech)
+    def cf_profile(self, tech, online=None):
+        """Hourly capacity factor of a wind or solar plant (None for other technologies): the measured
+        shape of the weather year for the existing fleet; for new build the same shape raised to the
+        new-build annual capacity factor (see ``cf_key``) by a power transform, which lifts low and
+        medium output most, as larger rotors and higher hubs do, and keeps the values in [0, 1]."""
+        col = VRE_PROFILE.get(tech)
+        if col is None:
+            return None
+        base = self.prof[col].values
+        target = self.cf_key(tech, online)
+        if target is None:
+            return base
+        key = (tech, target)
+        if key not in self._cf_cache:
+            lo, hi = 0.05, 5.0                      # mean(base ** a) falls as a rises
+            for _ in range(50):
+                a = 0.5 * (lo + hi)
+                lo, hi = (a, hi) if float((base ** a).mean()) > target else (lo, a)
+            self._cf_cache[key] = base ** (0.5 * (lo + hi))
+        return self._cf_cache[key]
+
+    def capacity_factor(self, tech, online=None):
+        cf = self.cf_profile(tech, online)
         return float(cf.mean()) if cf is not None else TECHS[tech].availability
 
     def srmc(self, tech, year, carbon=None, efficiency=None):
@@ -260,7 +289,7 @@ class GBMarketModel(ModelBase):
             if p.tech in STORAGE_TECHS:
                 continue
             t = TECHS[p.tech]
-            prof = self.cf_profile(p.tech)
+            prof = self.cf_profile(p.tech, p.online)
             if prof is None:
                 prof = t.availability if p.availability is None else p.availability
             avail = p.mw * prof
@@ -268,7 +297,7 @@ class GBMarketModel(ModelBase):
         return out
 
     def demand(self, year, price_forecast=None, residual=None):
-        base = self.prof.demand_mw.values * (1 + self.base_growth) ** (year - 2024)
+        base = self.prof.demand_mw.values * (1 + self.base_growth) ** (year - self.data.profile_year)
         heat = self.heat.hourly_load(year, self.prof) - self.heat.hourly_load(year, self.prof) * 0  # explicit
         heat_extra = heat * max(1 - 0.6e6 / max(self.heat.hp_homes, 1), 0)  # 2024 HPs already in base
         ev_sig = residual if residual is not None else price_forecast
@@ -488,7 +517,7 @@ class GBMarketModel(ModelBase):
                 before = sum(p.mw for p in self.plants if p.tech == tech and p.active(y0 - 5))
                 add = max(now - before, 0.0) / 5 * (h - y0)
                 if add > 0:
-                    extra.append(Plant(-1 - len(extra), self.gencos[0], tech, "GB", add, self.year, h + 50,
+                    extra.append(Plant(-1 - len(extra), self.gencos[0], tech, "GB", add, h, h + 50,
                                        support="cfd", cfd_end=h + 50))
             b, heat, ev, _ = self.demand(h)
             peak = float((b + heat + ev).max())

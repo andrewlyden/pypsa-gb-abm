@@ -24,6 +24,30 @@ import pandas as pd
 
 SNAPSHOT = Path(__file__).resolve().parents[2] / "data" / "pypsagb_snapshot"
 EXTERNAL = Path(__file__).resolve().parents[2] / "data" / "external"
+# Hourly demand, wind and solar profiles built from NESO and Elexon open data by
+# scripts/build_profiles.py (onshore and offshore wind separately). Used when the file for the profile
+# year exists; otherwise the profile in the PyPSA-GB snapshot (ESPENI, one wind shape) is used.
+PROFILES = Path(__file__).resolve().parents[2] / "data" / "profiles"
+# Without separate shapes (ESPENI profile), onshore and offshore wind are the one GB wind shape scaled
+# by these factors (the model's original assumption).
+SINGLE_WIND_SHAPE_SCALE = {"wind_onshore_cf": 0.75, "wind_offshore_cf": 1.10}
+# Weights of the onshore and offshore shapes in the GB wind index `wind_cf` (c. 2024 capacities, GW),
+# which the network stage uses for its wind strata and the SEM price proxy for its shape.
+GB_WIND_WEIGHTS = {"wind_onshore_cf": 15.0, "wind_offshore_cf": 15.5}
+
+
+def complete_profiles(prof: pd.DataFrame) -> pd.DataFrame:
+    """Make sure a profile table has `wind_onshore_cf`, `wind_offshore_cf` and the GB index `wind_cf`:
+    a table with one wind shape gets the two scaled copies; a table with separate shapes gets the
+    capacity-weighted index."""
+    prof = prof.copy()
+    if "wind_onshore_cf" not in prof or "wind_offshore_cf" not in prof:
+        for col, k in SINGLE_WIND_SHAPE_SCALE.items():
+            prof[col] = np.clip(prof["wind_cf"].values * k, 0, 1)
+    if "wind_cf" not in prof:
+        w = GB_WIND_WEIGHTS
+        prof["wind_cf"] = sum(prof[c].values * w[c] for c in w) / sum(w.values())
+    return prof
 
 # Interconnector register country -> neighbour price zone (data/external/neighbour_prices_<y>.csv).
 # Ireland (SEM) has no openly licensed hourly series there; it gets a GB-wind-shaped proxy.
@@ -94,13 +118,23 @@ DUKES_TO_TECH = {"Fossil Fuel": "ccgt", "Nuclear": "nuclear", "Bioenergy": "biom
 
 
 class PyPSAGBData:
-    def __init__(self, root: str | os.PathLike | None = None, profile_year: int = 2024):
+    def __init__(self, root: str | os.PathLike | None = None, profile_year: int = 2024,
+                 profiles: str | os.PathLike | None = None):
+        """*profiles*: an hourly profile file to use instead of the default for *profile_year*
+        ("espeni" = the PyPSA-GB/ESPENI profile with one wind shape, the model's original input)."""
         self.root = Path(root) if root else None
         self.profile_year = profile_year
         if self.root is None:
             self._load_snapshot()
         else:
             self._load_raw()
+        open_file = PROFILES / f"profiles_{profile_year}.csv"
+        self.profile_source = "pypsagb"
+        if profiles is not None and str(profiles) != "espeni":
+            self.profiles, self.profile_source = pd.read_csv(profiles), str(profiles)
+        elif profiles is None and open_file.exists():
+            self.profiles, self.profile_source = pd.read_csv(open_file), "open"
+        self.profiles = complete_profiles(self.profiles)
         self.neighbour_price_shape = self._neighbour_shapes()
 
     # ------------------------------------------------------------------ raw

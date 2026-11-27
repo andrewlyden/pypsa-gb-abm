@@ -40,8 +40,9 @@ def _quiet():
 
 def _avail(model, u, hours, weights=None):
     """Availability of *u* in the sampled *hours*. With *weights* (a sample), wind and solar profiles
-    are rescaled so their weighted sample mean equals the annual mean (sampling noise removed)."""
-    cf = model.cf_profile(u.tech)
+    are rescaled so their weighted sample mean equals the annual mean (sampling noise removed).
+    ``u.online`` selects the fleet or the new-build profile (GBMarketModel.cf_profile)."""
+    cf = model.cf_profile(u.tech, u.online)
     if cf is not None:
         x = cf[hours]
         if weights is not None:
@@ -51,14 +52,16 @@ def _avail(model, u, hours, weights=None):
     return np.full(len(hours), a)
 
 
-def _groups(units):
-    """Aggregate units with identical cost/availability characteristics: {(tech, eff, avail): mw}."""
-    g = {}
+def _groups(model, units):
+    """Aggregate units with identical cost, availability and profile: {(tech, eff, avail, online): mw},
+    where *online* is the first year of one unit of the group (it selects the group's profile)."""
+    g, rep = {}, {}
     for u in units:
         eff = None if u.efficiency is None else round(u.efficiency, 2)
-        k = (u.tech, eff, u.availability)
+        k = (u.tech, eff, u.availability, model.cf_key(u.tech, u.online))
         g[k] = g.get(k, 0.0) + u.mw
-    return g
+        rep.setdefault(k, u.online)
+    return {(k[0], k[1], k[2], rep[k]): mw for k, mw in g.items()}
 
 
 def _trade_and_h2(model, year, hours):
@@ -220,7 +223,7 @@ def evaluate(model, year: int, units, load: np.ndarray, hours=None) -> dict:
     n.add("Load", "load", bus="GB", p_set=load[hours])
     n.add("Generator", "shed", bus="GB", p_nom=1e6, marginal_cost=model.policy.voll)
     info = {}
-    for i, ((tech, eff, av), mw) in enumerate(_groups(units).items()):
+    for i, ((tech, eff, av, online), mw) in enumerate(_groups(model, units).items()):
         name = f"{tech}_{i}"
         if tech in STORAGE_TECHS:
             e = np.sqrt(TECHS[tech].efficiency)
@@ -228,7 +231,7 @@ def evaluate(model, year: int, units, load: np.ndarray, hours=None) -> dict:
                   efficiency_store=e, efficiency_dispatch=e, marginal_cost=TECHS[tech].vom,
                   cyclic_state_of_charge=True)
         else:
-            u = Unit(tech, mw, year, year, eff, av)
+            u = Unit(tech, mw, online, year, eff, av)
             mc = model.srmc(tech, year, efficiency=eff)
             n.add("Generator", name, bus="GB", carrier=tech, p_nom=mw, p_max_pu=_avail(model, u, hours),
                   marginal_cost=mc)
@@ -346,17 +349,19 @@ def plan(model, loads: dict, rate: float = SOCIAL_DISCOUNT_RATE, build_limits: d
         return pd.Series(np.concatenate([np.broadcast_to(f(p), (len(hours),)) for p in periods]), index=snaps)
 
     # existing and committed fleet, aggregated by (tech, efficiency, availability, active periods)
-    agg = {}
+    agg, online = {}, {}
     for u in model.initial_fleet:
         act = [p for p in periods if u.active(p)]
         if not act:
             continue
         eff = None if u.efficiency is None else round(u.efficiency, 2)
-        k = (u.tech, eff, u.availability, act[0], act[-1] - act[0] + step)
+        k = (u.tech, eff, u.availability, act[0], act[-1] - act[0] + step, model.cf_key(u.tech, u.online))
         agg[k] = agg.get(k, 0.0) + u.mw
-    for i, ((tech, eff, av, by, life), mw) in enumerate(agg.items()):
+        online.setdefault(k, u.online)
+    for i, (k, mw) in enumerate(agg.items()):
+        tech, eff, av, by, life, _ = k
         name = f"old_{tech}_{i}"
-        u = Unit(tech, mw, by, by, eff, av)
+        u = Unit(tech, mw, online[k], by, eff, av)       # online: selects the fleet or new-build profile
         if tech in STORAGE_TECHS:
             e = np.sqrt(TECHS[tech].efficiency)
             n.add("StorageUnit", name, bus="GB", carrier=tech, p_nom=mw, max_hours=STORAGE_TECHS[tech],
