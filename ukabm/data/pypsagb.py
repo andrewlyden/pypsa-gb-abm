@@ -241,6 +241,16 @@ class PyPSAGBData:
         ic = self._ic_in_service(year)
         return ic.groupby(ic.country.map(IC_MARKET)).p_nom.sum().astype(float).to_dict()
 
+    def interconnector_landing_share(self, year: int) -> dict:
+        """Per neighbour market, the split of its in-service capacity across GB landing zones (register
+        `zone` column, e.g. IFA/ElecLink/BritNed/Nemo Z15, NSL Z7, Moyle Z5)."""
+        ic = self._ic_in_service(year)
+        out = {}
+        for mkt, g in ic.groupby(ic.country.map(IC_MARKET)):
+            s = g.groupby("zone").p_nom.sum()
+            out[mkt] = s / s.sum()
+        return out
+
     def zone_share(self, tech: str) -> pd.Series:
         key = "wind" if tech.startswith("wind") else tech
         if key in self.zone_tech_share.index:
