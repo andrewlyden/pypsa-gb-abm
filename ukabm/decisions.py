@@ -19,6 +19,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import numpy as np
+
 from .config import STORAGE_TECHS, TECHS, VRE_TECHS  # noqa: F401  (STORAGE_TECHS for subclasses)
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -153,7 +155,8 @@ def for_genco(scenario: dict, genco_name: str) -> DecisionMaker:
 
 
 class ExpectationBids(RuleBased):
-    """CfD bids from the firm's own expectations (README roadmap item 3); other decisions as RuleBased.
+    """Forward-looking firms: CfD bids from their own expectations (README roadmap item 3), and merchant
+    or PPA investment, wind and solar included, on forecasts over the asset's life (item 4).
 
     The bid is the lowest strike at which the project meets the firm's hurdle rate:
 
@@ -199,6 +202,65 @@ class ExpectationBids(RuleBased):
         strike = need / (a_contract * gen * (1 - self.BASIS)) + t.vom
         strike /= max(1 - 0.5 * agent.risk_aversion, 0.5)        # risk premium
         return strike * (1 + 0.02 * m.rng.standard_normal())
+
+    # ------------------------------------------------ merchant and PPA investment (roadmap item 4)
+    PPA_YEARS = 15
+    PPA_DISCOUNT = 0.10    # PPA price below the expected capture price (the offtaker's margin and risk)
+    PPA_RATE_CUT = 0.015   # contracted revenue lowers the cost of capital by this much
+
+    def margin_path(self, agent, tech, forecast):
+        """Expected annual margin per MW at each forecast year: t+3 (the model's forecast) and the long
+        horizons of ``model.forecast_horizons``. Battery services use the fleet expected in that year."""
+        m = agent.model
+        prices = {m.year + 3: forecast, **m.forecast_horizons()}
+        online = m.year + TECHS[tech].lead_time
+        return {y: m.expected_margin_per_mw(tech, p, agent, fleet_year=max(y, online))
+                for y, p in sorted(prices.items())}
+
+    @staticmethod
+    def path_npv(tech, path, online, rate, haircut=0.0, first=None):
+        """NPV per MW of building *tech* coming online in *online*: margins interpolated linearly
+        between the forecast years of *path* (flat outside), less FOM, over the asset life. *first*:
+        optional (years, revenue per MW per year, rate) for a contracted first period."""
+        t = TECHS[tech]
+        ys = sorted(path)
+        npv, df = -t.capex * 1000, 1.0
+        for k in range(1, t.life + 1):
+            year = online + k - 1
+            if first is not None and k <= first[0]:
+                df /= 1 + first[2]
+                npv += (first[1] - t.fom * 1000) * df
+            else:
+                df /= 1 + rate
+                margin = float(np.interp(year, ys, [path[y] for y in ys]))
+                npv += (margin * (1 - haircut) - t.fom * 1000) * df
+        return npv
+
+    def merchant_investment(self, agent, forecast):
+        """The best positive-NPV block on forecasts over the asset's life. Wind and solar may be built
+        merchant or on a PPA alongside CfDs; other technologies as in RuleBased."""
+        m = agent.model
+        best = None
+        for tech in agent.tech_preference:
+            t = TECHS[tech]
+            if not t.investable or tech in m.scenario.get("banned_techs", []) or tech == "nuclear":
+                continue
+            path = self.margin_path(agent, tech, forecast)
+            online = m.year + t.lead_time
+            npv = self.path_npv(tech, path, online, agent.wacc, agent.risk_aversion)
+            if tech in VRE_TECHS:          # PPA: a fixed price on the t+3 capture value, then merchant
+                ppa = path[m.year + 3] * (1 - self.PPA_DISCOUNT)
+                npv = max(npv, self.path_npv(tech, path, online, agent.wacc, agent.risk_aversion,
+                                             first=(self.PPA_YEARS, ppa, max(agent.wacc - self.PPA_RATE_CUT, 0.03))))
+            if npv > 0 and (best is None or npv > best[1]):
+                best = (tech, npv)
+        if best is None:
+            return None
+        tech = best[0]
+        mw = TECHS[tech].chunk_mw
+        if TECHS[tech].capex * 1000 * mw > agent.budget:
+            return None
+        return tech, mw, best[1]
 
 
 REGISTRY["expectations"] = ExpectationBids

@@ -18,7 +18,7 @@ and hydrogen.
 ## Quick start
 ```bash
 pip install -e .            # numpy pandas scipy matplotlib mesa pypsa highspy
-pytest -q                   # 59 tests, ~9 min
+pytest -q                   # 63 tests, ~10 min
 python scripts/run_scenarios.py baseline --end 2030      # ~40 s
 python scripts/run_scenarios.py                          # all 6 scenarios 2025-2050 (~4 min each)
 python scripts/make_plots.py                             # -> docs/figures/
@@ -188,10 +188,10 @@ re-run `scripts/run_gap.py` and update [docs/gap.md](docs/gap.md).
    `ukabm/decisions.py`): lowest strike meeting the hurdle rate over a 20-year CfD plus a merchant tail
    valued at the firm's own capture-price view; risk premium; firms abstain above the cap. Withdrawal
    after winning waits for cost trajectories (item 19). Becomes the default with item 2's `targets`.
-4. **Merchant and PPA renewables; lifetime forecasts.** Let wind and solar be built on merchant NPV, with
-   a PPA option at a discount, alongside CfDs. Forecast prices at each technology's online year (lead
-   time) and at two later years, and use the declining margin in the NPV, replacing the single t+3
-   forecast for every technology.
+4. ✅ **Merchant and PPA renewables; lifetime forecasts.** Done in `decision_logic: "expectations"`:
+   NPV on a margin path (t+3, t+8, t+13; `GBMarketModel.forecast_horizons`, with an adequate fleet and
+   wind/solar growing at their recent rate), wind and solar buildable merchant or on a 15-year PPA
+   alongside CfDs. Becomes the default with items 2–3 after items 5–6.
 5. **System operator agent for the Capacity Market.** A NESO agent sets the T-4 target from the 3 h LOLE
    reliability standard on its own peak forecast (managed heat-pump and EV peak, de-rating factors), with
    a T-1 holdback. Reconcile with published targets: today's model target for 2029/30 is ~49 GW de-rated

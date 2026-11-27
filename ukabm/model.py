@@ -411,6 +411,39 @@ class GBMarketModel(ModelBase):
         plants = [p for p in self.plants if p.active(target_year)] + list(extra)
         return self.run_market(target_year, plants)["price"]
 
+    def forecast_horizons(self, offsets=(8, 13)):
+        """Long-horizon price forecasts for investment decisions, cached per model year. Fleet: the
+        pipeline at t+3 held, plus wind and solar growing at their recent build rate (cannibalisation),
+        plus peaking capacity that keeps the de-rated margin at the CM target (investors expect the system
+        to stay adequate). Fuel, carbon and demand are those of the horizon year."""
+        cache = getattr(self, "_horizon_cache", None)
+        if cache is not None and cache[0] == (self.year, offsets):
+            return cache[1]
+        y0 = self.year + 3
+        base = [p for p in self.plants if p.active(y0)]
+        out = {}
+        for off in offsets:
+            h = self.year + off
+            extra = []
+            for tech in sorted(VRE_TECHS):
+                now = sum(p.mw for p in base if p.tech == tech)
+                before = sum(p.mw for p in self.plants if p.tech == tech and p.active(y0 - 5))
+                add = max(now - before, 0.0) / 5 * (h - y0)
+                if add > 0:
+                    extra.append(Plant(-1 - len(extra), self.gencos[0], tech, "GB", add, self.year, h + 50,
+                                       support="cfd", cfd_end=h + 50))
+            b, heat, ev, _ = self.demand(h)
+            peak = float((b + heat + ev).max())
+            _, _, ic_cap, _ = self.interconnector_blocks(h)
+            firm = sum(p.mw * TECHS[p.tech].derating for p in base + extra) + 0.45 * ic_cap
+            short = peak * (1 + self.policy.cm_reliability_margin) - firm
+            if short > 0:
+                extra.append(Plant(-1 - len(extra), self.gencos[0], "ocgt", "GB", short / TECHS["ocgt"].derating,
+                                   self.year, h + 50))
+            out[h] = self.run_market(h, base + extra)["price"]
+        self._horizon_cache = ((self.year, offsets), out)
+        return out
+
     def expected_margin_per_mw(self, tech, price, agent, include_cm=True, fleet_year=None, extra_mw=None):
         """Expected annual margin per MW. *fleet_year*: year whose (pipeline) battery fleet shares the
         battery service pots; default = first operating year (CM new build passes its delivery year).

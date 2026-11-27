@@ -99,6 +99,16 @@ carbon optimist: the forecast). Risk aversion adds a premium; ±2 % noise stands
 firm whose required strike is above the cap is excluded (abstains). Other decisions are `RuleBased`.
 Not yet the default (with the `targets` government, after items 4–6).
 
+### Merchant and PPA investment over the asset's life (`decision_logic: "expectations"`)
+`ExpectationBids` also replaces the merchant rule. Each candidate is valued on a margin path, not one
+year: the t+3 forecast plus `GBMarketModel.forecast_horizons()` at t+8 and t+13, interpolated over the
+asset's life (flat after the last point). The long-horizon fleet is the t+3 pipeline held, plus wind and
+solar growing at their build rate of the last five years (cannibalisation), plus peaking capacity that
+keeps the de-rated margin at the CM target, so investors expect an adequate system rather than
+scarcity prices. Wind and solar are candidates alongside CfDs, merchant or on a 15-year PPA at 10 %
+below the t+3 capture value with the cost of capital 1.5 points lower; the better of the two counts.
+Two extra market clearings per model year.
+
 ## Multi-energy hooks (extension points)
 * `HeatModule.hourly_load` — swap synthetic temperature for PyPSA-GB atlite cutouts; add HP flexibility.
 * `GasNetworkModule.update(h2_blend=…)` — hydrogen blending / network repurposing.
