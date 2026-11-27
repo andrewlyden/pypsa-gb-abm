@@ -53,13 +53,14 @@ def test_wind_and_solar_are_merchant_candidates_alongside_cfds(setup):
     g = copy.copy(m.gencos[0])
     g.tech_preference = ["wind_onshore"]
     e = ExpectationBids()
-    assert RuleBased().merchant_investment(g, fc) is None        # the rules leave wind to the CfD
-    path = e.margin_path(g, "wind_onshore", fc)
+    obs = m.observation(g, "merchant_investment", forecast=fc)
+    assert RuleBased().merchant_investment(obs) is None          # the rules leave wind to the CfD
+    path = e.margin_path(obs, "wind_onshore")
     online = m.year + TECHS["wind_onshore"].lead_time
     merchant = e.path_npv("wind_onshore", path, online, g.wacc, g.risk_aversion)
     ppa = e.path_npv("wind_onshore", path, online, g.wacc, g.risk_aversion,
                      first=(e.PPA_YEARS, path[m.year + 3] * (1 - e.PPA_DISCOUNT), max(g.wacc - e.PPA_RATE_CUT, 0.03)))
-    decision = e.merchant_investment(g, fc)
+    decision = e.merchant_investment(obs)
     if max(merchant, ppa) > 0 and TECHS["wind_onshore"].capex * 1000 * TECHS["wind_onshore"].chunk_mw <= g.budget:
         assert decision is not None and decision[0] == "wind_onshore"
     else:

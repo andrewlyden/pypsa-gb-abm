@@ -63,11 +63,35 @@ decision maker with itself (traits, and the year, fleet, policy and forecasting 
 `agent.model`) and the call's arguments (price forecast, plant, technology). `RuleBased` holds the
 rules described above and is the default; results are identical to the code before the interface.
 
-Other decision makers subclass `RuleBased` (or `DecisionMaker`), override the decisions they make and
+Decisions receive an `Observation` (see below), not the agent. Other decision makers subclass
+`RuleBased` (or `DecisionMaker`), override the decisions they make and
 are registered by name. A scenario selects them with `decision_logic`: one name for every GenCo, or
 `{genco_name: name}` for some (the rest keep `"rules"`). Each GenCo gets its own instance, so learning
 agents can keep state. Random draws must come from `agent.model.rng`. Government and system-operator
 agents, Q-learning and LLM decision makers (README roadmap items 2, 5, 6, 24, 25) plug in here.
+
+### Information sets, action spaces and rewards (`ukabm.observations`)
+A decision maker never sees the model. For each decision the GenCo builds an `Observation`:
+* `traits`: the firm's own characteristics and the budget it has left this year;
+* `own`: views of its own plants (`PlantView`: capacity, dates, support, CM agreement, profit history),
+  with no link to the model or to other firms;
+* `market`: public information (year, published policy, last year's hourly prices as a read-only array,
+  last T-4 and CfD clearing prices, banned technologies), the seeded random generator, and analysis
+  tools that use only public information (capacity factors, a technology's expected margin on a price
+  series, the long-horizon price forecasts);
+* the decision's fields: `forecast`, `tech`, `plant`, `srmc`, `margin_per_kw`, `new`, `year`, and
+  `options` (the technologies the firm may build: investable, allowed and affordable).
+
+Each decision has a declared action space (`ACTIONS`: offer price, expected carbon price, a merchant
+investment among `options` or none, a CfD strike or abstain, a CM bid) and the GenCo checks every
+answer (`validate`), so an invalid action raises an error. Once a year after settlement each decision
+maker's `learn(outcome)` receives the firm's realised profit, in total and by plant: the reward for
+learning agents. `Observation.to_dict()` gives a JSON-safe summary for logs and LLM prompts.
+
+The rule-based and `expectations` logics were ported to observations with identical results. The
+tools are a boundary, not a sandbox (they are closures over the model). Today's forecasts are still the
+model's own (perfect knowledge of the committed pipeline and published paths); firms' own imperfect
+forecasts are item 36. Governments and system operators keep model access for now.
 
 ### Government and the CfD auction (`ukabm.institutions`)
 Each year the government sets every technology pot of the CfD round (`PotSettings`): a volume limit, an
