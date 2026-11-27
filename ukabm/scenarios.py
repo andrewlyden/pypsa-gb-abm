@@ -37,8 +37,25 @@ LADDER = [
 ]
 
 
+# Benchmarks: not policy scenarios, so not in SCENARIOS (scripts/run_scenarios.py runs SCENARIOS).
+BENCHMARKS = {
+    # Convergence test (README roadmap item 7): textbook conditions under which a competitive market
+    # should reproduce the least-cost plan. Energy-only market (no CfD, no CM) with scarcity priced only
+    # by unserved energy at VoLL (no ORDC adder), idealised firms (unbiased adaptive expectations, social
+    # discount rate, no risk aversion or budget limit, no mark-up) that invest merchant in any technology
+    # on lifetime price forecasts (decision_logic "expectations"), with enough decisions a year to keep up.
+    "competitive_benchmark": {
+        "policy": {"cfd_enabled": False, "cm_enabled": False},
+        "agents_ideal": ["expectations", "capital", "strategic"],
+        "decision_logic": "expectations",
+        "scarcity_adder": False,
+        "max_merchant_decisions": 40,
+    },
+}
+
+
 def get_scenario(name: str) -> dict:
-    return copy.deepcopy(SCENARIOS[name])
+    return copy.deepcopy(SCENARIOS[name] if name in SCENARIOS else BENCHMARKS[name])
 
 
 def with_ideal(scenario: dict, groups) -> dict:
