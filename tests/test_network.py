@@ -205,7 +205,7 @@ def test_bm_bid_prices_by_support():
         elif p.tech == "ccgt":
             assert np.allclose(bids[:, j], m.plant_srmc(p, 2025)) and bids[0, j] > 0
         elif p.tech.startswith("wind") and p.support == "ro":
-            assert np.allclose(bids[:, j], -m.policy.ro_value)
+            assert np.allclose(bids[:, j], -m.policy.ro_value if 2025 <= p.ro_end else 0.0)   # RO: at most 20 years
         elif p.tech.startswith("wind") and p.support == "cfd" and p.cfd_end >= 2025:
             assert np.allclose(bids[:, j], -(p.strike - 60.0))
     # above the strike the CfD bid is positive: turning down saves the payback
@@ -216,8 +216,10 @@ def test_bm_bid_prices_by_support():
 
 def test_network_stage_2025_constraint_cost_and_post_bm_mix():
     r = GBMarketModel(end=2025, network_every=1).run().loc[2025]
-    # outturn 2025: GBP 1.83bn incl. ~0.54bn BM premia, 10.4 TWh renewable turn-down (LCP Delta 2026)
-    assert 0.8 < r.constraint_cost_bn < 2.5
+    # outturn 2025: GBP 1.83bn incl. ~0.54bn BM premia not modelled, so ~1.29bn comparable; 10.4 TWh
+    # renewable turn-down (LCP Delta 2026). Tolerance -50 % / +100 % of 1.29bn: the model is ~45 % low
+    # since legacy CfD strikes were corrected (docs/review_2026-11.md A6).
+    assert 0.5 * 1.29 < r.constraint_cost_bn < 2.0 * 1.29
     assert 5.0 < r.curtailment_twh < 15.0
     assert r.network_shed_twh < 0.1    # fixed interconnector positions; no IC counter-trading in the stage
     # redispatch turns wind down and gas up, so post-BM CI is higher

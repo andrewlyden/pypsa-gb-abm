@@ -120,8 +120,19 @@ GOVERNMENT_POLITICAL = dict(
 SYSTEM_OPERATOR = dict(
     lole_h=3,                # GB reliability standard: 3 hours loss of load expectation a year
     weather_margin=0.0,      # extra de-rated capacity for weather beyond the model's one year (share)
-    t1_holdback=0.05,        # share of the target left to the T-1 auction
+    t1_holdback=0.025,       # share of the target left to the T-1 auction (~1.0 of 40.1 GW, 2029/30)
 )
+
+
+# CPI 2012 -> 2024 prices for CfD strikes: AR7 offshore GBP 65.45 (2012) = GBP 91.20 (2024), DESNZ 2025.
+CPI_2012_TO_2024 = 1.393
+# T-4 Capacity Market clearing prices (GBP/kW/yr, nominal) for delivery years auctioned before 2025:
+# 2024/25 18.00, 2025/26 30.59, 2026/27 63.00, 2027/28 65.00, 2028/29 60.00 (EMR Delivery Body T-4
+# results; ASSUMPTION to confirm against the published results). The model gives existing
+# dispatchable plant these one-year agreements for the delivery years before its own first T-4 auction.
+LEGACY_CM_PRICE = {2025: 30.59, 2026: 63.00, 2027: 65.00, 2028: 60.00}
+# Renewables Obligation: closed to new capacity in 2017, support for at most 20 years, scheme ends 2037.
+RO_LAST_ONLINE, RO_YEARS, RO_SCHEME_END = 2017, 20, 2037
 
 
 @dataclass

@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 from .agents import GenCo, Plant
-from .config import (TECHS, VRE_TECHS, STORAGE_TECHS, INITIAL_FLEET_MW, EXISTING_FLEET_EFFICIENCY,
+from .config import (LEGACY_CM_PRICE, CPI_2012_TO_2024, RO_LAST_ONLINE, RO_SCHEME_END, RO_YEARS, TECHS, VRE_TECHS, STORAGE_TECHS, INITIAL_FLEET_MW, EXISTING_FLEET_EFFICIENCY,
                      NESO_CI_FACTORS, Policy, Fuels, BATTERY_ANCILLARY_POT, BATTERY_TRADING_PER_MW_VRE,
                      BATTERY_FLEET_FLOOR_MW)
 from .data import PyPSAGBData
@@ -154,10 +154,7 @@ class GBMarketModel(ModelBase):
         return p
 
     def _init_fleet(self):
-        strikes = self.data.cfd_strikes
-        infl = 1.45  # ASSUMPTION: 2012 -> 2024 prices
-        mean_strike = {t: strikes[strikes.technology == k].strike_price_gbp_per_mwh_2012.mean() * infl
-                       for t, k in [("wind_offshore", "offshore"), ("wind_onshore", "onshore"), ("solar", "solar")]}
+        mean_strike = self.legacy_cfd_strikes()
         for tech, total in INITIAL_FLEET_MW.items():
             if tech == "nuclear":
                 continue
@@ -172,18 +169,36 @@ class GBMarketModel(ModelBase):
                     online = self.start - age
                     kw = {}
                     if tech in VRE_TECHS:
-                        if self.rng.random() < 0.5:
-                            kw = dict(support="ro")
+                        if self.rng.random() < 0.5 and online <= RO_LAST_ONLINE:
+                            kw = dict(support="ro", ro_end=min(online + RO_YEARS - 1, RO_SCHEME_END))
+                        elif online <= RO_LAST_ONLINE:
+                            kw = dict(support="cfd", strike=mean_strike.get(tech, 80.0), cfd_end=online + 14)
                         else:
-                            kw = dict(support="cfd", strike=mean_strike.get(tech, 80.0), cfd_end=online + 15)
+                            kw = dict(support="cfd", strike=mean_strike.get(tech, 80.0), cfd_end=online + 14)
                     retire = 2100 if tech in ("hydro", "pumped_hydro") else online + life - 1
                     if tech in EXISTING_FLEET_EFFICIENCY:
                         new, old = EXISTING_FLEET_EFFICIENCY[tech]
                         kw["efficiency"] = new + (old - new) * age / (life - 1)
                     self.new_plant(owner, tech, zone, total * s / 2, online, retire, **kw)
+        # agreements from T-4 auctions held before the model starts (delivery years before its first T-4)
+        for p in self.plants:
+            if p.tech not in VRE_TECHS and p.support not in ("cfd", "ro"):
+                p.cm_legacy = {y: c for y, c in LEGACY_CM_PRICE.items() if y < self.start + 4 and p.active(y)}
         for i, (mw, on, ret, zone, av) in enumerate(NUCLEAR_UNITS):
-            kw = dict(support="cfd", strike=128.0, cfd_end=on + 35) if on >= 2030 else {}
+            kw = dict(support="cfd", strike=92.50 * CPI_2012_TO_2024, cfd_end=on + 34) if on >= 2030 else {}
             self.new_plant(self.gencos[i % 2], "nuclear", zone, mw, on, ret, availability=av, **kw)
+
+    def legacy_cfd_strikes(self):
+        """Capacity-weighted strike (GBP/MWh, 2024 prices) of CfD contracts delivering by the start year."""
+        s = self.data.cfd_strikes
+        s = s[(s.capacity_mw > 0) & (s.delivery_year.astype(str).str[:4].astype(int) <= self.start)]
+        out = {}
+        for tech, k in [("wind_offshore", "offshore"), ("wind_onshore", "onshore"), ("solar", "solar")]:
+            t = s[s.technology == k]
+            if len(t):
+                out[tech] = float((t.strike_price_gbp_per_mwh_2012 * t.capacity_mw).sum() / t.capacity_mw.sum()
+                                  * CPI_2012_TO_2024)
+        return out
 
     def active(self, year):
         return [p for p in self.plants if p.active(year)]
@@ -332,13 +347,13 @@ class GBMarketModel(ModelBase):
                 diff = float(((p.strike - price) * q).sum())
                 extra += diff
                 cfd_cost += diff
-            elif p.support == "ro":
+            elif p.support == "ro" and year <= p.ro_end:
                 extra += self.policy.ro_value * e
                 ro_cost += self.policy.ro_value * e
-            cm = p.cm_price * 1000 * p.mw * t.derating if year <= p.cm_end else 0.0
+            cm = p.cm_payment_price(year) * 1000 * p.mw * t.derating
             cm_cost += cm
             profit = rev + extra + cm - var - t.fom * 1000 * p.mw
-            acc.append((p, profit, rev, e))
+            acc.append((p, profit, cm))
             gen_by_tech[p.tech] = gen_by_tech.get(p.tech, 0) + e
             if t.fuel is not None:
                 fuel_mwh = e / (p.efficiency or t.efficiency)
@@ -349,20 +364,21 @@ class GBMarketModel(ModelBase):
         for tech, net in res["storage"].items():
             sp = [p for p in plants if p.tech == tech]
             tot = sum(p.mw for p in sp)
-            rev = float((price * net).sum())
+            rev = float((price * net).sum()) - TECHS[tech].vom * float(np.clip(net, 0, None).sum())
             svc = self.battery_services_per_mw(plants) if tech == "battery" else 0.0
             cm_t = 0.0
             for p in sp:
                 rev_p = rev * p.mw / tot + svc * p.mw
-                cm = p.cm_price * 1000 * p.mw * TECHS[tech].derating if year <= p.cm_end else 0.0
+                cm = p.cm_payment_price(year) * 1000 * p.mw * TECHS[tech].derating
                 cm_cost += cm
                 cm_t += cm
-                acc.append((p, rev_p + cm - TECHS[tech].fom * 1000 * p.mw, rev_p, 0))
+                acc.append((p, rev_p + cm - TECHS[tech].fom * 1000 * p.mw, cm))
             gen_by_tech[tech] = float(np.clip(net, 0, None).sum())
             if tech == "battery" and tot > 0:
                 batt = dict(arbitrage=rev / tot, services=svc, cm=cm_t / tot)
-        for p, profit, rev, e in acc:
+        for p, profit, cm in acc:
             p.history.append((year, profit))
+            p.energy_history.append((year, profit - cm))
             p.loss_years = p.loss_years + 1 if profit < 0 else 0
         return dict(cfd_cost=cfd_cost, ro_cost=ro_cost, cm_cost=cm_cost, gen=gen_by_tech,
                     emissions_t=em, gas_burn_twh=gas_burn / 1e6, battery=batt)
@@ -418,17 +434,19 @@ class GBMarketModel(ModelBase):
         pipeline at t+3 held, plus wind and solar growing at their recent build rate (cannibalisation),
         plus peaking capacity that keeps the de-rated margin at the CM target (investors expect the system
         to stay adequate). Fuel, carbon and demand are those of the horizon year."""
+        key = (self.year, offsets, self._pid)          # refreshed after every new plant
         cache = getattr(self, "_horizon_cache", None)
-        if cache is not None and cache[0] == (self.year, offsets):
+        if cache is not None and cache[0] == key:
             return cache[1]
         y0 = self.year + 3
-        base = [p for p in self.plants if p.active(y0)]
+        margin = self.policy.cm_reliability_margin if self.policy.cm_enabled else 0.0
         out = {}
         for off in offsets:
             h = self.year + off
+            base = [p for p in self.plants if p.active(h)]     # committed plant online at h, retirements out
             extra = []
             for tech in sorted(VRE_TECHS):
-                now = sum(p.mw for p in base if p.tech == tech)
+                now = sum(p.mw for p in self.plants if p.tech == tech and p.active(y0))
                 before = sum(p.mw for p in self.plants if p.tech == tech and p.active(y0 - 5))
                 add = max(now - before, 0.0) / 5 * (h - y0)
                 if add > 0:
@@ -438,20 +456,26 @@ class GBMarketModel(ModelBase):
             peak = float((b + heat + ev).max())
             _, _, ic_cap, _ = self.interconnector_blocks(h)
             firm = sum(p.mw * TECHS[p.tech].derating for p in base + extra) + 0.45 * ic_cap
-            short = peak * (1 + self.policy.cm_reliability_margin) - firm
+            short = peak * (1 + margin) - firm     # energy-only market: firm capacity just meets peak
             if short > 0:
                 extra.append(Plant(-1 - len(extra), self.gencos[0], "ocgt", "GB", short / TECHS["ocgt"].derating,
                                    self.year, h + 50))
             out[h] = self.run_market(h, base + extra)["price"]
-        self._horizon_cache = ((self.year, offsets), out)
+        self._horizon_cache = (key, out)
         return out
 
-    def expected_margin_per_mw(self, tech, price, agent, include_cm=True, fleet_year=None, extra_mw=None):
-        """Expected annual margin per MW. *fleet_year*: year whose (pipeline) battery fleet shares the
-        battery service pots; default = first operating year (CM new build passes its delivery year).
-        *extra_mw*: new battery MW added to that fleet (default: the candidate chunk itself)."""
+    def expected_margin_per_mw(self, tech, price, agent, include_cm=True, fleet_year=None, extra_mw=None,
+                               price_year=None, vre_haircut=0.15):
+        """Expected annual margin per MW on the hourly *price* series for *price_year* (default t+3, the
+        year of the model's investment forecast): fuel and carbon costs are taken in that same year, with
+        the agent's carbon belief. *fleet_year*: year whose (pipeline) battery fleet shares the battery
+        service pots; default = first operating year (CM new build passes its delivery year).
+        *extra_mw*: new battery MW added to that fleet (default: the candidate chunk itself).
+        *vre_haircut*: discount on wind and solar capture value standing in for cannibalisation over the
+        asset's life when only one forecast year is used (0 when the forecasts already include it)."""
         t = TECHS[tech]
-        yr = self.year + t.lead_time
+        yr = self.year + t.lead_time                    # first operating year
+        py = self.year + 3 if price_year is None else price_year
         if tech in STORAGE_TECHS:
             net = storage_arbitrage(price, 1.0, STORAGE_TECHS[tech], t.efficiency)
             m = float((price * net).sum()) - t.vom * np.clip(net, 0, None).sum()
@@ -460,9 +484,9 @@ class GBMarketModel(ModelBase):
                 extra = t.chunk_mw if extra_mw is None else extra_mw
                 m += self.battery_services_per_mw([p for p in self.plants if p.active(fy)], extra)
         elif tech in VRE_TECHS:
-            m = float((price * self.cf_profile(tech)).sum()) * 0.85   # capture-price haircut
+            m = float((price * self.cf_profile(tech)).sum()) * (1 - vre_haircut)
         else:
-            srmc = self.srmc(tech, yr, agent.expected_carbon(yr))
+            srmc = self.srmc(tech, py, agent.expected_carbon(py))
             m = float(np.clip(price - srmc, 0, None).sum()) * t.availability
         if include_cm and self.policy.cm_enabled and tech not in VRE_TECHS:
             m += self.cm_clearing * 1000 * t.derating
@@ -519,6 +543,21 @@ class GBMarketModel(ModelBase):
         self.cfd_last = dict(awarded_mw=sum(mw.values()), budget_gbp=sum(budgets) if budgets else np.nan)
         return built
 
+    def existing_gross_margin_kw(self, p, price_fc):
+        """Expected annual gross margin (before FOM, excluding CM payments) of an existing plant, GBP/kW:
+        the mean of its last two years, or, without history, its margin on the price forecast."""
+        t = TECHS[p.tech]
+        if p.energy_history:
+            net = float(np.mean([h for _, h in p.energy_history[-2:]]))
+            return net / (p.mw * 1000) + t.fom
+        if price_fc is None:
+            return t.fom
+        if p.tech in STORAGE_TECHS:
+            return self.expected_margin_per_mw(p.tech, price_fc, p.owner, include_cm=False) / 1000
+        srmc = self.plant_srmc(p, self.year + 3)
+        avail = p.availability if p.availability is not None else t.availability
+        return float(np.clip(price_fc - srmc, 0, None).sum()) * avail / 1000
+
     def cm_auction(self, year, price_fc=None, ahead=4):
         """T-4 (ahead=4) or T-1 (ahead=1) Capacity Market auction. The system operator
         (ukabm.institutions.SystemOperator) sets the target; supported (CfD/RO) plant is outside the CM
@@ -535,11 +574,10 @@ class GBMarketModel(ModelBase):
             if p.active(dy) and p.support not in ("cfd", "ro"):
                 if p.tech in VRE_TECHS:
                     continue
-                if ahead == 1 and p.cm_end >= dy:      # already holds an agreement covering dy
+                if p.cm_held(dy):                      # already holds an agreement covering dy
                     continue
                 t = TECHS[p.tech]
-                margin_kw = max(np.mean([h for _, h in p.history[-2:]]) / (p.mw * 1000), 0) if p.history else 0
-                bid = p.owner.cm_bid(p, margin_kw + t.fom, new=False)   # history is net of FOM
+                bid = p.owner.cm_bid(p, self.existing_gross_margin_kw(p, price_fc), new=False)
                 offers.append((min(bid, self.policy.cm_price_cap), p.mw * t.derating, p))
         # new-build bids are priced on the investment forecast (t+3, known fuel and carbon paths) when
         # given, not on the latest outturn year, which mis-prices plant delivered 4 years later after a
@@ -563,6 +601,8 @@ class GBMarketModel(ModelBase):
                         offers.append((bid * (1 + 0.03 * k), t.chunk_mw * t.derating, (g, tech)))
         offers += self._cm_battery_supply(batt, price_fc, dy)
         offers.sort(key=lambda x: x[0])
+        if ahead == 1 and target <= 0:          # nothing missing: no T-1 auction
+            return []
         lo, hi, cap = target - 1500, target + 1500, self.policy.cm_price_cap
 
         def demand_price(q):  # linear sloping demand curve (PyPSA-GB parameters style)
@@ -583,13 +623,13 @@ class GBMarketModel(ModelBase):
         new, batt_svc = [], None
         for who in accepted:
             if isinstance(who, Plant):
-                who.cm_price, who.cm_end = clearing, dy
+                who.cm_price, who.cm_start, who.cm_end = clearing, dy, dy      # one-year agreement
             elif isinstance(who, tuple):
                 g, tech = who[:2]
                 if tech == "battery":
                     batt_svc = who[2]      # expected services of the marginal accepted battery chunk
                 new.append(self.new_plant(g, tech, self.choose_zone(tech), TECHS[tech].chunk_mw, dy,
-                                          cm_price=clearing, cm_end=dy + 14))
+                                          cm_price=clearing, cm_start=dy, cm_end=dy + 14))
         self.cm_log = getattr(self, "cm_log", [])
         self.cm_log.append(dict(year=dy, clearing=clearing, procured_mw=q, target_mw=target, peak=peak, n_offers=len(offers), offered=sum(o[1] for o in offers), ahead=ahead))
         if ahead != 4:
@@ -669,7 +709,8 @@ class GBMarketModel(ModelBase):
         retired = 0.0
         for p in plants:
             t = TECHS[p.tech]
-            if p.tech in ("ccgt", "ocgt", "biomass", "battery") and p.loss_years >= 2 and p.cm_end < y + 1:
+            if (p.tech in ("ccgt", "ocgt", "biomass", "battery", "gas_ccs", "h2_turbine") and p.loss_years >= 2
+                    and not any(p.cm_held(z) for z in range(y + 1, y + 5))):
                 p.retire = y
                 retired += p.mw
         # investment
@@ -735,6 +776,7 @@ class GBMarketModel(ModelBase):
             done = False
             for i in order:
                 g = self.gencos[i]
+                g.budget_left = budgets[g.name]
                 d = g.decide_investment(price_fc)
                 if d and budgets[g.name] > 0:
                     tech, mw, npv = d
@@ -795,7 +837,7 @@ class GBMarketModel(ModelBase):
             if p.tech == "nuclear":
                 bids[:, j] = NUCLEAR_BM_BID
             elif p.tech in VRE_TECHS or p.tech == "hydro":
-                if p.support == "ro":
+                if p.support == "ro" and year <= p.ro_end:
                     bids[:, j] = -self.policy.ro_value
                 elif p.support == "cfd" and year <= p.cfd_end:
                     bids[:, j] = -(p.strike - price)     # > 0 above the strike: turn-down saves the payback

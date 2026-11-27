@@ -28,11 +28,16 @@ def main():
     tasks = [("competitive_benchmark", s, [], "competitive_benchmark") for s in a.seeds]
     out = run_many(tasks, jobs=a.jobs, end=a.end)
     res = ROOT / "results"
-    for k, df in out.items():
-        df.to_csv(res / f"convergence_{k}.csv", index=False)
+    for k in ("costs", "capacity", "annual"):
+        out[k].to_csv(res / f"convergence_{k}.csv", index=False)
+    for label, seed, err in out["failed"]:
+        print(f"FAILED: {label} seed {seed}: {err}")
     s = summarise(out["costs"])
     cap = out["capacity"]
-    last = cap[cap.year == cap.year.max()].pivot_table(index="tech", columns="pathway", values="gw", aggfunc="median")
+    last = cap[cap.year == cap.year.max()]
+    # a technology absent in a seed counts as 0 GW there (rows exist only for technologies present)
+    last = (last.pivot_table(index=["tech", "pathway"], columns="seed", values="gw", aggfunc="sum")
+            .reindex(columns=sorted(cap.seed.unique())).fillna(0.0).median(axis=1).unstack("pathway"))
     lines = [
         f"# Convergence test: competitive benchmark vs the least-cost plan ({min(a.seeds)}–{max(a.seeds)} seeds, 2025–{a.end})",
         "",

@@ -5,3 +5,4 @@ results/*.pkl
 results_*.log
 *.egg-info/
 .venv/
+site/

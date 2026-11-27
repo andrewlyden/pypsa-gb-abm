@@ -31,7 +31,7 @@ import numpy as np
 
 import pandas as pd
 
-from .config import (CFD_TARGET_GW, GOVERNMENT_BILLS, GOVERNMENT_POLITICAL, GOVERNMENT_TARGETS,
+from .config import (VRE_TECHS, CFD_TARGET_GW, GOVERNMENT_BILLS, GOVERNMENT_POLITICAL, GOVERNMENT_TARGETS,
                      SYSTEM_OPERATOR, TECHS)
 
 CFD_TECHS = ("wind_offshore", "wind_onshore", "solar")
@@ -283,12 +283,13 @@ class SystemOperator:
         m = self.model
         load = self.load(dy)
         peak = float(load.max())
+        # outside the CM but counting towards security of supply: supported (CfD/RO) plant and all wind
+        # and solar, whatever its route to market (merchant and PPA renewables do not take part in the CM)
+        supported = [p for p in m.plants if p.active(dy) and (p.support in ("cfd", "ro") or p.tech in VRE_TECHS)]
         if self.mode == "formula":
             target = peak * (1 + m.policy.cm_reliability_margin)
-            target -= sum(p.mw * TECHS[p.tech].derating for p in m.plants
-                          if p.active(dy) and p.support in ("cfd", "ro"))
+            target -= sum(p.mw * TECHS[p.tech].derating for p in supported)
             return target, peak
-        supported = [p for p in m.plants if p.active(dy) and p.support in ("cfd", "ro")]
         net = np.asarray(load, dtype=float).copy()
         for tech in sorted({p.tech for p in supported}):
             mw = sum(p.mw for p in supported if p.tech == tech)
@@ -302,14 +303,16 @@ class SystemOperator:
         """Target for the auction held in *year* for delivery *dy* (*ahead* = 4 or 1)."""
         target, peak = self.full_target(dy)
         full = target
+        m = self.model
+        # capacity already holding an agreement for dy (multi-year new-build agreements, earlier T-4)
+        held = sum(p.mw * TECHS[p.tech].derating for p in m.plants if p.active(dy) and p.cm_held(dy))
         if ahead == 4:
             if self.t1:
                 target *= 1 - self.params["t1_holdback"]
+            target -= held
         else:   # T-1: what is still missing after agreements already covering dy and interconnectors
-            m = self.model
             _, _, ic_cap, _ = m.interconnector_blocks(dy)
-            held = sum(p.mw * TECHS[p.tech].derating for p in m.plants
-                       if p.active(dy) and p.support not in ("cfd", "ro") and p.cm_end >= dy)
             target = max(target - held - 0.45 * ic_cap, 0.0)
-        self.log.append(dict(year=year, delivery=dy, ahead=ahead, target_mw=target, full_mw=full, peak_mw=peak))
+        self.log.append(dict(year=year, delivery=dy, ahead=ahead, target_mw=target, full_mw=full, held_mw=held,
+                             peak_mw=peak))
         return target, peak

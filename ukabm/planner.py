@@ -36,10 +36,15 @@ def _quiet():
         logging.getLogger(name).setLevel(logging.ERROR)
 
 
-def _avail(model, u, hours):
+def _avail(model, u, hours, weights=None):
+    """Availability of *u* in the sampled *hours*. With *weights* (a sample), wind and solar profiles
+    are rescaled so their weighted sample mean equals the annual mean (sampling noise removed)."""
     cf = model.cf_profile(u.tech)
     if cf is not None:
-        return cf[hours]
+        x = cf[hours]
+        if weights is not None:
+            x = np.clip(x * cf.mean() / max(float((x * weights).sum() / weights.sum()), 1e-9), 0, 1)
+        return x
     a = TECHS[u.tech].availability if u.availability is None else u.availability
     return np.full(len(hours), a)
 
@@ -79,7 +84,8 @@ def evaluate(model, year: int, units, load: np.ndarray, hours=None) -> dict:
     units = [u for u in units if u.active(year)]
     n = pypsa.Network()
     n.set_snapshots(pd.RangeIndex(len(hours)))
-    n.snapshot_weightings = n.snapshot_weightings.astype(float).assign(**{c: w for c in n.snapshot_weightings.columns})
+    # objective and generator energy scale with the sampling weight; storage steps one hour per snapshot
+    n.snapshot_weightings = n.snapshot_weightings.astype(float).assign(objective=w, generators=w, stores=1.0)
     n.add("Bus", "GB")
     n.add("Load", "load", bus="GB", p_set=load[hours])
     n.add("Generator", "shed", bus="GB", p_nom=1e6, marginal_cost=model.policy.voll)
@@ -147,15 +153,31 @@ class Plan:
     hours: np.ndarray | None = None
 
 
-def sample_hours(model, loads: dict, every: int = 7) -> np.ndarray:
-    """Every *every*-th day plus, for each period, the day with the highest load net of wind."""
+def sample_days(model, loads: dict, every: int = 7):
+    """One day in every *every* days, the position within each block rotating so that every weekday is
+    sampled equally often, plus for each period the day with the highest load net of wind. Returns
+    (ordinary days, peak days), each sorted."""
     days = model.H // 24
-    keep = set(range(every // 2, days, every))
+    ordinary = {b + (k % every) for k, b in enumerate(range(0, days - every + 1, every))}
     wind = model.cf_profile("wind_offshore")
+    peak = set()
     for load in loads.values():
         net = load[:days * 24] - 30000 * wind[:days * 24]
-        keep.add(int(np.argmax(net)) // 24)
-    return np.concatenate([np.arange(d * 24, d * 24 + 24) for d in sorted(keep)])
+        peak.add(int(np.argmax(net)) // 24)
+    return sorted(ordinary), sorted(peak - ordinary)
+
+
+def sample_hours(model, loads: dict, every: int = 7) -> np.ndarray:
+    ordinary, peak = sample_days(model, loads, every)
+    return np.concatenate([np.arange(d * 24, d * 24 + 24) for d in sorted(ordinary + peak)])
+
+
+def sample_weights(model, loads: dict, every: int = 7) -> np.ndarray:
+    """Hours represented by each sampled hour (same order as ``sample_hours``): a peak day stands for
+    itself (weight 1); the ordinary days share the rest of the year. Sums to model.H."""
+    ordinary, peak = sample_days(model, loads, every)
+    w_ord = (model.H - 24 * len(peak)) / (24 * len(ordinary))
+    return np.concatenate([np.full(24, 1.0 if d in peak else w_ord) for d in sorted(ordinary + peak)])
 
 
 def plan(model, loads: dict, rate: float = SOCIAL_DISCOUNT_RATE, build_limits: dict | None = None,
@@ -168,12 +190,14 @@ def plan(model, loads: dict, rate: float = SOCIAL_DISCOUNT_RATE, build_limits: d
     periods = sorted(loads)
     step = periods[1] - periods[0] if len(periods) > 1 else 5
     hours = sample_hours(model, loads, every_nth_day)
-    w = model.H / len(hours)
+    w = sample_weights(model, loads, every_nth_day)      # hours each sampled hour represents
     n = pypsa.Network()
     snaps = pd.MultiIndex.from_product([periods, range(len(hours))], names=["period", "timestep"])
     n.set_snapshots(snaps)
     n.investment_periods = periods
-    n.snapshot_weightings = n.snapshot_weightings.astype(float).assign(**{c: w for c in n.snapshot_weightings.columns})
+    # objective and generator energy scale with the sampling weight; storage steps one hour per snapshot
+    wt = np.tile(w, len(periods))
+    n.snapshot_weightings = n.snapshot_weightings.astype(float).assign(objective=wt, generators=wt, stores=1.0)
     start = periods[0]
     n.investment_period_weightings["years"] = float(step)
     n.investment_period_weightings["objective"] = [
@@ -204,7 +228,7 @@ def plan(model, loads: dict, rate: float = SOCIAL_DISCOUNT_RATE, build_limits: d
                   cyclic_state_of_charge=True, cyclic_state_of_charge_per_period=True)
         else:
             n.add("Generator", name, bus="GB", p_nom=mw, build_year=by, lifetime=life,
-                  p_max_pu=per_period(lambda p: _avail(model, u, hours)),
+                  p_max_pu=per_period(lambda p: _avail(model, u, hours, w)),
                   marginal_cost=per_period(lambda p: model.srmc(tech, p, efficiency=eff)))
     # new build: one extendable asset per technology and period
     for p in periods:
@@ -229,7 +253,7 @@ def plan(model, loads: dict, rate: float = SOCIAL_DISCOUNT_RATE, build_limits: d
             else:
                 u = Unit(tech, 1.0, p, p)
                 n.add("Generator", name, bus="GB", p_nom_extendable=True, p_nom_max=cap, capital_cost=cc,
-                      build_year=p, lifetime=t.life, p_max_pu=per_period(lambda q: _avail(model, u, hours)),
+                      build_year=p, lifetime=t.life, p_max_pu=per_period(lambda q: _avail(model, u, hours, w)),
                       marginal_cost=per_period(lambda q: model.srmc(tech, q)))
     # trade and electrolysers: one asset per period (capacity and prices change by period)
     for p in periods:

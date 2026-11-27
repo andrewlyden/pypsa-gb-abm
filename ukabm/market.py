@@ -133,7 +133,7 @@ def valley_fill(energy_per_day: np.ndarray, signal: np.ndarray, max_mw: float, h
             m[list(hours_window)] = True
             cap[~m] = 0.0
         E = min(E, cap.sum())
-        lo, hi = r.min(), r.max() + E / max(cap.max(), 1e-9) + 1
+        lo, hi = r.min(), r.max() + cap.max() + 1     # at hi every window hour charges at full cap
         for _ in range(50):
             L = 0.5 * (lo + hi)
             if np.clip(L - r, 0, cap).sum() > E:

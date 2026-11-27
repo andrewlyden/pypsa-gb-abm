@@ -36,14 +36,28 @@ class Plant:
     strike: float = 0.0          # CfD strike GBP/MWh
     cfd_end: int = 0
     cm_price: float = 0.0        # GBP/kW/yr
+    cm_start: int = 0            # first delivery year of the CM agreement (paid cm_start..cm_end)
     cm_end: int = 0
+    ro_end: int = 0              # last year of Renewables Obligation support
+    cm_legacy: dict = field(default_factory=dict)        # {delivery year: GBP/kW} agreements pre-dating the model
     loss_years: int = 0
-    history: list = field(default_factory=list)
+    history: list = field(default_factory=list)          # (year, profit incl. support and CM)
+    energy_history: list = field(default_factory=list)   # (year, profit excl. CM payments)
     availability: float | None = None   # overrides Tech.availability (e.g. legacy AGR fleet)
     efficiency: float | None = None     # overrides Tech.efficiency (e.g. older CCGT fleet)
 
     def active(self, year):
         return self.online <= year <= self.retire
+
+    def cm_held(self, year):
+        """True if a Capacity Market agreement covers delivery *year*."""
+        return year in self.cm_legacy or (self.cm_start <= year <= self.cm_end and self.cm_end > 0)
+
+    def cm_payment_price(self, year):
+        """GBP/kW de-rated paid for delivery *year* (0 without an agreement)."""
+        if year in self.cm_legacy:
+            return self.cm_legacy[year]
+        return self.cm_price if self.cm_held(year) else 0.0
 
 
 class GenCo(AgentBase):

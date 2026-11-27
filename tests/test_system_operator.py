@@ -37,7 +37,8 @@ def test_reliability_standard_matches_the_published_t4_target():
     # gives ~49 GW; the reliability standard should be within 10 %.
     m = model(system_operator="standard")
     full, _ = m.operator.full_target(2029)
-    assert abs(full / 1e3 - 39.4) / 39.4 < 0.10
+    t4 = full * (1 - m.operator.params["t1_holdback"])       # the published 39.4 GW is the T-4 target after holdback
+    assert abs(t4 / 1e3 - 39.4) / 39.4 < 0.05
     assert m.operator.full_target(2029)[0] < model().operator.full_target(2029)[0]
 
 
@@ -46,7 +47,8 @@ def test_holdback_goes_to_t1_auctions(standard_run):
     log = pd.DataFrame(m.operator.log)
     h = m.operator.params["t1_holdback"]
     t4 = log[log.ahead == 4]
-    assert (t4.target_mw - t4.full_mw * (1 - h)).abs().max() < 1e-6
+    # T-4 buys the full target less the T-1 holdback and less capacity already holding agreements
+    assert (t4.target_mw - (t4.full_mw * (1 - h) - t4.held_mw)).abs().max() < 1e-6
     t1 = log[log.ahead == 1]
     assert (t1.target_mw <= t1.full_mw).all()
     cm = pd.DataFrame(m.cm_log)

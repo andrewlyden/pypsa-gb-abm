@@ -66,6 +66,28 @@ bills, political), compared as levers. [items 2, 6]
   strategic investment such as pre-empting rivals; plants retire after two loss-making years or at end of
   life, with no life-extension or mothballing decisions.
 
+### What the agents cannot yet express
+
+Mapped onto the sources the deck names:
+
+| source | the agents now | missing | item |
+|---|---|---|---|
+| market and plan design | government and system-operator agents, CfD and CM rules, objectives as levers | regulator, transmission planning | 2–6, 27 |
+| limited information | firms differ only in their carbon belief; every forecast is a perfect model run on the true paths | forecast errors, learning, heterogeneous information | 34, 36 |
+| cost of capital and risk | a fixed WACC and a flat risk haircut in a deterministic world | uncertain futures, risk-based decisions, risk-dependent cost of capital | 35, 37 |
+| strategic behaviour | static mark-ups (transfers) | withholding, pre-emption, bid shading, portfolio effects, BM gaming | 38, 24, 25 |
+| path dependence | sequential, lumpy decisions with lead times | pipeline, learning-curve costs | 18, 19 |
+| not yet identified | — | suppliers and PPAs, household flexibility, EV adoption | 39 |
+
+Uncertainty (item 35) comes first among these: without it, limited information and risk cannot arise,
+and the insurance value of CfDs and the Capacity Market is invisible to the gap.
+
+**Built for learning and LLM agents.** Every firm decision goes through `ukabm.decisions.DecisionMaker`,
+one instance per firm (so a learner keeps its own state), selectable per firm by scenario; governments
+and system operators are registered classes in `ukabm.institutions`. What is still missing for Q-learning
+and LLM agents is item 34: an explicit observation (what the agent may know), a declared action space
+and a reward, so that a learning or LLM agent cannot read the model's true future.
+
 ## 3. What is "optimal", and is the comparison fair?
 
 * **No convergence test.** Under textbook conditions (energy-only market priced at VoLL in scarcity,
