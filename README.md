@@ -18,7 +18,7 @@ and hydrogen.
 ## Quick start
 ```bash
 pip install -e .            # numpy pandas scipy matplotlib mesa pypsa highspy
-pytest -q                   # 54 tests, ~9 min
+pytest -q                   # 59 tests, ~9 min
 python scripts/run_scenarios.py baseline --end 2030      # ~40 s
 python scripts/run_scenarios.py                          # all 6 scenarios 2025-2050 (~4 min each)
 python scripts/make_plots.py                             # -> docs/figures/
@@ -184,10 +184,10 @@ re-run `scripts/run_gap.py` and update [docs/gap.md](docs/gap.md).
    at the expected strike, caps raised after a failed round, budgets cut above a £30/MWh levy). Tests in
    `tests/test_government.py`. `targets` becomes the default once items 3–6 are in, and the gap is
    re-run then.
-3. **CfD bids from expectations.** A firm bids the lowest strike that meets its hurdle NPV on its own
-   forecast of reference prices, capture rates and costs (replacing levelised cost ± noise; the forecast
-   is already passed to `cfd_bid` but unused). Firms abstain when the cap is below that strike, and a
-   winning project can be withdrawn before its final investment decision if costs rise.
+3. ✅ **CfD bids from expectations.** Done: `decision_logic: "expectations"` (`ExpectationBids` in
+   `ukabm/decisions.py`): lowest strike meeting the hurdle rate over a 20-year CfD plus a merchant tail
+   valued at the firm's own capture-price view; risk premium; firms abstain above the cap. Withdrawal
+   after winning waits for cost trajectories (item 19). Becomes the default with item 2's `targets`.
 4. **Merchant and PPA renewables; lifetime forecasts.** Let wind and solar be built on merchant NPV, with
    a PPA option at a discount, alongside CfDs. Forecast prices at each technology's online year (lead
    time) and at two later years, and use the declining margin in the NPV, replacing the single t+3

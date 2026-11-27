@@ -90,6 +90,15 @@ per technology a year, so the supply of bids, not the government, limits early r
 (up to 10 GW offshore a year; the developer pipeline is item 18). New annual columns:
 `cfd_awarded_mw`, `cfd_budget_bn`; per-round detail in `model.government.log`.
 
+### CfD bids from expectations (`decision_logic: "expectations"`)
+`ExpectationBids` replaces the levelised-cost bid with the lowest strike at which the project meets the
+firm's hurdle rate: a 20-year two-way CfD at the de-risked rate (WACC − 2.5 points, floor 3.5 %), 2 % of
+output unpaid (basis), then a merchant tail to the end of the asset's life at the firm's WACC, valued at
+the firm's own capture-price view (myopic: this year's prices; adaptive: the t+3 forecast less 15 %;
+carbon optimist: the forecast). Risk aversion adds a premium; ±2 % noise stands for project costs. A
+firm whose required strike is above the cap is excluded (abstains). Other decisions are `RuleBased`.
+Not yet the default (with the `targets` government, after items 4–6).
+
 ## Multi-energy hooks (extension points)
 * `HeatModule.hourly_load` — swap synthetic temperature for PyPSA-GB atlite cutouts; add HP flexibility.
 * `GasNetworkModule.update(h2_blend=…)` — hydrogen blending / network repurposing.

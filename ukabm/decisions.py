@@ -150,3 +150,55 @@ def for_genco(scenario: dict, genco_name: str) -> DecisionMaker:
     if isinstance(spec, dict):
         spec = spec.get(genco_name, "rules")
     return make(spec)
+
+
+class ExpectationBids(RuleBased):
+    """CfD bids from the firm's own expectations (README roadmap item 3); other decisions as RuleBased.
+
+    The bid is the lowest strike at which the project meets the firm's hurdle rate:
+
+        capex = PV_contract(strike x gen x (1 - basis) - FOM)  +  PV_tail(capture x gen - FOM)
+
+    over a 20-year two-way CfD at the de-risked rate (WACC - 2.5 points, floor 3.5 %), then a merchant
+    tail to the end of the asset's life at the firm's WACC. The tail capture price is the firm's view:
+    *myopic* firms take this year's capture price, *adaptive* firms the t+3 forecast less a 15 %
+    cannibalisation haircut, *carbon optimists* the t+3 forecast without the haircut. Risk aversion adds
+    a premium on the required revenue, and ±2 % noise (from ``model.rng``) stands for project-specific
+    costs. A firm whose required strike is above the cap is excluded by the auction (it abstains).
+    Withdrawal after winning needs cost uncertainty, which arrives with cost trajectories (item 19).
+    """
+
+    name = "expectations"
+    CONTRACT_YEARS = 20
+    BASIS = 0.02          # share of contracted output not paid the strike (curtailment, negative hours)
+    HAIRCUT = 0.15        # adaptive firms' cannibalisation haircut on the forecast capture price
+
+    def tail_capture(self, agent, tech, forecast):
+        m = agent.model
+        cf = m.cf_profile(tech)
+        if agent.expectation == "myopic" and m.last_price is not None:
+            price, haircut = m.last_price, 0.0
+        else:
+            price = forecast
+            haircut = 0.0 if agent.expectation == "carbon_optimist" else self.HAIRCUT
+        return float((price * cf).sum() / max(cf.sum(), 1e-9)) * (1 - haircut)
+
+    def cfd_bid(self, agent, tech, forecast):
+        t = TECHS[tech]
+        m = agent.model
+        gen = 8760 * m.capacity_factor(tech)                      # MWh per MW per year
+        n = min(self.CONTRACT_YEARS, t.life)
+        rc = max(agent.wacc - 0.025, 0.035)                       # contracted years
+        rm = agent.wacc                                           # merchant tail
+        a_contract = (1 - (1 + rc) ** -n) / rc
+        a_tail = ((1 - (1 + rm) ** -t.life) / rm - (1 - (1 + rm) ** -n) / rm) if t.life > n else 0.0
+        capex = t.capex * 1000
+        fom = t.fom * 1000
+        tail = max(self.tail_capture(agent, tech, forecast) - t.vom, 0.0) * gen - fom
+        need = capex + fom * a_contract - tail * a_tail          # PV the contract must cover
+        strike = need / (a_contract * gen * (1 - self.BASIS)) + t.vom
+        strike /= max(1 - 0.5 * agent.risk_aversion, 0.5)        # risk premium
+        return strike * (1 + 0.02 * m.rng.standard_normal())
+
+
+REGISTRY["expectations"] = ExpectationBids
