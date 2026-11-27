@@ -1,0 +1,1256 @@
+{
+ "provenance": {
+  "git": "8dec60c",
+  "scenario": "baseline",
+  "seed": 1,
+  "end": 2050,
+  "note": "run for the foundations review with the first version of this script (same calculations), in two processes"
+ },
+ "agents_last": {
+  "battery": 24.5,
+  "ccgt": 17.6,
+  "hydro": 1.5,
+  "nuclear": 6.5,
+  "ocgt": 33.9,
+  "pumped_hydro": 2.9,
+  "solar": 40.9,
+  "wind_offshore": 87.5,
+  "wind_onshore": 34.5
+ },
+ "variants": {
+  "default": {
+   "label": "Default",
+   "pv_planner_bn": 316.43,
+   "pv_agents_bn": 344.93,
+   "gap_bn": 28.5,
+   "gap_pct": 9.01,
+   "planner_last": {
+    "battery": 0.3,
+    "ccgt": 7.3,
+    "gas_ccs": 11.7,
+    "hydro": 1.5,
+    "nuclear": 6.5,
+    "ocgt": 7.3,
+    "pumped_hydro": 2.9,
+    "solar": 44.7,
+    "wind_offshore": 40.4,
+    "wind_onshore": 57.5
+   },
+   "planner": {
+    "2025": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 25.72,
+     "capex": 0.0,
+     "fom": 3.417,
+     "fuel": 6.666,
+     "carbon": 1.543,
+     "trade": 0.448,
+     "unserved": 0.0,
+     "h2_value": 0.0
+    },
+    "2030": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 16.68,
+     "capex": 2.889,
+     "fom": 3.811,
+     "fuel": 4.892,
+     "carbon": 1.401,
+     "trade": 0.437,
+     "unserved": 0.0,
+     "h2_value": -0.093
+    },
+    "2035": {
+     "unserved_gwh": 3.3,
+     "emissions_mt": 11.02,
+     "capex": 7.867,
+     "fom": 5.087,
+     "fuel": 2.654,
+     "carbon": 1.19,
+     "trade": -0.625,
+     "unserved": 0.02,
+     "h2_value": -0.608
+    },
+    "2040": {
+     "unserved_gwh": 76.5,
+     "emissions_mt": 10.37,
+     "capex": 10.973,
+     "fom": 5.759,
+     "fuel": 2.627,
+     "carbon": 1.369,
+     "trade": -0.246,
+     "unserved": 0.459,
+     "h2_value": -1.034
+    },
+    "2045": {
+     "unserved_gwh": 109.2,
+     "emissions_mt": 6.73,
+     "capex": 12.963,
+     "fom": 6.131,
+     "fuel": 3.201,
+     "carbon": 1.05,
+     "trade": -0.267,
+     "unserved": 0.655,
+     "h2_value": -1.394
+    },
+    "2050": {
+     "unserved_gwh": 129.2,
+     "emissions_mt": 4.9,
+     "capex": 14.934,
+     "fom": 6.267,
+     "fuel": 3.525,
+     "carbon": 0.881,
+     "trade": -0.401,
+     "unserved": 0.775,
+     "h2_value": -1.753
+    }
+   },
+   "agents": {
+    "2025": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 25.72,
+     "capex": 0.0,
+     "fom": 3.417,
+     "fuel": 6.666,
+     "carbon": 1.543,
+     "trade": 0.448,
+     "unserved": 0.0,
+     "h2_value": 0.0
+    },
+    "2030": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 24.9,
+     "capex": 2.585,
+     "fom": 3.758,
+     "fuel": 6.753,
+     "carbon": 2.092,
+     "trade": -0.106,
+     "unserved": 0.0,
+     "h2_value": -0.038
+    },
+    "2035": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 18.72,
+     "capex": 7.216,
+     "fom": 4.798,
+     "fuel": 4.127,
+     "carbon": 2.021,
+     "trade": -0.324,
+     "unserved": 0.0,
+     "h2_value": -0.333
+    },
+    "2040": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 12.49,
+     "capex": 12.505,
+     "fom": 6.321,
+     "fuel": 3.004,
+     "carbon": 1.648,
+     "trade": -1.076,
+     "unserved": 0.0,
+     "h2_value": -0.925
+    },
+    "2045": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 8.42,
+     "capex": 16.676,
+     "fom": 7.602,
+     "fuel": 2.13,
+     "carbon": 1.314,
+     "trade": -1.542,
+     "unserved": 0.0,
+     "h2_value": -1.705
+    },
+    "2050": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 6.18,
+     "capex": 20.593,
+     "fom": 8.604,
+     "fuel": 1.387,
+     "carbon": 1.112,
+     "trade": -1.813,
+     "unserved": 0.0,
+     "h2_value": -2.611
+    }
+   }
+  },
+  "limits_x0.5": {
+   "label": "Build limits x 0.5",
+   "pv_planner_bn": 326.46,
+   "pv_agents_bn": 344.93,
+   "gap_bn": 18.46,
+   "gap_pct": 5.66,
+   "planner_last": {
+    "ccgt": 6.7,
+    "gas_ccs": 11.6,
+    "hydro": 1.5,
+    "nuclear": 6.5,
+    "ocgt": 7.9,
+    "pumped_hydro": 2.9,
+    "solar": 44.3,
+    "wind_offshore": 60.0,
+    "wind_onshore": 28.8
+   },
+   "planner": {
+    "2025": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 25.72,
+     "capex": 0.0,
+     "fom": 3.417,
+     "fuel": 6.666,
+     "carbon": 1.543,
+     "trade": 0.448,
+     "unserved": 0.0,
+     "h2_value": 0.0
+    },
+    "2030": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 20.86,
+     "capex": 1.673,
+     "fom": 3.368,
+     "fuel": 5.923,
+     "carbon": 1.753,
+     "trade": 1.6,
+     "unserved": 0.0,
+     "h2_value": -0.047
+    },
+    "2035": {
+     "unserved_gwh": 3.2,
+     "emissions_mt": 16.32,
+     "capex": 5.374,
+     "fom": 4.071,
+     "fuel": 4.039,
+     "carbon": 1.763,
+     "trade": 1.514,
+     "unserved": 0.019,
+     "h2_value": -0.328
+    },
+    "2040": {
+     "unserved_gwh": 75.1,
+     "emissions_mt": 10.19,
+     "capex": 9.806,
+     "fom": 5.331,
+     "fuel": 3.856,
+     "carbon": 1.345,
+     "trade": 0.379,
+     "unserved": 0.451,
+     "h2_value": -0.772
+    },
+    "2045": {
+     "unserved_gwh": 112.3,
+     "emissions_mt": 6.43,
+     "capex": 12.843,
+     "fom": 6.224,
+     "fuel": 3.564,
+     "carbon": 1.003,
+     "trade": -0.214,
+     "unserved": 0.674,
+     "h2_value": -1.311
+    },
+    "2050": {
+     "unserved_gwh": 132.5,
+     "emissions_mt": 4.86,
+     "capex": 15.124,
+     "fom": 6.57,
+     "fuel": 3.51,
+     "carbon": 0.876,
+     "trade": -0.345,
+     "unserved": 0.795,
+     "h2_value": -1.751
+    }
+   },
+   "agents": {
+    "2025": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 25.72,
+     "capex": 0.0,
+     "fom": 3.417,
+     "fuel": 6.666,
+     "carbon": 1.543,
+     "trade": 0.448,
+     "unserved": 0.0,
+     "h2_value": 0.0
+    },
+    "2030": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 24.9,
+     "capex": 2.585,
+     "fom": 3.758,
+     "fuel": 6.753,
+     "carbon": 2.092,
+     "trade": -0.106,
+     "unserved": 0.0,
+     "h2_value": -0.038
+    },
+    "2035": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 18.72,
+     "capex": 7.216,
+     "fom": 4.798,
+     "fuel": 4.127,
+     "carbon": 2.021,
+     "trade": -0.324,
+     "unserved": 0.0,
+     "h2_value": -0.333
+    },
+    "2040": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 12.49,
+     "capex": 12.505,
+     "fom": 6.321,
+     "fuel": 3.004,
+     "carbon": 1.648,
+     "trade": -1.076,
+     "unserved": 0.0,
+     "h2_value": -0.925
+    },
+    "2045": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 8.42,
+     "capex": 16.676,
+     "fom": 7.602,
+     "fuel": 2.13,
+     "carbon": 1.314,
+     "trade": -1.542,
+     "unserved": 0.0,
+     "h2_value": -1.705
+    },
+    "2050": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 6.18,
+     "capex": 20.593,
+     "fom": 8.604,
+     "fuel": 1.387,
+     "carbon": 1.112,
+     "trade": -1.813,
+     "unserved": 0.0,
+     "h2_value": -2.611
+    }
+   }
+  },
+  "limits_x2": {
+   "label": "Build limits x 2",
+   "pv_planner_bn": 307.2,
+   "pv_agents_bn": 344.93,
+   "gap_bn": 37.73,
+   "gap_pct": 12.28,
+   "planner_last": {
+    "battery": 0.5,
+    "ccgt": 8.3,
+    "gas_ccs": 8.5,
+    "hydro": 1.5,
+    "nuclear": 6.5,
+    "ocgt": 8.2,
+    "pumped_hydro": 2.9,
+    "solar": 39.1,
+    "wind_offshore": 15.5,
+    "wind_onshore": 111.0
+   },
+   "planner": {
+    "2025": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 25.72,
+     "capex": 0.0,
+     "fom": 3.417,
+     "fuel": 6.666,
+     "carbon": 1.543,
+     "trade": 0.448,
+     "unserved": 0.0,
+     "h2_value": 0.0
+    },
+    "2030": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 12.53,
+     "capex": 4.527,
+     "fom": 4.453,
+     "fuel": 3.85,
+     "carbon": 1.053,
+     "trade": -1.194,
+     "unserved": 0.0,
+     "h2_value": -0.147
+    },
+    "2035": {
+     "unserved_gwh": 5.4,
+     "emissions_mt": 12.07,
+     "capex": 7.12,
+     "fom": 4.595,
+     "fuel": 2.871,
+     "carbon": 1.304,
+     "trade": -0.124,
+     "unserved": 0.032,
+     "h2_value": -0.539
+    },
+    "2040": {
+     "unserved_gwh": 74.3,
+     "emissions_mt": 10.78,
+     "capex": 10.605,
+     "fom": 5.341,
+     "fuel": 2.713,
+     "carbon": 1.423,
+     "trade": -0.221,
+     "unserved": 0.446,
+     "h2_value": -1.013
+    },
+    "2045": {
+     "unserved_gwh": 110.6,
+     "emissions_mt": 7.01,
+     "capex": 13.242,
+     "fom": 5.916,
+     "fuel": 2.692,
+     "carbon": 1.093,
+     "trade": -0.472,
+     "unserved": 0.664,
+     "h2_value": -1.541
+    },
+    "2050": {
+     "unserved_gwh": 131.7,
+     "emissions_mt": 4.9,
+     "capex": 15.633,
+     "fom": 6.205,
+     "fuel": 2.736,
+     "carbon": 0.881,
+     "trade": -0.745,
+     "unserved": 0.79,
+     "h2_value": -2.06
+    }
+   },
+   "agents": {
+    "2025": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 25.72,
+     "capex": 0.0,
+     "fom": 3.417,
+     "fuel": 6.666,
+     "carbon": 1.543,
+     "trade": 0.448,
+     "unserved": 0.0,
+     "h2_value": 0.0
+    },
+    "2030": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 24.9,
+     "capex": 2.585,
+     "fom": 3.758,
+     "fuel": 6.753,
+     "carbon": 2.092,
+     "trade": -0.106,
+     "unserved": 0.0,
+     "h2_value": -0.038
+    },
+    "2035": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 18.72,
+     "capex": 7.216,
+     "fom": 4.798,
+     "fuel": 4.127,
+     "carbon": 2.021,
+     "trade": -0.324,
+     "unserved": 0.0,
+     "h2_value": -0.333
+    },
+    "2040": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 12.49,
+     "capex": 12.505,
+     "fom": 6.321,
+     "fuel": 3.004,
+     "carbon": 1.648,
+     "trade": -1.076,
+     "unserved": 0.0,
+     "h2_value": -0.925
+    },
+    "2045": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 8.42,
+     "capex": 16.676,
+     "fom": 7.602,
+     "fuel": 2.13,
+     "carbon": 1.314,
+     "trade": -1.542,
+     "unserved": 0.0,
+     "h2_value": -1.705
+    },
+    "2050": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 6.18,
+     "capex": 20.593,
+     "fom": 8.604,
+     "fuel": 1.387,
+     "carbon": 1.112,
+     "trade": -1.813,
+     "unserved": 0.0,
+     "h2_value": -2.611
+    }
+   }
+  },
+  "onshore_unlimited": {
+   "label": "Onshore limit lifted (20 GW a year)",
+   "pv_planner_bn": 299.59,
+   "pv_agents_bn": 344.93,
+   "gap_bn": 45.33,
+   "gap_pct": 15.13,
+   "planner_last": {
+    "ccgt": 8.6,
+    "gas_ccs": 8.4,
+    "hydro": 1.5,
+    "nuclear": 6.5,
+    "ocgt": 8.0,
+    "pumped_hydro": 2.9,
+    "solar": 37.3,
+    "wind_offshore": 3.5,
+    "wind_onshore": 128.9
+   },
+   "planner": {
+    "2025": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 25.72,
+     "capex": 0.0,
+     "fom": 3.417,
+     "fuel": 6.666,
+     "carbon": 1.543,
+     "trade": 0.448,
+     "unserved": 0.0,
+     "h2_value": 0.0
+    },
+    "2030": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 9.6,
+     "capex": 5.908,
+     "fom": 4.812,
+     "fuel": 3.042,
+     "carbon": 0.806,
+     "trade": -2.573,
+     "unserved": 0.0,
+     "h2_value": -0.205
+    },
+    "2035": {
+     "unserved_gwh": 0.6,
+     "emissions_mt": 9.94,
+     "capex": 8.22,
+     "fom": 4.853,
+     "fuel": 2.414,
+     "carbon": 1.073,
+     "trade": -1.24,
+     "unserved": 0.004,
+     "h2_value": -0.676
+    },
+    "2040": {
+     "unserved_gwh": 82.2,
+     "emissions_mt": 9.25,
+     "capex": 11.32,
+     "fom": 5.463,
+     "fuel": 2.353,
+     "carbon": 1.221,
+     "trade": -0.837,
+     "unserved": 0.493,
+     "h2_value": -1.159
+    },
+    "2045": {
+     "unserved_gwh": 116.0,
+     "emissions_mt": 7.0,
+     "capex": 13.372,
+     "fom": 5.827,
+     "fuel": 2.497,
+     "carbon": 1.092,
+     "trade": -0.614,
+     "unserved": 0.696,
+     "h2_value": -1.607
+    },
+    "2050": {
+     "unserved_gwh": 136.8,
+     "emissions_mt": 4.98,
+     "capex": 15.442,
+     "fom": 6.002,
+     "fuel": 2.749,
+     "carbon": 0.896,
+     "trade": -0.733,
+     "unserved": 0.821,
+     "h2_value": -2.05
+    }
+   },
+   "agents": {
+    "2025": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 25.72,
+     "capex": 0.0,
+     "fom": 3.417,
+     "fuel": 6.666,
+     "carbon": 1.543,
+     "trade": 0.448,
+     "unserved": 0.0,
+     "h2_value": 0.0
+    },
+    "2030": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 24.9,
+     "capex": 2.585,
+     "fom": 3.758,
+     "fuel": 6.753,
+     "carbon": 2.092,
+     "trade": -0.106,
+     "unserved": 0.0,
+     "h2_value": -0.038
+    },
+    "2035": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 18.72,
+     "capex": 7.216,
+     "fom": 4.798,
+     "fuel": 4.127,
+     "carbon": 2.021,
+     "trade": -0.324,
+     "unserved": 0.0,
+     "h2_value": -0.333
+    },
+    "2040": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 12.49,
+     "capex": 12.505,
+     "fom": 6.321,
+     "fuel": 3.004,
+     "carbon": 1.648,
+     "trade": -1.076,
+     "unserved": 0.0,
+     "h2_value": -0.925
+    },
+    "2045": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 8.42,
+     "capex": 16.676,
+     "fom": 7.602,
+     "fuel": 2.13,
+     "carbon": 1.314,
+     "trade": -1.542,
+     "unserved": 0.0,
+     "h2_value": -1.705
+    },
+    "2050": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 6.18,
+     "capex": 20.593,
+     "fom": 8.604,
+     "fuel": 1.387,
+     "carbon": 1.112,
+     "trade": -1.813,
+     "unserved": 0.0,
+     "h2_value": -2.611
+    }
+   }
+  },
+  "vre_at_cfd_volumes": {
+   "label": "Wind and solar limited to the CfD volumes (3.6 / 1.2 / 1.2 GW a year)",
+   "pv_planner_bn": 327.63,
+   "pv_agents_bn": 344.93,
+   "gap_bn": 17.3,
+   "gap_pct": 5.28,
+   "planner_last": {
+    "ccgt": 6.5,
+    "gas_ccs": 12.2,
+    "hydro": 1.5,
+    "nuclear": 6.5,
+    "ocgt": 7.5,
+    "pumped_hydro": 2.9,
+    "solar": 33.4,
+    "wind_offshore": 62.6,
+    "wind_onshore": 27.6
+   },
+   "planner": {
+    "2025": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 25.72,
+     "capex": 0.0,
+     "fom": 3.417,
+     "fuel": 6.666,
+     "carbon": 1.543,
+     "trade": 0.448,
+     "unserved": 0.0,
+     "h2_value": 0.0
+    },
+    "2030": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 22.02,
+     "capex": 1.448,
+     "fom": 3.31,
+     "fuel": 6.218,
+     "carbon": 1.85,
+     "trade": 1.762,
+     "unserved": 0.0,
+     "h2_value": -0.035
+    },
+    "2035": {
+     "unserved_gwh": 3.1,
+     "emissions_mt": 16.05,
+     "capex": 5.25,
+     "fom": 4.097,
+     "fuel": 4.166,
+     "carbon": 1.734,
+     "trade": 1.564,
+     "unserved": 0.019,
+     "h2_value": -0.278
+    },
+    "2040": {
+     "unserved_gwh": 70.2,
+     "emissions_mt": 9.96,
+     "capex": 9.909,
+     "fom": 5.478,
+     "fuel": 3.755,
+     "carbon": 1.314,
+     "trade": 0.193,
+     "unserved": 0.421,
+     "h2_value": -0.771
+    },
+    "2045": {
+     "unserved_gwh": 108.2,
+     "emissions_mt": 6.44,
+     "capex": 13.025,
+     "fom": 6.382,
+     "fuel": 3.352,
+     "carbon": 1.005,
+     "trade": -0.294,
+     "unserved": 0.649,
+     "h2_value": -1.342
+    },
+    "2050": {
+     "unserved_gwh": 127.5,
+     "emissions_mt": 4.73,
+     "capex": 15.054,
+     "fom": 6.596,
+     "fuel": 3.615,
+     "carbon": 0.851,
+     "trade": -0.4,
+     "unserved": 0.765,
+     "h2_value": -1.699
+    }
+   },
+   "agents": {
+    "2025": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 25.72,
+     "capex": 0.0,
+     "fom": 3.417,
+     "fuel": 6.666,
+     "carbon": 1.543,
+     "trade": 0.448,
+     "unserved": 0.0,
+     "h2_value": 0.0
+    },
+    "2030": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 24.9,
+     "capex": 2.585,
+     "fom": 3.758,
+     "fuel": 6.753,
+     "carbon": 2.092,
+     "trade": -0.106,
+     "unserved": 0.0,
+     "h2_value": -0.038
+    },
+    "2035": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 18.72,
+     "capex": 7.216,
+     "fom": 4.798,
+     "fuel": 4.127,
+     "carbon": 2.021,
+     "trade": -0.324,
+     "unserved": 0.0,
+     "h2_value": -0.333
+    },
+    "2040": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 12.49,
+     "capex": 12.505,
+     "fom": 6.321,
+     "fuel": 3.004,
+     "carbon": 1.648,
+     "trade": -1.076,
+     "unserved": 0.0,
+     "h2_value": -0.925
+    },
+    "2045": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 8.42,
+     "capex": 16.676,
+     "fom": 7.602,
+     "fuel": 2.13,
+     "carbon": 1.314,
+     "trade": -1.542,
+     "unserved": 0.0,
+     "h2_value": -1.705
+    },
+    "2050": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 6.18,
+     "capex": 20.593,
+     "fom": 8.604,
+     "fuel": 1.387,
+     "carbon": 1.112,
+     "trade": -1.813,
+     "unserved": 0.0,
+     "h2_value": -2.611
+    }
+   }
+  },
+  "voll_16950": {
+   "label": "VoLL GBP 16,950/MWh",
+   "pv_planner_bn": 313.76,
+   "pv_agents_bn": 344.93,
+   "gap_bn": 31.16,
+   "gap_pct": 9.93,
+   "planner_last": {
+    "battery": 3.1,
+    "ccgt": 6.7,
+    "gas_ccs": 11.5,
+    "hydro": 1.5,
+    "nuclear": 6.5,
+    "ocgt": 11.9,
+    "pumped_hydro": 2.9,
+    "solar": 46.3,
+    "wind_offshore": 40.4,
+    "wind_onshore": 57.5
+   },
+   "planner": {
+    "2025": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 25.72,
+     "capex": 0.0,
+     "fom": 3.417,
+     "fuel": 6.666,
+     "carbon": 1.543,
+     "trade": 0.448,
+     "unserved": 0.0,
+     "h2_value": 0.0
+    },
+    "2030": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 16.68,
+     "capex": 2.889,
+     "fom": 3.811,
+     "fuel": 4.892,
+     "carbon": 1.401,
+     "trade": 0.437,
+     "unserved": 0.0,
+     "h2_value": -0.093
+    },
+    "2035": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 10.82,
+     "capex": 8.038,
+     "fom": 5.132,
+     "fuel": 2.619,
+     "carbon": 1.169,
+     "trade": -0.722,
+     "unserved": 0.0,
+     "h2_value": -0.613
+    },
+    "2040": {
+     "unserved_gwh": 0.9,
+     "emissions_mt": 10.09,
+     "capex": 11.264,
+     "fom": 5.829,
+     "fuel": 2.556,
+     "carbon": 1.332,
+     "trade": -0.311,
+     "unserved": 0.016,
+     "h2_value": -1.043
+    },
+    "2045": {
+     "unserved_gwh": 0.3,
+     "emissions_mt": 6.64,
+     "capex": 13.294,
+     "fom": 6.206,
+     "fuel": 3.095,
+     "carbon": 1.036,
+     "trade": -0.315,
+     "unserved": 0.005,
+     "h2_value": -1.405
+    },
+    "2050": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 4.88,
+     "capex": 15.23,
+     "fom": 6.342,
+     "fuel": 3.479,
+     "carbon": 0.878,
+     "trade": -0.47,
+     "unserved": 0.0,
+     "h2_value": -1.766
+    }
+   },
+   "agents": {
+    "2025": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 25.72,
+     "capex": 0.0,
+     "fom": 3.417,
+     "fuel": 6.666,
+     "carbon": 1.543,
+     "trade": 0.448,
+     "unserved": 0.0,
+     "h2_value": 0.0
+    },
+    "2030": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 24.9,
+     "capex": 2.585,
+     "fom": 3.758,
+     "fuel": 6.753,
+     "carbon": 2.092,
+     "trade": -0.106,
+     "unserved": 0.0,
+     "h2_value": -0.038
+    },
+    "2035": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 18.72,
+     "capex": 7.216,
+     "fom": 4.798,
+     "fuel": 4.127,
+     "carbon": 2.021,
+     "trade": -0.324,
+     "unserved": 0.0,
+     "h2_value": -0.333
+    },
+    "2040": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 12.49,
+     "capex": 12.505,
+     "fom": 6.321,
+     "fuel": 3.004,
+     "carbon": 1.648,
+     "trade": -1.076,
+     "unserved": 0.0,
+     "h2_value": -0.925
+    },
+    "2045": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 8.42,
+     "capex": 16.676,
+     "fom": 7.602,
+     "fuel": 2.13,
+     "carbon": 1.314,
+     "trade": -1.542,
+     "unserved": 0.0,
+     "h2_value": -1.705
+    },
+    "2050": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 6.18,
+     "capex": 20.593,
+     "fom": 8.604,
+     "fuel": 1.387,
+     "carbon": 1.112,
+     "trade": -1.813,
+     "unserved": 0.0,
+     "h2_value": -2.611
+    }
+   }
+  },
+  "carbon_appraisal": {
+   "label": "Carbon at appraisal values (GBP 310 -> 450/t)",
+   "pv_planner_bn": 334.98,
+   "pv_agents_bn": 405.56,
+   "gap_bn": 70.58,
+   "gap_pct": 21.07,
+   "planner_last": {
+    "battery": 4.8,
+    "gas_ccs": 26.5,
+    "hydro": 1.5,
+    "nuclear": 6.5,
+    "pumped_hydro": 2.9,
+    "solar": 56.6,
+    "wind_offshore": 49.9,
+    "wind_onshore": 57.5
+   },
+   "planner": {
+    "2025": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 25.49,
+     "capex": 0.0,
+     "fom": 3.417,
+     "fuel": 6.785,
+     "carbon": 7.901,
+     "trade": -0.068,
+     "unserved": 0.0,
+     "h2_value": 0.0
+    },
+    "2030": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 16.0,
+     "capex": 3.249,
+     "fom": 3.88,
+     "fuel": 4.995,
+     "carbon": 5.409,
+     "trade": -0.411,
+     "unserved": 0.0,
+     "h2_value": -0.056
+    },
+    "2035": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 6.32,
+     "capex": 10.606,
+     "fom": 6.047,
+     "fuel": 3.691,
+     "carbon": 2.314,
+     "trade": -7.841,
+     "unserved": 0.0,
+     "h2_value": -0.547
+    },
+    "2040": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 3.72,
+     "capex": 14.539,
+     "fom": 7.072,
+     "fuel": 4.329,
+     "carbon": 1.466,
+     "trade": -9.015,
+     "unserved": 0.0,
+     "h2_value": -1.017
+    },
+    "2045": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 3.21,
+     "capex": 16.059,
+     "fom": 7.331,
+     "fuel": 5.103,
+     "carbon": 1.353,
+     "trade": -9.169,
+     "unserved": 0.0,
+     "h2_value": -1.367
+    },
+    "2050": {
+     "unserved_gwh": 64.5,
+     "emissions_mt": 3.02,
+     "capex": 17.879,
+     "fom": 7.43,
+     "fuel": 5.145,
+     "carbon": 1.361,
+     "trade": -8.968,
+     "unserved": 0.387,
+     "h2_value": -1.755
+    }
+   },
+   "agents": {
+    "2025": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 25.49,
+     "capex": 0.0,
+     "fom": 3.417,
+     "fuel": 6.785,
+     "carbon": 7.901,
+     "trade": -0.068,
+     "unserved": 0.0,
+     "h2_value": 0.0
+    },
+    "2030": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 24.78,
+     "capex": 2.585,
+     "fom": 3.758,
+     "fuel": 6.872,
+     "carbon": 8.375,
+     "trade": -1.288,
+     "unserved": 0.0,
+     "h2_value": -0.024
+    },
+    "2035": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 18.74,
+     "capex": 7.216,
+     "fom": 4.798,
+     "fuel": 4.283,
+     "carbon": 6.86,
+     "trade": -2.053,
+     "unserved": 0.0,
+     "h2_value": -0.188
+    },
+    "2040": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 12.42,
+     "capex": 12.505,
+     "fom": 6.321,
+     "fuel": 3.126,
+     "carbon": 4.894,
+     "trade": -3.514,
+     "unserved": 0.0,
+     "h2_value": -0.675
+    },
+    "2045": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 8.49,
+     "capex": 16.676,
+     "fom": 7.602,
+     "fuel": 2.245,
+     "carbon": 3.582,
+     "trade": -4.536,
+     "unserved": 0.0,
+     "h2_value": -1.331
+    },
+    "2050": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 6.2,
+     "capex": 20.593,
+     "fom": 8.604,
+     "fuel": 1.399,
+     "carbon": 2.789,
+     "trade": -4.825,
+     "unserved": 0.0,
+     "h2_value": -2.22
+    }
+   }
+  },
+  "capital_at_7pct": {
+   "label": "Capital at 7 % (planner and annuities; present values at 3.5 %)",
+   "pv_planner_bn": 372.88,
+   "pv_agents_bn": 417.12,
+   "gap_bn": 44.25,
+   "gap_pct": 11.87,
+   "planner_last": {
+    "ccgt": 8.0,
+    "gas_ccs": 14.1,
+    "hydro": 1.5,
+    "nuclear": 6.5,
+    "ocgt": 6.9,
+    "pumped_hydro": 2.9,
+    "solar": 32.0,
+    "wind_offshore": 21.0,
+    "wind_onshore": 57.5
+   },
+   "planner": {
+    "2025": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 25.72,
+     "capex": 0.0,
+     "fom": 3.417,
+     "fuel": 6.666,
+     "carbon": 1.543,
+     "trade": 0.448,
+     "unserved": 0.0,
+     "h2_value": 0.0
+    },
+    "2030": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 17.04,
+     "capex": 4.148,
+     "fom": 3.764,
+     "fuel": 4.989,
+     "carbon": 1.431,
+     "trade": 0.572,
+     "unserved": 0.0,
+     "h2_value": -0.086
+    },
+    "2035": {
+     "unserved_gwh": 6.9,
+     "emissions_mt": 16.99,
+     "capex": 7.932,
+     "fom": 3.965,
+     "fuel": 3.839,
+     "carbon": 1.835,
+     "trade": 1.635,
+     "unserved": 0.041,
+     "h2_value": -0.326
+    },
+    "2040": {
+     "unserved_gwh": 67.6,
+     "emissions_mt": 14.24,
+     "capex": 12.69,
+     "fom": 4.636,
+     "fuel": 4.026,
+     "carbon": 1.88,
+     "trade": 1.718,
+     "unserved": 0.406,
+     "h2_value": -0.586
+    },
+    "2045": {
+     "unserved_gwh": 100.1,
+     "emissions_mt": 9.43,
+     "capex": 15.361,
+     "fom": 4.97,
+     "fuel": 4.72,
+     "carbon": 1.472,
+     "trade": 1.645,
+     "unserved": 0.601,
+     "h2_value": -0.773
+    },
+    "2050": {
+     "unserved_gwh": 123.0,
+     "emissions_mt": 6.87,
+     "capex": 18.047,
+     "fom": 5.086,
+     "fuel": 5.12,
+     "carbon": 1.237,
+     "trade": 1.383,
+     "unserved": 0.738,
+     "h2_value": -0.949
+    }
+   },
+   "agents": {
+    "2025": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 25.72,
+     "capex": 0.0,
+     "fom": 3.417,
+     "fuel": 6.666,
+     "carbon": 1.543,
+     "trade": 0.448,
+     "unserved": 0.0,
+     "h2_value": 0.0
+    },
+    "2030": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 24.9,
+     "capex": 3.852,
+     "fom": 3.758,
+     "fuel": 6.753,
+     "carbon": 2.092,
+     "trade": -0.106,
+     "unserved": 0.0,
+     "h2_value": -0.038
+    },
+    "2035": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 18.72,
+     "capex": 10.721,
+     "fom": 4.798,
+     "fuel": 4.127,
+     "carbon": 2.021,
+     "trade": -0.324,
+     "unserved": 0.0,
+     "h2_value": -0.333
+    },
+    "2040": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 12.49,
+     "capex": 18.67,
+     "fom": 6.321,
+     "fuel": 3.004,
+     "carbon": 1.648,
+     "trade": -1.076,
+     "unserved": 0.0,
+     "h2_value": -0.925
+    },
+    "2045": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 8.42,
+     "capex": 24.731,
+     "fom": 7.602,
+     "fuel": 2.13,
+     "carbon": 1.314,
+     "trade": -1.542,
+     "unserved": 0.0,
+     "h2_value": -1.705
+    },
+    "2050": {
+     "unserved_gwh": 0.0,
+     "emissions_mt": 6.18,
+     "capex": 30.449,
+     "fom": 8.604,
+     "fuel": 1.387,
+     "carbon": 1.112,
+     "trade": -1.813,
+     "unserved": 0.0,
+     "h2_value": -2.611
+    }
+   }
+  }
+ }
+}

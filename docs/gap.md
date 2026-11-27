@@ -165,6 +165,43 @@ remain between the two sides:
    £0.3bn/yr less electrolyser value (seed 3). Storage, interconnectors and electrolysers are run by
    heuristics, so part of the operation gap measures those heuristics rather than the market.
 
+## How robust is the headline? (foundations review, 27 Nov 2026)
+
+The [foundations review](review_2026-11_foundations.md) re-solved the planner under other values of its
+own assumptions and costed both fleets under each (one baseline agent run, seed 1; investment gap
+only; [results/planner_sensitivity.md](../results/planner_sensitivity.md)):
+
+| variant | optimal | agents' fleet | investment gap | gap % | planner 2050: offshore / onshore / solar (GW) |
+|---|---|---|---|---|---|
+| default | 316 | 345 | 28.5 | 9.0 | 40 / 58 / 45 |
+| build limits × 0.5 | 327 | 345 | 18.5 | 5.7 | 60 / 29 / 44 |
+| build limits × 2 | 307 | 345 | 37.7 | 12.3 | 16 / 111 / 39 |
+| onshore limit lifted | 300 | 345 | 45.3 | 15.1 | 3.5 / 129 / 37 |
+| wind and solar at the CfD volumes | 328 | 345 | 17.3 | 5.3 | 63 / 28 / 33 |
+| VoLL £16,950/MWh | 314 | 345 | 31.2 | 9.9 | 40 / 58 / 46 |
+| carbon at appraisal values (£310 → £450/t) | 335 | 406 | 70.6 | 21.1 | 50 / 58 / 57 |
+| capital at 7 % | 373 | 417 | 44.2 | 11.9 | 21 / 58 / 32 |
+
+* **The headline is one point in a range of £17–71bn (5–21 %).** The seed range (±£1bn) is small beside
+  the effect of assumptions and conventions.
+* **The planner's wind mix is its build limit.** Onshore and offshore wind have the same hourly shape
+  in the model (0.75 × and 1.10 × one GB profile), so the planner builds the cheaper one to its limit.
+  "88 against 40 GW offshore" above compares a CfD pot share with an assumed limit, not a decision
+  with an optimum.
+* **About £11bn of the investment gap is the difference between the planner's limits and the CfD
+  volumes.** With the planner held to the CfD's annual volumes the gap is £17bn.
+* **"The optimum chooses some loss of load" is largely a sampling artefact.** The plan made at a VoLL
+  of £16,950 has almost no loss of load and is £2.6bn cheaper than the default plan on the default
+  yardstick: the planner's sampled hours understate scarcity. The gap is understated by at least that
+  much.
+* **Dearer capital and a higher carbon value both widen the gap**, because the agents' fleet is more
+  capital-intensive than the planner's and keeps more unabated gas.
+
+The review also found that the modelled Capacity Market clears at its £75 cap in most years after 2029
+and does not reproduce the real auctions' entrants or prices (F11), so the Capacity Market lever above
+describes this model's CM, not the scheme. Its section 5 sets out how to close the convergence residual
+in steps before reading gaps of this size.
+
 ## Caveats that bias the gap
 
 * **No reserve or response in the optimum (overstates the gap).** The agents' batteries earn ancillary
