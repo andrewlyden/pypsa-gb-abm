@@ -1,8 +1,10 @@
-__pycache__/
+*.egg-info/
 *.pyc
 .pytest_cache/
+.venv/
+__pycache__/
+data/fleet/raw/
+data/profiles/raw/
 results/*.pkl
 results_*.log
-*.egg-info/
-.venv/
 site/

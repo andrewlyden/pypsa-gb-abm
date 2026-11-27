@@ -28,6 +28,9 @@ EXTERNAL = Path(__file__).resolve().parents[2] / "data" / "external"
 # scripts/build_profiles.py (onshore and offshore wind separately). Used when the file for the profile
 # year exists; otherwise the profile in the PyPSA-GB snapshot (ESPENI, one wind shape) is used.
 PROFILES = Path(__file__).resolve().parents[2] / "data" / "profiles"
+# Starting fleet (vintages, zones, support) and contracted pipeline built from the DUKES station list
+# and the CfD register by scripts/build_fleet.py.
+FLEET = Path(__file__).resolve().parents[2] / "data" / "fleet"
 # Without separate shapes (ESPENI profile), onshore and offshore wind are the one GB wind shape scaled
 # by these factors (the model's original assumption).
 SINGLE_WIND_SHAPE_SCALE = {"wind_onshore_cf": 0.75, "wind_offshore_cf": 1.10}
@@ -284,6 +287,17 @@ class PyPSAGBData:
             s = g.groupby("zone").p_nom.sum()
             out[mkt] = s / s.sum()
         return out
+
+    def fleet_table(self, year: int) -> pd.DataFrame | None:
+        """Shares of each technology's capacity by zone, vintage and support for a model starting in
+        *year* (data/fleet/fleet_<year>.csv), or None if there is no table for that year."""
+        f = FLEET / f"fleet_{year}.csv"
+        return pd.read_csv(f, keep_default_na=False) if f.exists() else None
+
+    def pipeline_table(self, year: int) -> pd.DataFrame | None:
+        """Capacity contracted but not yet built at the start of *year* (data/fleet/pipeline_<year>.csv)."""
+        f = FLEET / f"pipeline_{year}.csv"
+        return pd.read_csv(f) if f.exists() else None
 
     def zone_share(self, tech: str) -> pd.Series:
         key = "wind" if tech.startswith("wind") else tech

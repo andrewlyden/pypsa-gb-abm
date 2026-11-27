@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 from .agents import GenCo, Plant
-from .config import (capex_kw, fom_kw, NEW_BUILD_CF, VRE_PROFILE, LEGACY_CM_PRICE, CPI_2012_TO_2024, RO_LAST_ONLINE, RO_SCHEME_END, RO_YEARS, TECHS, VRE_TECHS, STORAGE_TECHS, INITIAL_FLEET_MW, EXISTING_FLEET_EFFICIENCY,
+from .config import (capex_kw, fom_kw, EXISTING_LIFE, EXISTING_MIN_YEARS, NEW_BUILD_CF, VRE_PROFILE, LEGACY_CM_PRICE, CPI_2012_TO_2024, RO_LAST_ONLINE, RO_SCHEME_END, RO_YEARS, TECHS, VRE_TECHS, STORAGE_TECHS, INITIAL_FLEET_MW, EXISTING_FLEET_EFFICIENCY,
                      NESO_CI_FACTORS, Policy, Fuels, BATTERY_ANCILLARY_POT, BATTERY_TRADING_PER_MW_VRE,
                      BATTERY_FLEET_FLOOR_MW)
 from .data import PyPSAGBData
@@ -38,6 +38,7 @@ import mesa
 
 ModelBase = mesa.Model
 PANEL_ROUTES = ("cfd", "cm", "merchant")
+MERGED_KEY = 10 ** 9          # keys of merged offer blocks inside run_market (plant ids are far smaller)
 
 # Interconnector trade (see interconnector_blocks). Price levels are foreign mean price / SRMC of an
 # existing GB CCGT, calibrated to 2025: capacity-weighted FR/NL/BE/NO2/DK1 day-ahead averaged
@@ -130,6 +131,7 @@ class GBMarketModel(ModelBase):
         self.cfd_last = dict(awarded_mw=0.0, budget_gbp=np.nan)
         self.plants: list[Plant] = []
         self._pid = 0
+        self.network_results = {}
         self._init_fleet()
         # the fleet as it stood at the start (incl. committed nuclear), before any agent decision:
         # the planner benchmark starts from the same fleet
@@ -161,9 +163,43 @@ class GBMarketModel(ModelBase):
         return p
 
     def _init_fleet(self):
+        """The fleet at the start: capacity by technology from config.INITIAL_FLEET_MW, distributed
+        over zones, vintages and support schemes by the fleet table (real stations; scripts/build_fleet.py)
+        where there is one for the start year, plus the contracted pipeline; otherwise, or with scenario
+        ``fleet: "random"``, the earlier rule (zone shares, two random vintages per zone)."""
+        table = None if self.scenario.get("fleet", "table") == "random" else self.data.fleet_table(self.start)
         mean_strike = self.legacy_cfd_strikes()
+        k = 0
         for tech, total in INITIAL_FLEET_MW.items():
-            if tech == "nuclear":
+            rows = None if table is None else table[table.tech == tech]
+            if tech == "nuclear" or rows is None or rows.empty:
+                continue
+            life = EXISTING_LIFE.get(tech, TECHS[tech].life)
+            for r in rows.itertuples():
+                if r.zone:
+                    zones = {r.zone: 1.0}
+                else:                               # no location in the source: the technology's main zones
+                    zs = self.data.zone_share(tech)
+                    zs = zs[zs > 0.10]
+                    zones = (zs / zs.sum()).to_dict()
+                online = int(r.online)
+                kw = {}
+                if r.support == "cfd":
+                    kw = dict(support="cfd", strike=float(r.strike_2012) * CPI_2012_TO_2024, cfd_end=int(r.support_end))
+                elif r.support == "ro":
+                    kw = dict(support="ro", ro_end=int(r.support_end))
+                if tech in ("hydro", "pumped_hydro"):
+                    retire = 2100
+                else:
+                    retire = max(online + life - 1, self.start + EXISTING_MIN_YEARS - 1)
+                if tech in EXISTING_FLEET_EFFICIENCY:
+                    new, old = EXISTING_FLEET_EFFICIENCY[tech]
+                    kw["efficiency"] = new + (old - new) * min(max(self.start - online, 0) / (life - 1), 1.0)
+                for zone, s in zones.items():
+                    self.new_plant(self.gencos[k % len(self.gencos)], tech, zone, total * r.share * s, online, retire, **kw)
+                    k += 1
+        for tech, total in INITIAL_FLEET_MW.items():
+            if tech == "nuclear" or (table is not None and (table.tech == tech).any()):
                 continue
             share = self.data.zone_share(tech)
             share = share[share > 0.02]
@@ -194,6 +230,16 @@ class GBMarketModel(ModelBase):
         for i, (mw, on, ret, zone, av) in enumerate(NUCLEAR_UNITS):
             kw = dict(support="cfd", strike=92.50 * CPI_2012_TO_2024, cfd_end=on + 34) if on >= 2030 else {}
             self.new_plant(self.gencos[i % 2], "nuclear", zone, mw, on, ret, availability=av, **kw)
+        # contracted pipeline: CfD awards not yet built at the start (both runs start with it)
+        pipe = None if table is None else self.data.pipeline_table(self.start)
+        for r in ([] if pipe is None else pipe.itertuples()):
+            t = TECHS[r.tech]
+            n = max(int(round(r.mw / t.chunk_mw)), 1)
+            for _ in range(n):
+                self.new_plant(self.gencos[k % len(self.gencos)], r.tech, self.choose_zone(r.tech), r.mw / n,
+                               int(r.online), support="cfd", strike=float(r.strike_2012) * CPI_2012_TO_2024,
+                               cfd_end=int(r.support_end), route="pipeline")
+                k += 1
 
     def legacy_cfd_strikes(self):
         """Capacity-weighted strike (GBP/MWh, 2024 prices) of CfD contracts delivering by the start year."""
@@ -308,9 +354,33 @@ class GBMarketModel(ModelBase):
         h2 = self.h2.hourly_load(year, price_forecast) if price_forecast is not None else 0 * base
         return base, heat_extra, ev_extra, h2
 
+    def _merge_blocks(self, plants, blocks):
+        """Merge plant offers that the clearing cannot tell apart: the same offer price and the same
+        availability shape (e.g. all CfD offshore wind of one vintage class). Returns the merged blocks
+        and, for each, the plant blocks in it with their shares, so dispatch can be split back pro rata.
+        Clearing the merged offers gives the same prices and totals with far fewer blocks to sort."""
+        pmap = {p.pid: p for p in plants}
+        groups = {}
+        for j, b in enumerate(blocks):
+            p = pmap[b.key]
+            prof = self.cf_profile(p.tech, p.online)
+            if prof is None:
+                shape = ("flat", TECHS[p.tech].availability if p.availability is None else p.availability)
+            else:
+                shape = ("profile", p.tech, self.cf_key(p.tech, p.online))
+            groups.setdefault((float(b.price), shape), []).append(j)
+        merged, members = [], []
+        for g, ((price, _), idx) in enumerate(groups.items()):
+            avail = sum(blocks[j].avail for j in idx)
+            mw = np.array([pmap[blocks[j].key].mw for j in idx])
+            merged.append(Block(MERGED_KEY + g, price, avail))
+            members.append((idx, mw / mw.sum()))
+        return merged, members
+
     def run_market(self, year, plants, record=True):
         self._tech_of = {p.pid: p.tech for p in plants}
-        blocks = self.blocks(plants, year)
+        plant_blocks = self.blocks(plants, year)
+        blocks, members = self._merge_blocks(plants, plant_blocks)
         ic_blocks, x_blocks, ic_cap, ref = self.interconnector_blocks(year)
         allb = blocks + ic_blocks + x_blocks
         x_max = sum(b.avail for b in x_blocks)          # export bids enter demand at full volume
@@ -319,7 +389,7 @@ class GBMarketModel(ModelBase):
         d1 = base + heat + ev0
         p1, _, _ = clear(d1 + x_max, allb, self.policy.voll, scarcity_on=self.scarcity_on, curve=curve)
         # flexibility reacts to pass-1 prices
-        vre = sum(np.broadcast_to(b.avail, (self.H,)) for b in blocks
+        vre = sum(np.broadcast_to(b.avail, (self.H,)) for b in plant_blocks
                   if self._tech_of.get(b.key) in VRE_TECHS)
         base, heat, ev, h2 = self.demand(year, p1, residual=d1 - vre)
         # storage: the fleet is dispatched in tranches, each a price-taker on the price left by the flexible
@@ -350,6 +420,12 @@ class GBMarketModel(ModelBase):
             price, disp, uns = clear(d2 + x_max, allb, self.policy.voll, scarcity_on=self.scarcity_on, curve=curve)
         xj = [j for j, b in enumerate(allb) if b.key <= -11]
         export = x_max - disp[:, xj].sum(1)              # bought-back volume = export not taken
+        # back to one column per plant: a merged block's dispatch is shared in proportion to capacity
+        full = np.empty((self.H, len(plant_blocks) + len(ic_blocks) + len(x_blocks)))
+        for g, (idx, share) in enumerate(members):
+            full[:, idx] = disp[:, [g]] * share[None, :]
+        full[:, len(plant_blocks):] = disp[:, len(blocks):]
+        disp, allb = full, plant_blocks + ic_blocks + x_blocks
         # demand = everything GB generation/imports serve (incl. exports, net storage), for the network
         # stage; demand_domestic = GB final consumption, the volume policy costs are recovered from
         return dict(price=price, disp=disp, unserved=uns, blocks=allb, demand=d2 + export, export=export,

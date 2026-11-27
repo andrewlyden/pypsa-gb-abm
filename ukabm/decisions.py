@@ -83,6 +83,8 @@ class RuleBased(DecisionMaker):
             return 0.0
         if plant.tech == "nuclear":
             return srmc - 15.0              # inflexible: bids below cost to stay on
+        if plant.support == "ro" and year <= plant.ro_end:
+            return srmc - p.ro_value        # fuelled RO plant (biomass): runs down to cost less the ROC value
         return srmc * (1.0 + obs.traits.markup)
 
     def expected_carbon(self, obs):

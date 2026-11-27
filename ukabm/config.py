@@ -84,9 +84,12 @@ def fom_kw(tech: str, online: int | None = None) -> float:
 #   capacity (forecast-error and balancing volume). 3960 GBP/yr per MW of VRE tops the fleet's modelled
 #   2025 day-ahead arbitrage (~GBP 5.6k/MW) up to ~GBP 44k/MW of trading revenue on 48.5 GW of VRE.
 # Per-MW revenue is not extrapolated above its 2025 level for fleets smaller than the 2025 fleet.
-BATTERY_ANCILLARY_POT = 100e6            # GBP/yr
-BATTERY_TRADING_PER_MW_VRE = 3960.0      # GBP/yr per MW of wind + solar capacity
-BATTERY_FLEET_FLOOR_MW = 5000.0          # 2025 fleet in INITIAL_FLEET_MW
+# November 2026: the 2025 fleet is 6.4 GW (DUKES 2026 Table 5.16), not 5 GW, and wind and solar 51.5 GW,
+# not 48.5 GW; the pots are re-based so that revenue per MW on the 2025 fleet is unchanged
+# (GBP 20k/MW ancillary: 128m on 6.4 GW; GBP 38.4k/MW trading top-up: 246m on 51.5 GW of VRE).
+BATTERY_ANCILLARY_POT = 128e6            # GBP/yr
+BATTERY_TRADING_PER_MW_VRE = 4780.0      # GBP/yr per MW of wind + solar capacity
+BATTERY_FLEET_FLOOR_MW = 6400.0          # 2025 fleet in INITIAL_FLEET_MW
 
 # Reserve and response in the optimum and the evaluator (README roadmap item 9). The agents' batteries
 # are paid for services the hourly market does not see (the two pots above); the system needs those
@@ -118,12 +121,30 @@ VRE_PROFILE = {"wind_onshore": "wind_onshore_cf", "wind_offshore": "wind_offshor
 # A scenario can override it with `new_build_cf`. Values and sources: docs/assumptions.md.
 NEW_BUILD_CF: dict = {}
 
-# Initial GB fleet c. 2025 (MW). Indicative, consistent in magnitude with DUKES 2025 / NESO.
+# GB fleet in 2025 (MW): the mean of installed capacity at the end of 2024 and of 2025 (DESNZ, DUKES
+# 2026 Table 5.12, GB, all generators; data/history/gb_capacity.csv), so that the 2025 operating year
+# sees the capacity that was there on average. How each total is spread over zones, vintages and
+# support schemes comes from data/fleet (scripts/build_fleet.py).
+#   wind_offshore 16,140 -> 16,650; wind_onshore 14,728 -> 14,912; solar 19,047 -> 21,517;
+#   battery 5,210 -> 7,512 (Table 5.16, UK grid-scale); nuclear 5,883; pumped_hydro 2,900.
+# Departures from the table, because generation is compared with NESO's transmission-metered mix
+# and embedded thermal plant is netted off NESO demand:
+#   ccgt 30,000: between 28.8 GW transmission-connected and 31.2 GW in all;
+#   ocgt 3,700: OCGT, gas engines and other gas (3,663); oil-fired plant (1,089) left out;
+#   biomass 3,000: the transmission-connected conversions (3,035) of 6.5 GW of bioenergy;
+#   hydro 1,500 (1,884 in the table; 775 MW transmission-connected), see Tech availability.
 INITIAL_FLEET_MW = {
-    "nuclear": 5900, "ccgt": 30000, "ocgt": 2000, "biomass": 3800,
-    "wind_onshore": 15000, "wind_offshore": 15500, "solar": 18000, "hydro": 1500,
-    "battery": 5000, "pumped_hydro": 2900,
+    "nuclear": 5900, "ccgt": 30000, "ocgt": 3700, "biomass": 3000,
+    "wind_onshore": 14800, "wind_offshore": 16400, "solar": 20300, "hydro": 1500,
+    "battery": 6400, "pumped_hydro": 2900,
 }
+# Technical life (years) of plant in the starting fleet where it differs from the economic life of
+# new build in TECHS: GB CCGTs of the 1990s are still operating (DUKES 2026 Table 5.11 lists 11.4 GW
+# commissioned before 2000), so existing gas plant closes on age only at 40 (CCGT) or 45 (peaking
+# plant) years; before that it closes when it loses money (model retirement rule). A plant already past
+# this age at the start stays EXISTING_MIN_YEARS more years. ASSUMPTION.
+EXISTING_LIFE = {"ccgt": 40, "ocgt": 45}
+EXISTING_MIN_YEARS = 5
 # Existing-fleet performance that differs from new-build Tech values (calibration to 2025 outturn).
 # CCGT: GB fleet thermal efficiency ~50 % (GCV) — DUKES Table 5.10 (CCGT stations, 2023-24); the
 # 0.55 in TECHS is new-build. Initial-fleet CCGTs get an efficiency that falls linearly with age
