@@ -110,6 +110,20 @@ scarcity prices. Wind and solar are candidates alongside CfDs, merchant or on a 
 below the t+3 capture value with the cost of capital 1.5 points lower; the better of the two counts.
 Two extra market clearings per model year.
 
+### Government objectives (levers)
+Three more governments, each a `TargetTracking` variant selected by `scenario["government"]`:
+* `least_cost`: at its first round it solves the planner (`ukabm.planner.plan`) on the model's expected
+  inflexible demand per five-year period and tracks the planner's wind and solar pathway (existing
+  fleet plus cumulative build), ignoring the levy. This is the ideal-government rung. One planner solve
+  per run (~5 minutes). On the baseline the planner's pathway reaches ~40–45 GW offshore and ~58 GW
+  onshore by 2050, against the CfD rules' ~90 GW offshore.
+* `bills`: the same targets at the lowest levy: squeeze from £20/MWh, to 40 % of the budget, caps rising
+  5 % after a failed round (`config.GOVERNMENT_BILLS`).
+* `political`: targets announced 15 % above the path; in the two years before each general election
+  (2029, then every five years) it funds 30 % of the missing capacity, and 130 % of the budget otherwise
+  (`config.GOVERNMENT_POLITICAL`).
+All parameters are illustrative assumptions for comparing objectives, not estimates of actual policy.
+
 ### System operator and the Capacity Market target (`ukabm.institutions.SystemOperator`)
 `scenario["system_operator"]`:
 * `formula` (default): the original target, peak demand in the delivery year × 1.06 less the de-rated

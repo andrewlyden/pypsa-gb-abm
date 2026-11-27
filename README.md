@@ -18,7 +18,7 @@ and hydrogen.
 ## Quick start
 ```bash
 pip install -e .            # numpy pandas scipy matplotlib mesa pypsa highspy
-pytest -q                   # 67 tests, ~10 min
+pytest -q                   # 71 tests, ~10 min
 python scripts/run_scenarios.py baseline --end 2030      # ~40 s
 python scripts/run_scenarios.py                          # all 6 scenarios 2025-2050 (~4 min each)
 python scripts/make_plots.py                             # -> docs/figures/
@@ -197,12 +197,10 @@ re-run `scripts/run_gap.py` and update [docs/gap.md](docs/gap.md).
    demand (supported wind and solar by their hourly output) with 5 % held back for a T-1 auction:
    39.5 GW at T-4 for delivery 2029 against 39.4 GW published (the old formula: 49.4 GW). Default
    stays `formula` until items 2–6 switch together.
-6. **Government objectives as levers.** Add three objectives to the `Government` of item 2, each a scenario
-   value: `"least_cost"` (budgets and pots from the planner's pathway: the ideal-government rung),
-   `"bills"` (meet targets at the lowest levy, accept slippage when bills rise), and `"political"` (avoid
-   levy rises in the two years before an election every five years; announce ambitious targets, fund
-   them late). Document each rule in `docs/model_design.md`; a test that each changes round budgets as
-   intended.
+6. ✅ **Government objectives as levers.** Done: `government: "least_cost"` (tracks the planner's
+   wind and solar pathway; the ideal-government rung), `"bills"` (lowest levy, slips when bills
+   rise) and `"political"` (ambitious announcements, little funding before elections). Parameters in
+   `config.GOVERNMENT_*`, documented in `docs/model_design.md`.
 7. **Convergence test.** Scenario `competitive_benchmark`: no CfD, no CM, scarcity pricing at VoLL,
    idealised firms, merchant renewables, lifetime forecasts, small blocks. In theory a competitive market
    then reproduces the least-cost plan; its gap to the planner measures the decision procedure alone.

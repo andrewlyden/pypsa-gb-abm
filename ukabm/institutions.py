@@ -16,8 +16,12 @@ Governments are selected by ``scenario["government"]`` (default ``"fixed"``):
   round that failed for lack of bids under the cap, and scales budgets down when the policy levy passes a
   bill threshold. Parameters: ``config.GOVERNMENT_TARGETS`` and ``scenario["government_params"]``.
 
-Further objectives (least cost, bills, political; README roadmap item 6) subclass ``Government`` and
-register a name, like decision makers in ``ukabm.decisions``.
+* ``"least_cost"`` tracks the least-cost plan's wind and solar pathway (``ukabm.planner``), ignoring bills.
+* ``"bills"`` tracks the targets at the lowest levy: lower bill threshold, deeper squeeze, slower caps.
+* ``"political"`` announces more ambitious targets but funds little before elections and catches up after.
+
+Other objectives subclass ``Government`` (or ``TargetTracking``) and ``register`` a name, like decision
+makers in ``ukabm.decisions``.
 """
 from __future__ import annotations
 
@@ -25,7 +29,10 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .config import CFD_TARGET_GW, GOVERNMENT_TARGETS, SYSTEM_OPERATOR, TECHS
+import pandas as pd
+
+from .config import (CFD_TARGET_GW, GOVERNMENT_BILLS, GOVERNMENT_POLITICAL, GOVERNMENT_TARGETS,
+                     SYSTEM_OPERATOR, TECHS)
 
 CFD_TECHS = ("wind_offshore", "wind_onshore", "solar")
 
@@ -135,7 +142,97 @@ class TargetTracking(Government):
                        over_cap=r.get("over_cap", 0), next_cap=self.cap[row["tech"]])
 
 
-GOVERNMENTS: dict[str, type[Government]] = {"fixed": FixedRules, "targets": TargetTracking}
+# ------------------------------------------------- further government objectives (roadmap item 6)
+class LeastCost(TargetTracking):
+    """The ideal-government rung: targets are the least-cost plan's wind and solar capacity.
+
+    At its first round the government solves ``ukabm.planner.plan`` on the model's expected inflexible
+    demand for each five-year period and tracks the planner's pathway (existing fleet plus cumulative
+    build), funding it without regard to the levy (no squeeze). Caps adapt as in ``targets``."""
+
+    name = "least_cost"
+
+    def __init__(self, model):
+        super().__init__(model)
+        self.params["levy_threshold"] = float("inf")
+        self.planned = False
+
+    def plan_targets(self):
+        from .planner import plan          # deferred: the planner imports pypsa
+        m = self.model
+        years = list(range(m.start, max(m.end, m.start + 25) + 1, 5))
+        loads = {}
+        for y in years:
+            b, heat, ev, _ = m.demand(y)
+            loads[y] = np.asarray(b + heat + ev, dtype=float)
+        p = plan(m, loads, every_nth_day=self.params.get("planner_every_nth_day", 7))
+        for tech in CFD_TECHS:
+            built = p.built_mw[tech].cumsum() if tech in p.built_mw else pd.Series(0.0, index=years)
+            path = {}
+            for y in years:
+                existing = sum(u.mw for u in m.initial_fleet if u.tech == tech and u.active(y))
+                path[y] = (existing + float(built.loc[y])) / 1000
+            self.targets[tech] = path
+        self.planned = True
+
+    def round_settings(self, year, price_fc):
+        if not self.planned:
+            self.plan_targets()
+        return super().round_settings(year, price_fc)
+
+
+class BillsFirst(TargetTracking):
+    """Meets targets at the lowest levy: a lower bill threshold, a deeper squeeze, and caps that rise
+    little after a failed round; accepts slipping behind the targets when bills are high."""
+
+    name = "bills"
+
+    def __init__(self, model):
+        super().__init__(model)
+        self.params = {**self.params, **GOVERNMENT_BILLS, **model.scenario.get("government_params", {})}
+
+
+class Political(TargetTracking):
+    """Announces ambitious targets but avoids levy rises before elections: in the ``pre_election_years``
+    before each general election it funds only a fraction of the missing capacity, then catches up
+    after the election with a larger budget. Elections every ``election_every`` years from
+    ``first_election`` (UK: by 2029)."""
+
+    name = "political"
+
+    def __init__(self, model):
+        super().__init__(model)
+        self.params = {**self.params, **GOVERNMENT_POLITICAL, **model.scenario.get("government_params", {})}
+        amb = self.params["target_ambition"]
+        self.targets = {t: {y: v * amb if y > model.start else v for y, v in path.items()}
+                        for t, path in self.targets.items()}
+
+    def next_election(self, year):
+        P = self.params
+        first, every = P["first_election"], P["election_every"]
+        if year <= first:
+            return first
+        return first + -(-(year - first) // every) * every
+
+    def pre_election(self, year):
+        """True in the ``pre_election_years`` before an election (not in the election year itself)."""
+        return 0 < self.next_election(year) - year <= self.params["pre_election_years"]
+
+    def round_settings(self, year, price_fc):
+        out = super().round_settings(year, price_fc)
+        P = self.params
+        scale = P["pre_election_scale"] if self.pre_election(year) else P["post_election_scale"]
+        for tech, s in out.items():
+            s.budget_gbp *= scale
+            s.max_mw *= scale if scale < 1 else 1.0
+        for row in self.log[-len(CFD_TECHS):]:
+            row["election_scale"] = scale
+        return out
+
+
+
+GOVERNMENTS: dict[str, type[Government]] = {"fixed": FixedRules, "targets": TargetTracking, "least_cost": LeastCost,
+                                             "bills": BillsFirst, "political": Political}
 
 
 def register(name: str, cls: type[Government]) -> None:

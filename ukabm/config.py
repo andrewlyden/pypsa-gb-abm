@@ -106,6 +106,16 @@ GOVERNMENT_TARGETS = dict(
     cap_ceiling=2.0,         # caps never exceed this multiple of the policy cap
     budget_headroom=1.1,     # budget = missing MW x expected support x this
 )
+# Bills-first government: overrides GOVERNMENT_TARGETS (ASSUMPTION, illustrative).
+GOVERNMENT_BILLS = dict(levy_threshold=20.0, levy_budget_scale=0.4, cap_step=0.05)
+# Political government (ASSUMPTION, illustrative): UK general elections every 5 years, next by 2029.
+GOVERNMENT_POLITICAL = dict(
+    first_election=2029, election_every=5,
+    pre_election_years=2,        # rounds held in the two years before an election are cut back
+    pre_election_scale=0.3,      # share of the missing capacity funded before an election
+    post_election_scale=1.3,     # budget uplift in the other years (catch-up)
+    target_ambition=1.15,        # announced targets above the target path
+)
 # System operator's reliability standard (ukabm.institutions.SystemOperator, "standard" mode).
 SYSTEM_OPERATOR = dict(
     lole_h=3,                # GB reliability standard: 3 hours loss of load expectation a year
