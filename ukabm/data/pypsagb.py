@@ -23,6 +23,70 @@ import numpy as np
 import pandas as pd
 
 SNAPSHOT = Path(__file__).resolve().parents[2] / "data" / "pypsagb_snapshot"
+EXTERNAL = Path(__file__).resolve().parents[2] / "data" / "external"
+
+# Interconnector register country -> neighbour price zone (data/external/neighbour_prices_<y>.csv).
+# Ireland (SEM) has no openly licensed hourly series there; it gets a GB-wind-shaped proxy.
+IC_MARKET = {"France1": "FR", "France2": "FR", "Netherlands": "NL", "Belgium": "BE", "Norway": "NO2",
+             "Denmark": "DK1", "Germany": "DE_LU", "Ireland": "SEM", "Ireland2": "SEM", "N. Ireland": "SEM"}
+
+# Corrections to commissioning years in the PyPSA-GB interconnector register (links_future.csv),
+# which lists several projects as operating by 2024/25 that were not (GB peak import in 2025 was
+# 9.2 GW per Elexon FUELHH vs 16.1 GW in the register). None = not expected to be built.
+#   NeuConnect (DE, 1.4 GW): under construction, operation 2028 (NeuConnect; Ofgem IC cap & floor
+#     handbook, Dec 2024).  GridLink (FR): "under development", 2030 (same Ofgem handbook).
+#   FAB Link (FR): connection date end-2030 (Ofgem needs-case reassessment, Nov 2022).
+#   NorthConnect (NO): Ofgem withdrew cap & floor in Dec 2022; Norway not approving new links.
+#   Greenlink (IE): opened January 2025 (DESNZ Energy Trends, Dec 2025).
+IC_COMMISSIONING_OVERRIDES = {"NeuConnect": 2028, "GridLink": 2030, "FAB Link": 2031,
+                              "NorthConnect": None, "Greenlink": 2025}
+
+# Inter-zonal capacities. The PyPSA-GB zonal network carries future (HND-era) values, e.g. 22 GW
+# across the Scotland-England boundary, so the Scottish boundaries are rebuilt from boundary
+# capabilities (MW, incl. HVDC) under NESO's Holistic Transition network build-out as tabulated by
+# LCP Delta, "From Bottlenecks to Balance" (Mar 2026, p.58), linearly interpolated between
+# 2025/2030/2035 and held after. Each boundary's AC part is carried by one zonal link = boundary
+# minus the HVDC links that cross it (floor 500 MW); HVDC links are steps at target energisation:
+# Caithness-Moray 1.2 GW (2019), Shetland 0.6 GW (2024), Western HVDC Hunterston-Deeside 2.25 GW
+# (2018), EGL1 Torness-Hawthorn Pit 2 GW (2027), EGL2 Peterhead-Drax 2 GW (2029), EGL3/4 to
+# Lincolnshire 2 x 2 GW (2031) (SSEN Transmission 2022; Ofgem ASTI 2024). EGL2-4 use the PyPSA-GB
+# Z2-Z7 DC corridor.
+# HVDC landings are placed by which side of each boundary they lie on, not by nearest bus.
+# Hunterston and Torness are south of B5 and north of B6: the Kintyre-Hunterston cable crosses B5,
+# and the Western HVDC and EGL1 reinforce B6 (SP Energy Networks, RIIO-T2 Business Plan Annex 4,
+# 2019, s.4.1.1 and s.6.2). So the Western HVDC (moved from the PyPSA-GB Z3-Z9 corridor, north of
+# B4) and EGL1 run from Z6, south of the modelled B5 cut, and cross B6 only.
+# The Western Isles HVDC (1.8 GW, 2030) lands at Beauly, south of B0. It is represented by the
+# radial PyPSA-GB Z1_4-Z1_2 link (2 GW, never binding: Z1_2 has ~50 MW of hydro and no demand).
+# The PyPSA-GB Z1_3-Z1_2 corridor is closed: it would open a route around B0.
+# BOUNDARY_NORTH lists the zones north of each boundary. tests/test_network.py checks that the
+# links crossing each cut are exactly the AC link plus the HVDC links in BOUNDARY_LINKS.
+# English links keep their PyPSA-GB capacities.
+BOUNDARY_MW = {"B0": [(2025, 1800), (2030, 4700), (2035, 4600)],
+               "B2": [(2025, 3500), (2030, 6000), (2035, 12000)],
+               "B4": [(2025, 4000), (2030, 7300), (2035, 12000)],
+               "B5": [(2025, 4300), (2030, 8300), (2035, 11700)],
+               "B6": [(2025, 7000), (2030, 10200), (2035, 16800)]}
+BOUNDARY_LINKS = {"B0": ("Z1_4-Z1_3", ["Z2-Z1_3"]), "B2": ("Z3-Z2", ["Z7-Z2"]), "B4": ("Z5-Z3", ["Z7-Z2"]),
+                  "B5": ("Z6-Z5", ["Z7-Z2"]), "B6": ("Z7-Z6", ["Z7-Z2", "EGL1", "WesternHVDC"])}
+_N2 = {"Z1_1", "Z1_2", "Z1_3", "Z1_4", "Z2"}
+BOUNDARY_NORTH = {"B0": {"Z1_1", "Z1_3"}, "B2": _N2, "B4": _N2 | {"Z3", "Z4"}, "B5": _N2 | {"Z3", "Z4", "Z5"},
+                  "B6": _N2 | {"Z3", "Z4", "Z5", "Z6"}}
+HVDC_STEPS = {"Z2-Z1_3": [(2019, 1200)], "Z1_3-Z1_1": [(2024, 600)], "Z1_3-Z1_2": [(2018, 0)],
+              "WesternHVDC": [(2018, 2250)], "EGL1": [(2025, 0), (2027, 2000)],
+              "Z7-Z2": [(2025, 0), (2029, 2000), (2031, 6000)], "Z9-Z3": [(2018, 0)]}
+NEW_LINKS = [dict(name="EGL1", bus0="Z6", bus1="Z7", carrier="DC", p_nom=0.0, p_min_pu=-1),
+             dict(name="WesternHVDC", bus0="Z6", bus1="Z9", carrier="DC", p_nom=0.0, p_min_pu=-1)]
+# Average available share of boundary capability by month (planned outages/maintenance), read from
+# LCP Delta (2026, p.59; NESO day-ahead constraint flows & limits 2019-24): Scottish boundaries
+# (B5 separately, it runs much lower) and English & Welsh links.
+AVAIL_SCOT = [0.85, 0.86, 0.82, 0.77, 0.69, 0.67, 0.65, 0.63, 0.69, 0.77, 0.74, 0.86]
+AVAIL_B5 = [0.55, 0.65, 0.54, 0.51, 0.50, 0.48, 0.52, 0.43, 0.62, 0.47, 0.48, 0.54]
+AVAIL_EW = [0.93, 0.92, 0.85, 0.80, 0.80, 0.70, 0.70, 0.62, 0.83, 0.85, 0.83, 0.92]
+# Year-specific extra derating of Scottish boundaries: in 2025 average availability on B2, B4 and B6
+# was ~25 % below 2023 because of upgrade outages (LCP Delta 2026, p.18; NESO 2025 Annual
+# Balancing Costs Report). Other years: normal availability.
+SCOT_OUTAGE_DERATE = {2025: 0.76}
 
 DUKES_TO_TECH = {"Fossil Fuel": "ccgt", "Nuclear": "nuclear", "Bioenergy": "biomass", "Hydro": "hydro",
                  "Pumped Hydro": "pumped_hydro", "Pumped hydro": "pumped_hydro", "Solar": "solar",
@@ -37,6 +101,7 @@ class PyPSAGBData:
             self._load_snapshot()
         else:
             self._load_raw()
+        self.neighbour_price_shape = self._neighbour_shapes()
 
     # ------------------------------------------------------------------ raw
     def _load_raw(self):
@@ -114,9 +179,77 @@ class PyPSAGBData:
         self.cfd_strikes = pd.read_csv(path / "cfd_strike_prices_by_round.csv")
         self.emissions = pd.read_csv(path / "emissions_intensity.csv")
 
+    def _neighbour_shapes(self) -> pd.DataFrame:
+        """Hourly neighbour price shapes, dimensionless. Continental zones are divided by the
+        capacity-weighted continental mean of the profile year (so relative levels between borders
+        are kept); the SEM proxy is (1.25 - 0.75 * GB wind CF) normalised to mean 1, since Irish
+        and GB wind are strongly correlated and SEM is gas-marginal most hours."""
+        prices = pd.read_csv(EXTERNAL / f"neighbour_prices_{self.profile_year}.csv").iloc[:len(self.profiles)]
+        caps = self.interconnector_mw_by_market(self.profile_year)
+        w = pd.Series({k: v for k, v in caps.items() if k in prices.columns})
+        mean = float((prices[w.index].mean() * w).sum() / w.sum())
+        shape = prices / mean
+        sem = 1.25 - 0.75 * self.profiles.wind_cf.values
+        shape["SEM"] = sem / sem.mean()
+        return shape
+
     # -------------------------------------------------------------- helpers
+    def _ic_in_service(self, year: int) -> pd.DataFrame:
+        ic = self.interconnectors
+        first = ic.name.map(IC_COMMISSIONING_OVERRIDES).where(ic.name.isin(list(IC_COMMISSIONING_OVERRIDES)), ic.year)
+        return ic[first.notna() & (first <= year)]
+
+    def links_for_year(self, year: int) -> pd.DataFrame:
+        """Inter-zonal links with capacities for *year* (see BOUNDARY_MW, HVDC_STEPS)."""
+        links = pd.concat([self.links, pd.DataFrame(NEW_LINKS)], ignore_index=True).set_index("name")
+        step = lambda pts, t=year: float(([m for y, m in pts if y <= t] or [0.0])[-1])
+        for name, pts in HVDC_STEPS.items():
+            links.loc[name, "p_nom"] = step(pts)
+        for bnd, pts in BOUNDARY_MW.items():
+            ac, hvdc = BOUNDARY_LINKS[bnd]
+            ys, mw = zip(*pts)
+            # AC part never shrinks when a new HVDC link energises ahead of the interpolated boundary
+            links.loc[ac, "p_nom"] = max(max(float(np.interp(t, ys, mw)) - sum(step(HVDC_STEPS[h], t) for h in hvdc)
+                                             for t in range(min(ys), max(year, min(ys)) + 1)), 500.0)
+        return links.reset_index()
+
+    def link_availability(self, year: int, links: pd.DataFrame, hours) -> pd.DataFrame:
+        """Available share of each link's capacity in the given hours (rows) of the profile year.
+
+        Scottish boundary links (AC and HVDC) follow AVAIL_SCOT. B5 runs lower (AVAIL_B5) but shares
+        the Z7-Z2 HVDC corridor with B2/B4/B6, so its AC link is derated further until the
+        available capacity across the whole B5 cut equals AVAIL_B5 x its total capability.
+        """
+        month = (pd.Timestamp(f"{self.profile_year}-01-01")
+                 + pd.to_timedelta(self.profiles.doy.values[hours] - 1, unit="D")).month.values - 1
+        scot = {ac for ac, _ in BOUNDARY_LINKS.values()} | {h for _, hv in BOUNDARY_LINKS.values() for h in hv}
+        derate = SCOT_OUTAGE_DERATE.get(year, 1.0)
+        out = {}
+        for name in links.name:
+            out[name] = np.asarray(AVAIL_SCOT)[month] * derate if name in scot else np.asarray(AVAIL_EW)[month]
+        cap = links.set_index("name").p_nom
+        ac, hvdc = BOUNDARY_LINKS["B5"]
+        if cap[ac] > 0:
+            target = np.asarray(AVAIL_B5)[month] * derate * (cap[ac] + sum(cap[h] for h in hvdc))
+            out[ac] = np.clip((target - sum(out[h] * cap[h] for h in hvdc)) / cap[ac], 0.0, 1.0)
+        return pd.DataFrame(out)
+
     def interconnector_mw(self, year: int) -> float:
-        return float(self.interconnectors.loc[self.interconnectors.year <= year, "p_nom"].sum())
+        return float(self._ic_in_service(year).p_nom.sum())
+
+    def interconnector_mw_by_market(self, year: int) -> dict:
+        ic = self._ic_in_service(year)
+        return ic.groupby(ic.country.map(IC_MARKET)).p_nom.sum().astype(float).to_dict()
+
+    def interconnector_landing_share(self, year: int) -> dict:
+        """Per neighbour market, the split of its in-service capacity across GB landing zones (register
+        `zone` column, e.g. IFA/ElecLink/BritNed/Nemo Z15, NSL Z7, Moyle Z5)."""
+        ic = self._ic_in_service(year)
+        out = {}
+        for mkt, g in ic.groupby(ic.country.map(IC_MARKET)):
+            s = g.groupby("zone").p_nom.sum()
+            out[mkt] = s / s.sum()
+        return out
 
     def zone_share(self, tech: str) -> pd.Series:
         key = "wind" if tech.startswith("wind") else tech

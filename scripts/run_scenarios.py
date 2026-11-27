@@ -38,7 +38,7 @@ for name in a.scenarios:
     r.to_csv(out / f"annual_{name}.csv")
     keep = {y: m.hourly[y] for y in m.hourly if y % 5 == 0}
     extra = {"hourly": keep, "network": m.network_results, "cm_log": getattr(m, "cm_log", []),
-             "buses": m.data.buses, "links": m.data.links}
+             "buses": m.data.buses, "links": m.data.links_for_year(m.network_results.get("year", a.end))}
     with open(out / f"detail_{name}.pkl", "wb") as f:
         pickle.dump(extra, f)
     print(f"{name}: {time.time() - t0:.0f}s  price2050={r.price_twa.iloc[-1]:.1f}  "

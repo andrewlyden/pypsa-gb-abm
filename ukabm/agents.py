@@ -40,6 +40,8 @@ class Plant:
     cm_end: int = 0
     loss_years: int = 0
     history: list = field(default_factory=list)
+    availability: float | None = None   # overrides Tech.availability (e.g. legacy AGR fleet)
+    efficiency: float | None = None     # overrides Tech.efficiency (e.g. older CCGT fleet)
 
     def active(self, year):
         return self.online <= year <= self.retire

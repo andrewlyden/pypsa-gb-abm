@@ -6,20 +6,27 @@ Market / carbon policy) — linked to [PyPSA-GB](https://github.com/andrewlyden/
 zonal network, with **multi-energy coupling** to heat (household heat-pump agents), gas networks, EVs
 and hydrogen.
 
-> ⚠️ Prototype for a workshop. Uncalibrated; numbers are illustrative. See [assumptions](docs/assumptions.md).
+> ⚠️ Prototype. The 2025 operating year is calibrated against GB outturn ([table](results/calibration_2025.md));
+> the 2026-2050 pathway is not validated and numbers are illustrative. See [assumptions](docs/assumptions.md).
 
 * Research: [literature review](docs/research/literature_review.md) ·
   [capability-vs-challenge matrix](docs/research/capability_matrix.md) ·
   [gap analysis](docs/research/gap_analysis.md)
 * Design: [model design](docs/model_design.md) · [assumptions & limitations](docs/assumptions.md)
+* Optimal vs emergent: [the gap](docs/gap.md) · [roadmap: what the model is missing](docs/roadmap.md)
 
 ## Quick start
 ```bash
 pip install -e .            # numpy pandas scipy matplotlib mesa pypsa highspy
-pytest -q                   # 6 tests, ~30 s
+pytest -q                   # 43 tests, ~6 min
 python scripts/run_scenarios.py baseline --end 2030      # ~40 s
 python scripts/run_scenarios.py                          # all 6 scenarios 2025-2050 (~4 min each)
 python scripts/make_plots.py                             # -> docs/figures/
+python scripts/compare_outturn.py                        # 2025 vs GB outturn -> results/calibration_2025.md
+python scripts/run_ensemble.py                           # baseline, no_cfd, heat_push x 5 seeds
+python scripts/run_gap.py                                # optimal vs emergent: planner, ladder, levers (hours)
+# optional: rebuild the outturn reference / neighbour prices (public APIs, no key)
+python scripts/fetch_outturn.py 2024 2025 && python scripts/fetch_neighbour_prices.py 2024
 # optional: rebuild the PyPSA-GB snapshot / run on a live clone
 python scripts/extract_pypsagb_snapshot.py /path/to/PyPSA-GB
 python scripts/run_scenarios.py baseline --pypsa-gb /path/to/PyPSA-GB
@@ -37,25 +44,91 @@ ukabm/agents.py        GenCo agents (offers, CfD/CM bids, NPV investment), Plant
 ukabm/market.py        vectorised hourly clearing, storage arbitrage, valley-filling
 ukabm/model.py         GBMarketModel (Mesa): annual loop, auctions, settlement, investment
 ukabm/multienergy.py   HeatModule (household agents), GasNetworkModule, EVModule, HydrogenModule
-ukabm/network.py       PyPSA zonal redispatch on the PyPSA-GB zonal network
+ukabm/network.py       BM-style redispatch (bids/offers) on the PyPSA-GB zonal network, ETYS boundary limits
 ukabm/data/pypsagb.py  PyPSA-GB adapter (raw clone or bundled snapshot)
 ukabm/scenarios.py     baseline, high_carbon, no_cfd, heat_push, no_capacity_market, high_gas
+ukabm/outturn.py       model-vs-outturn comparison (data/outturn: NESO generation mix + CI, Elexon)
+ukabm/ensemble.py      multi-seed runs (run_ensemble, parallel) and per-year bands
+ukabm/costs.py         system-cost accounting shared by every run (resource cost; transfers cancel)
+ukabm/planner.py       the optimum: PyPSA multi-period capacity expansion; least-cost evaluator dispatch
+ukabm/gap.py           optimal vs emergent: gap runs, investment/operation split, ladder of agent frictions
 ```
 
-## Headline results (single seed, illustrative)
-| scenario | price 2030 / 2050 (£/MWh) | CI 2050 (g/kWh) | LOLE total 2025-50 (h) | HP homes 2050 |
-|---|---|---|---|---|
-| baseline | 77 / 31 | 9 | 0 | 6.7 m |
-| high_carbon (£300/t 2050) | 84 / 40 | 4 | 0 | 6.0 m |
-| no_cfd | 82 / 89 | 26 | 7 | 4.4 m |
-| no_capacity_market | 1328 / 37 | 8 | 13,228 | 3.8 m |
-| heat_push (£11.5k grant, £25/MWh levy rebalancing) | 82 / 48 | 19 | 15 | 27.3 m |
-| high_gas (£45/MWh_th) | 100 / 47 | 14 | 0 | 14.8 m |
+## 2025 calibration (baseline, seed 42) vs GB outturn
+| | model | outturn 2025 |
+|---|---|---|
+| price, time-weighted mean (£/MWh) | 83.9 | 79.9 (Elexon MID) |
+| carbon intensity, NESO basis: wholesale / after BM redispatch (g/kWh) | 113 / 122 | 130 (NESO, generation-weighted) |
+| gas / wind after BM redispatch (TWh) | 75 / 88 | 77 / 86 |
+| nuclear / biomass (TWh) | 35 / 20 | 34 / 20 |
+| imports / exports (TWh) | 45 / 15 | 44 / 15 (Elexon FUELHH) |
+| constraint cost (£bn) | 0.85 | 1.83, of which ~0.54 BM premia not modelled (LCP Delta 2026, NESO data) |
+| renewable turn-down in the BM (TWh) | 6.4 | 10.4 |
 
-Qualitative messages: CfDs drive offshore wind and lower long-run prices; removing the CM produces a
-missing-money scarcity episode before merchant entry responds (classic ABM investment cycle); high gas
-prices and levy rebalancing both accelerate heat-pump uptake, which raises winter peak and carbon intensity
-until the fleet catches up.
+The network stage redispatches the copperplate schedule on the PyPSA-GB zones with dated ETYS boundary
+capabilities. It turns down Scottish wind behind B4/B6 and turns up gas in England, which closes half of the CI gap.
+Interconnector flows enter at their landing zones (mostly southern England), so Scottish demand is not
+netted by imports; constraint cost and turn-down are ~35 % below outturn.
+Remaining residuals: the model has no CHP/waste "other" generation (4.7 TWh, ~+5 g/kWh) and its price
+distribution is too narrow (no negative hours). Full table: [results/calibration_2025.md](results/calibration_2025.md).
+
+## Optimal versus emergent: the gap (illustrative)
+The same system solved two ways: the agents (many actors, today's market design) and a PyPSA
+multi-period least-cost plan (one planner, perfect foresight, 3.5 %), both costed by one least-cost
+dispatch over 8,760 h ([method and results](docs/gap.md)). Present value of system cost 2025–2054, £bn,
+median of 3 seeds:
+
+| run | optimal | agents | gap [range] | of which investment / operation | gap % |
+|---|---|---|---|---|---|
+| baseline (full agents) | 315 | 346 | 32 [31–33] | 28 / 3 | 10.0 |
+| baseline, idealised agents | 315 | 352 | 37 [36–38] | 33 / 4 | 11.8 |
+| no_cfd | 313 | 372 | 57 [55–60] | 55 / 1 | 17.9 |
+| no_capacity_market | 313 | 332 | 18 [17–18] | 14 / 3 | 5.5 |
+| heat_push | 391 | 419 | 28 [28–31] | 25 / 3 | 7.2 |
+| high_carbon | 314 | 345 | 32 [31–33] | 28 / 4 | 10.3 |
+| high_gas | 350 | 387 | 37 [37–39] | 33 / 5 | 10.6 |
+
+* The gap is mostly **what is built**: too little solar and onshore wind by 2030, then too much
+  offshore wind, OCGT and batteries by 2050 (88 against 47 GW offshore).
+* **Firm traits barely move it, but mostly because they cannot.** Renewable volumes are set by the CfD
+  parameters (6 GW/yr, 60/20/20; bids never reach the caps) and firm capacity by the CM target formula,
+  so firms decide who builds, not how much. Idealised firms leave a larger gap (£37bn). Making the
+  government, the system operator and the firms' bids real decisions is now the top of the roadmap.
+* **CfDs keep the system near the optimum** (without them the gap nearly doubles); the **Capacity
+  Market** as modelled overshoots (without it the gap halves, at the cost of some loss of load).
+* The optimum has no reserve or response requirement and sees one weather year, which overstates the
+  gap (24 GW of batteries alone ≈ £1.5bn/yr in 2050); see the caveats in [docs/gap.md](docs/gap.md).
+
+![gap over time](docs/figures/gap_over_time.svg)
+![gap ladder](docs/figures/gap_ladder.svg)
+
+## Scenario results (illustrative)
+Ensembles, median [min–max] of seeds 1–5 ([results/ensemble_summary.md](results/ensemble_summary.md)). Seeds vary
+agent and path draws, not weather, demand, fuel or carbon paths.
+
+| scenario | price 2030 (£/MWh) | price 2050 (£/MWh) | CI 2050 (g/kWh) | LOLE total 2025-50 (h) | HP homes 2050 (m) | offshore wind 2050 (GW) |
+|---|---|---|---|---|---|---|
+| baseline | 90 [88–91] | 36 [36–38] | 7 [6–9] | 0 [0–34] | 6.8 [6.5–7.4] | 87 [84–89] |
+| heat_push | 94 [92–96] | 53 [53–55] | 17 [16–18] | 0 [0–101] | 27.1 [26.8–27.3] | 87 [84–89] |
+| no_cfd | 95 [93–97] | 79 [76–81] | 26 [24–27] | 0 [0–39] | 5.0 [4.6–5.1] | 3 [0–5] |
+
+All scenarios, seed 42:
+
+| scenario | price 2030 / 2050 (£/MWh) | CI 2050 (g/kWh), direct (NESO basis) | LOLE total 2025-50 (h) | HP homes 2050 | batteries 2030 / 2050 (GW) |
+|---|---|---|---|---|---|
+| baseline | 89 / 38 | 9 (14) | 0 | 7.3 m | 5 / 26 |
+| high_carbon (£300/t 2050) | 96 / 45 | 7 (11) | 0 | 6.6 m | 6 / 30 |
+| no_cfd | 94 / 86 | 28 (41) | 0 | 5.0 m | 5 / 10 |
+| no_capacity_market | 93 / 48 | 5 (10) | 76 | 6.8 m | 5 / 15 |
+| heat_push (£11.5k grant, £25/MWh levy rebalancing) | 93 / 53 | 17 (24) | 0 | 27.2 m | 6 / 28 |
+| high_gas (central gas path + £15/MWh_th) | 114 / 53 | 12 (18) | 0 | 13.7 m | 11 / 38 |
+
+The central gas path now includes the 2026 spike (£55/MWh_th in 2026, £63 in 2027, easing to £35 by 2030;
+[assumptions](docs/assumptions.md)), so wholesale prices peak at ~£147/MWh in 2027 in every scenario. CfDs
+drive offshore wind and lower long-run prices; without a Capacity Market, loss of load appears from the late 2030s
+(76 h over 2037–50) rather than as an early scarcity episode; high gas prices and levy rebalancing both accelerate
+heat-pump uptake, which raises winter peak and carbon intensity until the fleet catches up. Loss-of-load hours
+are seed-dependent (0–101 h across seeds in heat_push) and should not be quoted from one seed.
 
 ![scenarios](docs/figures/scenario_comparison.svg)
 ![capacity](docs/figures/capacity_mix.svg)
@@ -64,45 +137,186 @@ until the fleet catches up.
 
 | area | status |
 |---|---|
-| Hourly GB market clearing (agent offers, ORDC scarcity, interconnector tranches) | ✅ works, unit-tested |
-| Storage arbitrage (battery, pumped hydro), smart EV valley-filling, electrolysers | ✅ works (heuristic, perfect intra-day foresight) |
+| Hourly GB market clearing (agent offers, ORDC scarcity) | ✅ works, unit-tested |
+| Interconnectors: per-market import offers + export bids on observed 2024 neighbour price shapes | ✅ works; calibrated to 2025 flows (45/15 TWh vs 44/15) |
+| 2025 calibration vs outturn (`scripts/compare_outturn.py`) | ✅ price +6 %, gas/imports/exports/nuclear/biomass within 10 %; CI (NESO basis) −13 % with explained residuals (curtailment, "other") |
+| Storage arbitrage (battery, pumped hydro), smart EV valley-filling, electrolysers | ✅ works (heuristic, perfect intra-day foresight; storage fleet dispatched in price-aware tranches) |
 | Merchant investment (5 heterogeneous GenCos, NPV on re-forecast prices) | ✅ works |
-| CfD allocation rounds with pots; 2-way CfD settlement | ✅ works (simplified: no £ budget) |
-| T-4 Capacity Market with sloping demand curve | ✅ works (no T-1, no penalties) |
+| CfD allocation rounds with pots; 2-way CfD settlement | ✅ works. ⚠️ Volume fixed at 6 GW/yr (60/20/20) with no £ budget; bids (levelised cost ± noise) never reach the caps, so the auction decides who builds, not how much (roadmap items 2–3) |
+| Government / system operator as agents (CfD budgets, CM target, rule changes) | ❌ not started: policy rules are fixed parameters (roadmap items 2, 5) |
+| T-4 Capacity Market with sloping demand curve | ✅ works (no T-1, no penalties); fixed Nov 2026: no acceptance beyond the end of the demand curve, new-build bids on the t+3 forecast. ⚠️ target ~25 % above published (roadmap) |
 | Retirement on persistent losses / end of life | ✅ works |
 | PyPSA-GB link: zonal network, ESPENI profiles, DUKES siting, IC register, CM/CfD data | ✅ works (bundled snapshot or live clone) |
-| PyPSA zonal redispatch → constraint cost, zonal price siting signal | ⚠️ runs; constraint costs look **too low** (~£0.1bn vs £1–2bn outturn) — zonal transport model, random 96 hours, single GB wind shape |
+| Network stage: BM-style redispatch (bids/offers) on PyPSA-GB zones with dated ETYS boundary capabilities and monthly availability, 96 wind-stratified hours | ✅ 2025: £0.85bn vs £1.29bn outturn excl. BM premia; 6.4 vs 10.4 TWh turn-down; post-BM gas/wind within 3 TWh, CI 8 g/kWh low. Boundary cuts tested for bypass routes; IC flows at landing zones. Siting by resource share (national pricing); LMP siting is the `locational_signal` sensitivity. ⚠️ Single GB wind shape for all zones; ~£0 in 2030 (see roadmap); redispatch is reported only, not settled or passed to consumers (no BSUoS) |
 | Heat-pump household agents + gas network tariff feedback | ✅ works (stylised, synthetic temperature) |
 | Hydrogen: electrolysers + H2 turbine tech | ⚠️ stub-level: exogenous H2 price, no H2 storage/network |
-| Batteries | ⚠️ no new merchant batteries: flat price duration under OCGT-led CM; needs BM/ancillary revenue stack |
+| Batteries: revenue stack (day-ahead arbitrage + ancillary and intraday/BM pots shared across the fleet + CM) | ✅ 2025 stack £64k/MW/yr before CM (Modo index £73k incl. CM); batteries enter via CM (stepwise supply curve: each chunk counts the batteries ahead of it) and merchant NPV, 6–7 GW by 2030 and 17–38 GW by 2050; the 2030 fleet earns about its entry cost (£76k/MW/yr), 2040–50 ~75–80 %. ⚠️ Stylised pots (2050 fleet scales with the trading pot: 15 / 24 / 33 GW at ×0.5 / ×1 / ×1.5), not charged to consumers (`battery_services_bn`); low against Clean Power 2030 (23–27 GW by 2030) |
 | Strategic BM bidding, nodal/ETYS network in loop, RL agents | ❌ not started |
-| Calibration/validation vs 2020–24 outturn, multi-seed Monte-Carlo, weather years | ❌ not started |
+| Price distribution | ⚠️ too narrow: no negative hours (244 in 2025), p05 £54 vs £9, p95 £100 vs £123 (no unit commitment / must-run, no scarcity tail) |
+| Multi-seed Monte-Carlo (`run_ensemble`, band plots) | ✅ 5 seeds for baseline, no_cfd, heat_push; other scenarios seed 42 |
+| System cost (resource cost, `syscost_*` columns) and planner benchmark (`ukabm.planner`) | ✅ PyPSA multi-period LP on the same inputs; least-cost evaluator for both pathways. ⚠️ copperplate, one weather year, electricity only (demand held at the agents' values) |
+| Gap ladder (idealised agent trait groups) and policy levers (`ukabm.gap`, `scripts/run_gap.py`) | ✅ 3 seeds; see [docs/gap.md](docs/gap.md) |
+| Back-casts 2020–24, weather years, CI tolerance test | ❌ not started (2025 only) |
 
 **Next (priority order)**
 
-The daily agent takes the highest unfinished item it can complete in one run. Items marked
-*needs human* are decisions for the maintainer and are skipped by the agent.
+The project's focus is the gap between the optimal and the emergent system ([docs/gap.md](docs/gap.md)):
+how large it is, where it comes from, and which market designs and plans close it. The first measurement
+showed that the model cannot yet say where the gap comes from, because the CfD volume, the Capacity
+Market target and the carbon price are fixed parameters rather than decisions anyone makes. The roadmap
+therefore starts by making those decisions real. Rationale for every item: [docs/roadmap.md](docs/roadmap.md).
 
-1. Multi-seed runs (5 seeds) for baseline + 2 policy scenarios; show uncertainty bands, not single lines,
-   in the plots and the headline table.
-2. Calibrate 2025 against outturn. Price is plausible (~£75–80/MWh ✅) but carbon intensity is ~47 g/kWh
-   vs ~125 actual ❌: imports and biomass run too much, CCGT too little. Diagnose (interconnector tranche
-   prices, biomass costs/availability, CCGT offers), fix, and report 2025 price, CI and generation mix vs
-   outturn in a table.
-3. Network stage: switch to the PyPSA-GB Reduced 32-bus network with zonal wind profiles (Scottish vs
-   English wind) and representative rather than random hours. Constraint costs (~£0.1bn now) should move
-   towards the £1–2bn/yr outturn.
-4. Battery revenues: add a stylised BM/ancillary revenue stack so merchant batteries can enter. Then check
-   Capacity Market over-procurement of OCGT (CM clears at the cap every year; the target is likely too high
-   with an unmanaged EV peak).
-5. Validation check: a script and test comparing the 2025 run with outturn (price, CI, generation mix)
-   within tolerance bands documented in `docs/assumptions.md`, so regressions show up in CI.
-6. Write up the heat_push vs baseline loop (HP uptake ↔ prices ↔ gas tariffs) as a docs page: the
-   multi-energy headline result.
-7. *needs human*: decide whether to extend validation to 2020–24 back-casts and multiple weather years,
-   and which outturn data sources to treat as the reference.
-8. *needs human*: choose what to pursue next among hydrogen (H2 storage/network vs exogenous price),
-   strategic BM bidding, nodal/ETYS network in the loop, and RL agents.
+The daily agent takes the highest unfinished item it can complete in one run; a large item may be split
+over several PRs, each leaving the model working. After any item that changes agent or planner behaviour,
+re-run `scripts/run_gap.py` and update [docs/gap.md](docs/gap.md).
+
+*A. Who decides*
+
+1. **Decision interface (deck slide 16).** Move `GenCo` investment, CfD bids and CM bids behind one
+   interface (inputs: forecasts, prices, policy state; outputs: decisions), with the current rules as the
+   default implementation and a test that results are identical for a fixed seed. Government (items 2,
+   6), system-operator (item 5), Q-learning (item 24) and LLM (item 25) decision makers all plug into it.
+2. **Government agent and a £-budget CfD auction.** New `ukabm/institutions.py` with a `Government` that
+   sets each round's budget per pot in £ (strike minus forecast reference price, times expected
+   generation, as in the allocation framework, simplified), the pot split and the administrative strike
+   prices. First objective, `government: "targets"`: track a capacity target path (Clean Power 2030, then
+   FES), raise a pot's cap after an under-subscribed round, cut the budget when the levy passes a bill
+   threshold. The auction clears pay-as-clear per pot until the budget is spent. `government: "fixed"`
+   keeps today's 6 GW/yr rule. Tests: budget respected; an empty round raises the cap next year.
+3. **CfD bids from expectations.** A firm bids the lowest strike that meets its hurdle NPV on its own
+   forecast of reference prices, capture rates and costs (replacing levelised cost ± noise; the forecast
+   is already passed to `cfd_bid` but unused). Firms abstain when the cap is below that strike, and a
+   winning project can be withdrawn before its final investment decision if costs rise.
+4. **Merchant and PPA renewables; lifetime forecasts.** Let wind and solar be built on merchant NPV, with
+   a PPA option at a discount, alongside CfDs. Forecast prices at each technology's online year (lead
+   time) and at two later years, and use the declining margin in the NPV, replacing the single t+3
+   forecast for every technology.
+5. **System operator agent for the Capacity Market.** A NESO agent sets the T-4 target from the 3 h LOLE
+   reliability standard on its own peak forecast (managed heat-pump and EV peak, de-rating factors), with
+   a T-1 holdback. Reconcile with published targets: today's model target for 2029/30 is ~49 GW de-rated
+   against 39.4 GW published (2028/29: 43.7 GW target, 43.0 GW procured; Modo Energy).
+6. **Government objectives as levers.** Add three objectives to the `Government` of item 2, each a scenario
+   value: `"least_cost"` (budgets and pots from the planner's pathway: the ideal-government rung),
+   `"bills"` (meet targets at the lowest levy, accept slippage when bills rise), and `"political"` (avoid
+   levy rises in the two years before an election every five years; announce ambitious targets, fund
+   them late). Document each rule in `docs/model_design.md`; a test that each changes round budgets as
+   intended.
+7. **Convergence test.** Scenario `competitive_benchmark`: no CfD, no CM, scarcity pricing at VoLL,
+   idealised firms, merchant renewables, lifetime forecasts, small blocks. In theory a competitive market
+   then reproduces the least-cost plan; its gap to the planner measures the decision procedure alone.
+   Aim for < 3 %; if it is larger, find out why before interpreting other gaps. Add a regression test.
+
+*B. A fair benchmark*
+
+8. **Speed.** Profile a gap run (forecast market clearings, planner LP, evaluator) and halve the batch
+   time, e.g. by caching or reduced-hour forecasts. Items 14–17 and section D need many more runs.
+9. **Reserve and response in the optimum.** Agents build batteries partly for ancillary and intraday/BM
+   revenue (`config.BATTERY_*` pots), but the planner and the evaluator have no reserve or response
+   requirement, so those batteries count as pure cost. Add a requirement sized to the 2025 ancillary
+   market to `planner.plan` and `planner.evaluate`, and report how much of the gap it removes.
+10. **Same-outcome optimum.** Planner variants with the agents' emissions per period as a cap, and with the
+    agents' loss of load as a constraint. The gap at equal emissions separates efficiency from ambition.
+11. **Planner with the agents' information.** A rolling-horizon planner that plans each period with one or
+    two periods of foresight and only the fuel and carbon prices known at the time. Perfect-foresight gap
+    minus rolling-horizon gap = the value of information.
+12. **Planned pathway as a third benchmark.** Encode the Clean Power 2030 action plan and the FES 2025
+    Holistic Transition capacities as a fixed pathway, cost it with the evaluator, and report optimal vs
+    planned vs emergent.
+13. **Who pays.** For both pathways, report consumer cost, producer surplus, policy cost (CfD, CM, RO) and
+    carbon revenue, pricing the planner's fleet through the agents' market clearing.
+14. **Multi-energy optimum (a): heat.** The planner also chooses how homes are heated each period (heat
+    pumps vs gas boilers, using the household stock and heat demand of `HeatModule`), paying household
+    heating capex, gas supply and gas network cost. `ukabm.costs` adds the same heat-side costs to the
+    agents' system cost, so household decisions become a source of the gap. Follow heat in PyPSA-GB
+    (Lyden et al. 2024b).
+15. **Multi-energy optimum (b): hydrogen.** Make electrolysers, hydrogen storage and hydrogen turbines
+    endogenous in the planner, with hydrogen demand (industry, power) per period; on the agents' side
+    replace the exogenous electrolyser path and hydrogen price with merchant electrolyser investment and a
+    hydrogen price that clears supply and demand (Dergunova and Lyden 2024).
+
+*C. Evidence*
+
+16. **Auction back-cast.** Add CfD AR1–AR6 (LCCC) and CM T-4 2014–2025 (EMR Delivery Body) clearing prices
+    and volumes by technology to `data/outturn`. Run the government and firm logic of items 2–6 over
+    2014–2025 with the historical budgets and targets; compare prices and volumes; set tolerance bands and
+    a test.
+17. **Weather years.** Extract demand, wind and solar profiles for 4–6 historical years from PyPSA-GB
+    (ESPENI and atlite, via `scripts/extract_pypsagb_snapshot.py` with `profile_year`), including a cold,
+    still year (e.g. 2010) and a low-wind year (2021). The planner optimises over all years (weighted);
+    agents and the evaluator draw a year per simulation year with a seed; gap results report the spread
+    across years. Neighbour price shapes exist only for 2024: rescale, or fetch more years.
+18. **Developer pipeline.** Projects pass through leasing, consent and grid connection with sunk costs and
+    attrition; only consented projects may bid. Initial pipeline from the TEC register and Crown Estate
+    leasing rounds.
+19. **Technology cost trajectories.** Year-dependent capex and FOM for solar, wind, batteries, gas CCS and
+    electrolysers (DESNZ Electricity Generation Costs 2023; NREL ATB) in both runs, so the timing of
+    investment matters.
+
+*D. Experiments (the deck's questions)*
+
+20. **Gap robustness.** 5 seeds (currently 3); planner build limits ×0.5 and ×2
+    (`config.PLANNER_BUILD_MW_PER_YEAR`); the planner restricted to the agents' option set per period.
+21. **Ladder with government and firm rungs.** Idealise the government (`"least_cost"`, the reliability
+    standard met exactly) and the firms separately, run every order of the rungs and report each source's
+    range (Shapley-style). Replaces the single-order ladder.
+22. **Design levers.** Sweep the CfD budget and pot split, the reliability standard, an energy-only market,
+    the government objectives of item 6, and REMA options (deemed-generation CfD, centralised
+    reliability options); zonal pricing once item 26 exists.
+23. **Patterns over time (deck slide 12).** (a) Tipping point: sweep `hp_grant` (£0–15k, 7 values,
+    3 seeds) and plot 2050 heat-pump homes and the gap against the grant. (b) Lock-in: years between
+    heat-pump/boiler lifecycle-cost parity and heat pumps passing 50 % of replacements. (c) Multiple
+    equilibria: seed spread of the 2050 flexibility mix (batteries vs OCGT vs demand response).
+24. **Q-learning agents.** Q-learning implementations of firms' CfD bids, CM bids and offer mark-ups
+    behind the item 1 interface (state: recent clearing prices, own margins; reward: profit), trained
+    over repeated runs with fixed seeds. Compare their gap, prices and bids with the rule-based firms;
+    check for tacit collusion.
+25. **LLM agents on open-weight models, compared with rules and Q-learning.** LLM implementations of the
+    government's round settings and firms' investment and bid decisions behind the item 1 interface.
+    * *Models:* open-weight, Apache-2.0 by default (e.g. Qwen3, gpt-oss, Mistral Small), with the model
+      name and revision pinned in the scenario. One client for the OpenAI-compatible API, so the same code
+      runs Ollama on a laptop, vLLM on a GPU cluster, or Claude as an optional comparison.
+    * *Division of labour:* the model computes NPVs, forecasts and the option set; the LLM chooses among
+      options (which projects, bid strategy, risk stance) and returns JSON validated against a schema,
+      falling back to the rule-based decision if invalid. One call per decision maker per year (~175 per
+      run).
+    * *Reproducibility:* temperature 0 and a seed; every response cached by (model, prompt) hash in
+      `results/llm_cache/`, so a cached run repeats exactly and the cache can be published.
+    * *Tests:* a fake client with canned responses, so CI needs no model. Development runs use a 4-bit
+      7–8B model under Ollama (~1–3 h per run on a CPU laptop).
+    * *Experiments:* rules vs Q-learning vs LLM on the scenarios of items 21–22, and a model-size ladder
+      (~8B, ~30B, ≥100B) as a bounded-rationality lever. Larger models and full sweeps need a GPU (university
+      HPC with vLLM): the maintainer arranges access; until then run the small model locally.
+
+*E. Realism*
+
+26. **Network in the gap.** Add the redispatch cost to the agents' system cost in network years and give
+    the planner the PyPSA-GB zones with dated ETYS boundaries, so siting enters the gap; then a
+    zonal-pricing scenario (settle at the network stage's zonal prices).
+27. Network follow-ups: constraint cost ~£0 in 2030–35 (LCP Delta projects £4–6bn in 2030); offshore build
+    rate vs the 2030 pipeline; East Anglia (EC5) constraint; zonal wind profiles; interconnector
+    counter-trades; post-BM CI in the headline (by 2050 redispatch adds up to ~30 g/kWh); constraint costs
+    and the battery service pots are not recovered from consumers (no BSUoS in the retail price); a
+    TNUoS-style zonal generation charge as the GB-consistent locational signal under national pricing.
+28. Neighbouring markets: replace the fixed 2024 price shapes with 2030–2050 paths (ENTSO-E TYNDP or
+    PyPSA-Eur) so Europe decarbonises too; net trade is worth £17bn PV to the optimum. Interconnector
+    capacity is flat at 14.7 GW from 2031 (FAB Link) to 2050, below FES net-zero pathways: add dated
+    pipeline projects (LionLink, Nautilus, MaresConnect, Tarchon, …) from the NESO/Ofgem pipeline, or a
+    sourced `ic_growth` path.
+29. Demand flexibility and long-duration storage: heat-pump and industrial demand response and
+    non-hydrogen long-duration storage, available to both runs.
+30. Price distribution too narrow (no negative hours, p95 £100 vs £123 in 2025): must-run/min-stable
+    generation and RO bidding. Battery capex (£600/kW for 2 h) needs a 2025 source.
+31. Validation check: tolerance bands (in `docs/assumptions.md`) on the `ukabm.outturn.compare` table for
+    2025 and a test, so regressions show up in CI.
+32. Finance: cost of capital that depends on each firm's mix of merchant, contracted and capacity revenue;
+    firm entry and exit.
+33. Carbon price from a UK ETS cap; nuclear and transmission investment as government decisions.
+
+*Decided by the maintainer (26 Nov 2026)*: the government agent gets several objectives, compared as
+levers (items 2, 6); the optimum becomes multi-energy with heat and hydrogen (items 14–15); validation
+extends to auction back-casts and weather years (items 16–17), not yet to 2020–24 operation back-casts;
+Q-learning and LLM agents are both built and compared (items 24–25), the LLM agents on open-weight
+models first, with Claude as an optional comparison.
 
 ## Credits
 Data extracts from PyPSA-GB (MIT), which in turn uses ESPENI, DUKES, NESO and LCCC data. Framework: Mesa, PyPSA, HiGHS.

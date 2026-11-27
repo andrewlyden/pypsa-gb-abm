@@ -18,39 +18,60 @@ class Block:
     key: int              # plant id
     price: np.ndarray | float  # GBP/MWh offer price, scalar or hourly array
     avail: np.ndarray | float  # MW available, scalar or hourly array
+    demand_bid: bool = False   # buy-back block standing for a price-responsive bid (e.g. exports)
 
 
-def clear(demand: np.ndarray, blocks: list[Block], voll: float = 6000.0,
-          scarcity_sigma: float = 2500.0, scarcity_on: bool = True):
-    """Uniform-price clearing for every hour (vectorised).
-
-    Returns price[h], dispatch[h, b] (ordered like *blocks*), unserved[h], spill[h].
-    Scarcity: an ORDC-style adder VOLL*LOLP(margin), LOLP ~ 0.5*erfc(margin/(sigma*sqrt2)).
-    """
-    H = len(demand)
+def merit_order(blocks: list[Block], H: int):
+    """Hourly merit order of *blocks*: (order, sorted prices, sorted quantities, cumulative quantity).
+    Can be passed to clear() to re-clear the same offers against different demand."""
     P0 = np.empty((H, len(blocks)))
     Q0 = np.empty((H, len(blocks)))
     for i, b in enumerate(blocks):
         P0[:, i] = np.broadcast_to(b.price, (H,))
         Q0[:, i] = np.broadcast_to(b.avail, (H,))
-    order = np.argsort(P0, axis=1, kind="stable")          # hourly merit order
+    order = np.argsort(P0, axis=1, kind="stable")
     P = np.take_along_axis(P0, order, axis=1)
     Q = np.take_along_axis(Q0, order, axis=1)
-    cum = np.cumsum(Q, axis=1)
-    total = cum[:, -1]
+    return order, P, Q, np.cumsum(Q, axis=1)
+
+
+def clear(demand: np.ndarray, blocks: list[Block], voll: float = 6000.0,
+          scarcity_sigma: float = 2500.0, scarcity_on: bool = True, curve=None):
+    """Uniform-price clearing for every hour (vectorised).
+
+    Returns price[h], dispatch[h, b] (ordered like *blocks*), unserved[h].
+    Scarcity: an ORDC-style adder VOLL*LOLP(margin), LOLP ~ 0.5*erfc(margin/(sigma*sqrt2)).
+    The margin is total offered volume minus demand. Buy-back blocks (``demand_bid``) appear on
+    both sides, so it is physical supply minus the remaining demand. A buy-back block whose
+    price is below the adder is accepted in full before the merit order is cleared. A
+    price-responsive bid is therefore never served above its price, also in scarcity hours.
+    *curve*: merit_order(blocks, H), to skip rebuilding it when only demand changes.
+    """
+    H = len(demand)
+    order, P, Q, cum = curve if curve is not None else merit_order(blocks, H)
     d = np.maximum(demand, 0.0)
+    pre = np.zeros_like(Q)        # buy-back volume accepted because of the scarcity adder
+    adder = np.zeros(H)
+    if scarcity_on:
+        margin = cum[:, -1] - d
+        lolp = 0.5 * erfc(margin / (scarcity_sigma * np.sqrt(2)))
+        adder = np.minimum(voll * lolp, voll)
+        bid = np.array([b.demand_bid for b in blocks])[order]
+        pre = np.where(bid & (P < adder[:, None]), Q, 0.0)
+        if pre.any():
+            Q = Q - pre
+            cum = np.cumsum(Q, axis=1)
+            d = d - pre.sum(axis=1)   # leaves margin, and so the adder, unchanged
+    total = cum[:, -1]
     idx = (cum < d[:, None]).sum(axis=1)  # first block meeting demand
     short = idx >= len(blocks)
     idx_c = np.minimum(idx, len(blocks) - 1)
     price = P[np.arange(H), idx_c].copy()
     price[short] = voll
-    disp_sorted = np.clip(d[:, None] - (cum - Q), 0.0, Q)
+    disp_sorted = np.clip(d[:, None] - (cum - Q), 0.0, Q) + pre
     unserved = np.maximum(d - total, 0.0)
     # Blocks with negative price run even if demand is low: they are "must-run"; excess spilt
-    if scarcity_on:
-        margin = total - d
-        lolp = 0.5 * erfc(margin / (scarcity_sigma * np.sqrt(2)))
-        price = np.maximum(price, np.minimum(voll * lolp, voll))
+    price = np.maximum(price, adder)
     dispatch = np.empty_like(disp_sorted)
     np.put_along_axis(dispatch, order, disp_sorted, axis=1)
     return price, dispatch, unserved
