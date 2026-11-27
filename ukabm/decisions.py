@@ -1,0 +1,266 @@
+"""Decision interface: every choice a generation company makes goes through a DecisionMaker.
+
+The model asks the owning GenCo, and the GenCo asks its decision maker. Inputs are the agent itself
+(its traits, and through ``agent.model`` the year, fleet, policy and forecasting helpers) plus the
+arguments of each call (price forecasts, plants, technologies). Outputs are plain decisions: an offer
+price, an expected carbon price, a merchant investment, a CfD strike bid or a CM bid.
+
+``RuleBased`` holds the model's original rules. Other implementations (government and system-operator
+rules, Q-learning, LLM agents; README roadmap items 2, 5, 6, 24, 25) subclass ``DecisionMaker``,
+override the decisions they make, inherit the rest, and are registered by name:
+
+    register("my_logic", MyLogic)
+    scenario["decision_logic"] = "my_logic"                          # every GenCo
+    scenario["decision_logic"] = {"MerchantIPP": "my_logic"}         # named GenCos; others "rules"
+
+Implementations must draw random numbers only from ``agent.model.rng`` so runs stay reproducible.
+"""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import numpy as np
+
+from .config import STORAGE_TECHS, TECHS, VRE_TECHS  # noqa: F401  (STORAGE_TECHS for subclasses)
+
+if TYPE_CHECKING:  # pragma: no cover
+    from .agents import GenCo, Plant
+
+
+class DecisionMaker:
+    """Interface. Each method is one decision; see ``RuleBased`` for the reference behaviour."""
+
+    name = "base"
+
+    def offer_price(self, agent: "GenCo", plant: "Plant", srmc: float, year: int) -> float:
+        """Day-ahead offer price (GBP/MWh) for *plant* in *year*, given its short-run marginal cost."""
+        raise NotImplementedError
+
+    def expected_carbon(self, agent: "GenCo", year: int) -> float:
+        """The carbon price (GBP/t) the agent expects in *year*."""
+        raise NotImplementedError
+
+    def merchant_investment(self, agent: "GenCo", forecast) -> tuple[str, float, float] | None:
+        """One merchant investment (tech, MW, NPV GBP/MW) on the hourly *forecast* price, or None."""
+        raise NotImplementedError
+
+    def cfd_bid(self, agent: "GenCo", tech: str, forecast) -> float:
+        """Strike-price bid (GBP/MWh) for one block of *tech* in this year's CfD round."""
+        raise NotImplementedError
+
+    def cm_bid(self, agent: "GenCo", plant_or_tech, expected_margin_per_kw: float, new: bool) -> float:
+        """Capacity Market bid (GBP/kW/yr, de-rated) for an existing plant or one new-build block."""
+        raise NotImplementedError
+
+
+class RuleBased(DecisionMaker):
+    """The model's original decision rules (heterogeneous through the GenCo's traits)."""
+
+    name = "rules"
+
+    def offer_price(self, agent, plant, srmc, year):
+        p = agent.model.policy
+        if plant.tech in VRE_TECHS or plant.tech == "hydro":
+            if plant.support == "ro":
+                return -p.ro_value          # RO units bid negative up to the ROC value
+            if plant.support == "cfd" and year <= plant.cfd_end:
+                return -0.01                # CfD (post-AR4 negative-price rule simplified)
+            return 0.0
+        if plant.tech == "nuclear":
+            return srmc - 15.0              # inflexible: bids below cost to stay on
+        return srmc * (1.0 + agent.markup)
+
+    def expected_carbon(self, agent, year):
+        p = agent.model.policy
+        c = p.carbon_price(year)
+        if agent.expectation == "carbon_optimist":
+            return c * 1.3
+        if agent.expectation == "myopic":
+            return p.carbon_price(agent.model.year)  # assumes today's price persists
+        return c
+
+    def merchant_investment(self, agent, forecast):
+        """Evaluate candidate techs on the forecast price series; build one block of the best."""
+        m = agent.model
+        best = None
+        for tech in agent.tech_preference:
+            t = TECHS[tech]
+            if not t.investable or tech in m.scenario.get("banned_techs", []):
+                continue
+            if tech in VRE_TECHS and m.policy.cfd_enabled:
+                continue  # VRE goes via CfD auction when CfD is available
+            if tech == "nuclear":
+                continue  # nuclear only via government-led CfD/RAB route
+            margin = m.expected_margin_per_mw(tech, forecast, agent)
+            # cannibalisation haircut for VRE capture price and for own price impact
+            npv = agent.npv_per_mw(tech, margin * (1 - agent.risk_aversion))
+            if npv > 0 and (best is None or npv > best[1]):
+                best = (tech, npv)
+        if best is None:
+            return None
+        tech = best[0]
+        mw = TECHS[tech].chunk_mw
+        cost = TECHS[tech].capex * 1000 * mw
+        if cost > agent.budget:
+            return None
+        return tech, mw, best[1]
+
+    def cfd_bid(self, agent, tech, forecast):
+        """Strike-price bid = levelised cost at a de-risked (CfD) WACC."""
+        t = TECHS[tech]
+        r = max(agent.wacc - 0.025, 0.035)
+        crf = r / (1 - (1 + r) ** -t.life)
+        cf = agent.model.capacity_factor(tech)
+        lcoe = (t.capex * 1000 * crf + t.fom * 1000) / (8760 * cf) + t.vom
+        return lcoe * (1 + 0.05 * agent.model.rng.standard_normal())
+
+    def cm_bid(self, agent, plant_or_tech, expected_margin_per_kw, new):
+        """Net missing money."""
+        if new:
+            t = TECHS[plant_or_tech]
+            crf = agent.wacc / (1 - (1 + agent.wacc) ** -15)  # 15-year CM agreement
+            missing = t.capex * crf + t.fom - expected_margin_per_kw
+            return max(missing, 0.0) / t.derating
+        t = TECHS[plant_or_tech.tech]
+        return max(t.fom - expected_margin_per_kw, 0.0) / t.derating
+
+
+REGISTRY: dict[str, type[DecisionMaker]] = {"rules": RuleBased}
+
+
+def register(name: str, cls: type[DecisionMaker]) -> None:
+    """Make *cls* selectable as ``scenario["decision_logic"] = name``."""
+    if not (isinstance(cls, type) and issubclass(cls, DecisionMaker)):
+        raise TypeError(f"{cls!r} is not a DecisionMaker subclass")
+    REGISTRY[name] = cls
+
+
+def make(spec) -> DecisionMaker:
+    """A decision maker from a registered name, a DecisionMaker subclass or an instance."""
+    if isinstance(spec, DecisionMaker):
+        return spec
+    if isinstance(spec, type) and issubclass(spec, DecisionMaker):
+        return spec()
+    if spec not in REGISTRY:
+        raise KeyError(f"unknown decision logic {spec!r}; registered: {sorted(REGISTRY)}")
+    return REGISTRY[spec]()
+
+
+def for_genco(scenario: dict, genco_name: str) -> DecisionMaker:
+    """The decision maker *scenario* assigns to the GenCo called *genco_name* (default: rules)."""
+    spec = scenario.get("decision_logic", "rules")
+    if isinstance(spec, dict):
+        spec = spec.get(genco_name, "rules")
+    return make(spec)
+
+
+class ExpectationBids(RuleBased):
+    """Forward-looking firms: CfD bids from their own expectations (README roadmap item 3), and merchant
+    or PPA investment, wind and solar included, on forecasts over the asset's life (item 4).
+
+    The bid is the lowest strike at which the project meets the firm's hurdle rate:
+
+        capex = PV_contract(strike x gen x (1 - basis) - FOM)  +  PV_tail(capture x gen - FOM)
+
+    over a 20-year two-way CfD at the de-risked rate (WACC - 2.5 points, floor 3.5 %), then a merchant
+    tail to the end of the asset's life at the firm's WACC. The tail capture price is the firm's view:
+    *myopic* firms take this year's capture price, *adaptive* firms the t+3 forecast less a 15 %
+    cannibalisation haircut, *carbon optimists* the t+3 forecast without the haircut. Risk aversion adds
+    a premium on the required revenue, and ±2 % noise (from ``model.rng``) stands for project-specific
+    costs. A firm whose required strike is above the cap is excluded by the auction (it abstains).
+    Withdrawal after winning needs cost uncertainty, which arrives with cost trajectories (item 19).
+    """
+
+    name = "expectations"
+    CONTRACT_YEARS = 20
+    BASIS = 0.02          # share of contracted output not paid the strike (curtailment, negative hours)
+    HAIRCUT = 0.15        # adaptive firms' cannibalisation haircut on the forecast capture price
+
+    def tail_capture(self, agent, tech, forecast):
+        m = agent.model
+        cf = m.cf_profile(tech)
+        if agent.expectation == "myopic" and m.last_price is not None:
+            price, haircut = m.last_price, 0.0
+        else:
+            price = forecast
+            haircut = 0.0 if agent.expectation == "carbon_optimist" else self.HAIRCUT
+        return float((price * cf).sum() / max(cf.sum(), 1e-9)) * (1 - haircut)
+
+    def cfd_bid(self, agent, tech, forecast):
+        t = TECHS[tech]
+        m = agent.model
+        gen = 8760 * m.capacity_factor(tech)                      # MWh per MW per year
+        n = min(self.CONTRACT_YEARS, t.life)
+        rc = max(agent.wacc - 0.025, 0.035)                       # contracted years
+        rm = agent.wacc                                           # merchant tail
+        a_contract = (1 - (1 + rc) ** -n) / rc
+        a_tail = ((1 - (1 + rm) ** -t.life) / rm - (1 - (1 + rm) ** -n) / rm) if t.life > n else 0.0
+        capex = t.capex * 1000
+        fom = t.fom * 1000
+        tail = max(self.tail_capture(agent, tech, forecast) - t.vom, 0.0) * gen - fom
+        need = capex + fom * a_contract - tail * a_tail          # PV the contract must cover
+        strike = need / (a_contract * gen * (1 - self.BASIS)) + t.vom
+        strike /= max(1 - 0.5 * agent.risk_aversion, 0.5)        # risk premium
+        return strike * (1 + 0.02 * m.rng.standard_normal())
+
+    # ------------------------------------------------ merchant and PPA investment (roadmap item 4)
+    PPA_YEARS = 15
+    PPA_DISCOUNT = 0.10    # PPA price below the expected capture price (the offtaker's margin and risk)
+    PPA_RATE_CUT = 0.015   # contracted revenue lowers the cost of capital by this much
+
+    def margin_path(self, agent, tech, forecast):
+        """Expected annual margin per MW at each forecast year: t+3 (the model's forecast) and the long
+        horizons of ``model.forecast_horizons``. Battery services use the fleet expected in that year."""
+        m = agent.model
+        prices = {m.year + 3: forecast, **m.forecast_horizons()}
+        online = m.year + TECHS[tech].lead_time
+        return {y: m.expected_margin_per_mw(tech, p, agent, fleet_year=max(y, online))
+                for y, p in sorted(prices.items())}
+
+    @staticmethod
+    def path_npv(tech, path, online, rate, haircut=0.0, first=None):
+        """NPV per MW of building *tech* coming online in *online*: margins interpolated linearly
+        between the forecast years of *path* (flat outside), less FOM, over the asset life. *first*:
+        optional (years, revenue per MW per year, rate) for a contracted first period."""
+        t = TECHS[tech]
+        ys = sorted(path)
+        npv, df = -t.capex * 1000, 1.0
+        for k in range(1, t.life + 1):
+            year = online + k - 1
+            if first is not None and k <= first[0]:
+                df /= 1 + first[2]
+                npv += (first[1] - t.fom * 1000) * df
+            else:
+                df /= 1 + rate
+                margin = float(np.interp(year, ys, [path[y] for y in ys]))
+                npv += (margin * (1 - haircut) - t.fom * 1000) * df
+        return npv
+
+    def merchant_investment(self, agent, forecast):
+        """The best positive-NPV block on forecasts over the asset's life. Wind and solar may be built
+        merchant or on a PPA alongside CfDs; other technologies as in RuleBased."""
+        m = agent.model
+        best = None
+        for tech in agent.tech_preference:
+            t = TECHS[tech]
+            if not t.investable or tech in m.scenario.get("banned_techs", []) or tech == "nuclear":
+                continue
+            path = self.margin_path(agent, tech, forecast)
+            online = m.year + t.lead_time
+            npv = self.path_npv(tech, path, online, agent.wacc, agent.risk_aversion)
+            if tech in VRE_TECHS:          # PPA: a fixed price on the t+3 capture value, then merchant
+                ppa = path[m.year + 3] * (1 - self.PPA_DISCOUNT)
+                npv = max(npv, self.path_npv(tech, path, online, agent.wacc, agent.risk_aversion,
+                                             first=(self.PPA_YEARS, ppa, max(agent.wacc - self.PPA_RATE_CUT, 0.03))))
+            if npv > 0 and (best is None or npv > best[1]):
+                best = (tech, npv)
+        if best is None:
+            return None
+        tech = best[0]
+        mw = TECHS[tech].chunk_mw
+        if TECHS[tech].capex * 1000 * mw > agent.budget:
+            return None
+        return tech, mw, best[1]
+
+
+REGISTRY["expectations"] = ExpectationBids

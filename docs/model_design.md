@@ -52,7 +52,99 @@
 |---|---|---|
 | GenCo ×5 (IntegratedUtility, MerchantIPP, OilMajor, InfraFund, GreenDeveloper) | offers, CfD bids (LCOE at de-risked WACC), CM bids (net missing money), merchant NPV investment, retirement | WACC 6–10 %, myopic/adaptive/carbon-optimist beliefs, mark-ups 0–8 %, risk aversion, budgets |
 | Households ×2000 (each ≈14k homes) | heating system at boiler replacement (logit on lifecycle cost + hassle) | heat demand, discount rate, hassle cost, on/off gas grid, boiler age |
-| Government (Policy) | carbon path, CfD target/pots, CM target & curve, HP grant, levy rebalancing | scenario |
+| Government (`ukabm.institutions`) | each CfD round's pots: volume limit, £ budget, administrative strike price; reacts to the last round and to the levy | `government`: `fixed` (default) or `targets` |
+| System operator (`ukabm.institutions`) | CM target per auction (T-4, and T-1 under `standard`) | `system_operator`: `formula` (default) or `standard` |
+| Policy (parameters) | carbon path, CM demand curve, HP grant, levy rebalancing | scenario |
+
+### Decision interface (`ukabm.decisions`)
+Every GenCo decision goes through a `DecisionMaker`: `offer_price`, `expected_carbon`,
+`merchant_investment`, `cfd_bid` and `cm_bid`. The model calls the GenCo, and the GenCo calls its
+decision maker with itself (traits, and the year, fleet, policy and forecasting helpers through
+`agent.model`) and the call's arguments (price forecast, plant, technology). `RuleBased` holds the
+rules described above and is the default; results are identical to the code before the interface.
+
+Other decision makers subclass `RuleBased` (or `DecisionMaker`), override the decisions they make and
+are registered by name. A scenario selects them with `decision_logic`: one name for every GenCo, or
+`{genco_name: name}` for some (the rest keep `"rules"`). Each GenCo gets its own instance, so learning
+agents can keep state. Random draws must come from `agent.model.rng`. Government and system-operator
+agents, Q-learning and LLM decision makers (README roadmap items 2, 5, 6, 24, 25) plug in here.
+
+### Government and the CfD auction (`ukabm.institutions`)
+Each year the government sets every technology pot of the CfD round (`PotSettings`): a volume limit, an
+administrative strike price (bids above it are excluded) and an annual £ budget. Bids clear pay-as-clear
+per pot: blocks are accepted cheapest first while the pot is under its volume limit and while all accepted
+MW, paid the current bid as clearing strike, cost no more than the budget. Support per MW is valued as
+(strike − forecast capture price) × expected generation, floored at zero (a simplification of the
+allocation framework's budget impact). The government then sees the result (`observe`).
+
+* `fixed` (default): the original rule, 6 GW a year at 60/20/20 with the policy caps and no £ budget.
+  Results are identical to the code before the government agent.
+* `targets`: asks for the capacity missing at each technology's delivery year against
+  `config.CFD_TARGET_GW` (Clean Power 2030 lower bounds for 2030; indicative after), budgets it at the
+  strike it expects (the pot's last clearing, else the cap) with 10 % headroom, raises a pot's cap by
+  15 % (up to 2× the policy cap) after a round that failed for lack of bids under the cap, and cuts
+  budgets to 60 % while the policy levy is above £30/MWh (`config.GOVERNMENT_TARGETS`, overridable with
+  `government_params`; targets with `cfd_targets_gw`).
+
+Firms still bid levelised cost ± noise (item 3 changes this), and each GenCo offers at most two blocks
+per technology a year, so the supply of bids, not the government, limits early rounds in `targets`
+(up to 10 GW offshore a year; the developer pipeline is item 18). New annual columns:
+`cfd_awarded_mw`, `cfd_budget_bn`; per-round detail in `model.government.log`.
+
+### CfD bids from expectations (`decision_logic: "expectations"`)
+`ExpectationBids` replaces the levelised-cost bid with the lowest strike at which the project meets the
+firm's hurdle rate: a 20-year two-way CfD at the de-risked rate (WACC − 2.5 points, floor 3.5 %), 2 % of
+output unpaid (basis), then a merchant tail to the end of the asset's life at the firm's WACC, valued at
+the firm's own capture-price view (myopic: this year's prices; adaptive: the t+3 forecast less 15 %;
+carbon optimist: the forecast). Risk aversion adds a premium; ±2 % noise stands for project costs. A
+firm whose required strike is above the cap is excluded (abstains). Other decisions are `RuleBased`.
+Not yet the default (with the `targets` government, after items 4–6).
+
+### Merchant and PPA investment over the asset's life (`decision_logic: "expectations"`)
+`ExpectationBids` also replaces the merchant rule. Each candidate is valued on a margin path, not one
+year: the t+3 forecast plus `GBMarketModel.forecast_horizons()` at t+8 and t+13, interpolated over the
+asset's life (flat after the last point). The long-horizon fleet is the t+3 pipeline held, plus wind and
+solar growing at their build rate of the last five years (cannibalisation), plus peaking capacity that
+keeps the de-rated margin at the CM target, so investors expect an adequate system rather than
+scarcity prices. Wind and solar are candidates alongside CfDs, merchant or on a 15-year PPA at 10 %
+below the t+3 capture value with the cost of capital 1.5 points lower; the better of the two counts.
+Two extra market clearings per model year.
+
+### Government objectives (levers)
+Three more governments, each a `TargetTracking` variant selected by `scenario["government"]`:
+* `least_cost`: at its first round it solves the planner (`ukabm.planner.plan`) on the model's expected
+  inflexible demand per five-year period and tracks the planner's wind and solar pathway (existing
+  fleet plus cumulative build), ignoring the levy. This is the ideal-government rung. One planner solve
+  per run (~5 minutes). On the baseline the planner's pathway reaches ~40–45 GW offshore and ~58 GW
+  onshore by 2050, against the CfD rules' ~90 GW offshore.
+* `bills`: the same targets at the lowest levy: squeeze from £20/MWh, to 40 % of the budget, caps rising
+  5 % after a failed round (`config.GOVERNMENT_BILLS`).
+* `political`: targets announced 15 % above the path; in the two years before each general election
+  (2029, then every five years) it funds 30 % of the missing capacity, and 130 % of the budget otherwise
+  (`config.GOVERNMENT_POLITICAL`).
+All parameters are illustrative assumptions for comparing objectives, not estimates of actual policy.
+
+### System operator and the Capacity Market target (`ukabm.institutions.SystemOperator`)
+`scenario["system_operator"]`:
+* `formula` (default): the original target, peak demand in the delivery year × 1.06 less the de-rated
+  capacity of CfD/RO plant; T-4 only. Results identical to the code before.
+* `standard`: a NESO-style reliability standard. Supported wind and solar enter through their hourly
+  output in the delivery year; the target is the 4th-highest hour of the remaining net demand (3 h LOLE
+  on the model's one weather year, `weather_margin` for more), 5 % of it held back for a T-1 auction a
+  year ahead that buys what is still missing (plants with agreements covering the year and
+  interconnectors count as held). Delivery 2029: 41.6 GW full target, 39.5 GW at T-4, against
+  39.4 GW published for 2029/30; the formula gives 49.4 GW. The first T-1 auctions are larger because
+  the model starts without the agreements earlier auctions would have signed.
+
+### Convergence test (`competitive_benchmark`, `scripts/run_convergence.py`)
+Textbook conditions under which a competitive market should reproduce the least-cost plan: no CfD, no
+CM, scarcity priced only by unserved energy at VoLL (`scarcity_adder: False`), idealised firms on the
+`expectations` logic with up to 40 merchant decisions a year. A benchmark, not a policy scenario
+(`scenarios.BENCHMARKS`, not run by `run_scenarios.py`). First trial (seed 1, 2025–2035): gap 1.7 % of
+the optimum's PV cost (investment 0.7 %, operation 1.0 %), within the 3 % aim, but with a very different
+fleet (2035: 10 vs 46 GW offshore, 55 vs 30 GW onshore, 17 vs 2 GW batteries). The cost surface is flat
+near the optimum, so fleets can differ a lot at almost the same cost (README item 10, near-optimal space).
+Full run (3 seeds, to 2050) pending; slow test `tests/test_convergence.py` (`UKABM_SLOW=1`).
 
 ## Multi-energy hooks (extension points)
 * `HeatModule.hourly_load` — swap synthetic temperature for PyPSA-GB atlite cutouts; add HP flexibility.

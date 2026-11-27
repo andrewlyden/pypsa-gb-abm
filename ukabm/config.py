@@ -89,6 +89,41 @@ NESO_CI_FACTORS = {"ccgt": 394.0, "ocgt": 651.0, "biomass": 120.0, "imports": 65
 NUCLEAR_SCHEDULE = [(2028, -2300), (2030, -1200), (2030, 1600), (2031, 1600), (2035, -1200)]
 
 
+# Capacity target path for the target-tracking government (ukabm.institutions, GW installed).
+# 2025: the model's starting fleet. 2030: lower ends of the Clean Power 2030 Action Plan ranges (DESNZ,
+# Dec 2024: offshore 43-50 GW, onshore 27-29 GW, solar 45-47 GW). 2035 and 2050: indicative
+# (ASSUMPTION, FES-like; to be sourced from FES 2025). Linear between points, flat after 2050.
+CFD_TARGET_GW = {
+    "wind_offshore": {2025: 15.5, 2030: 43.0, 2035: 60.0, 2050: 90.0},
+    "wind_onshore": {2025: 15.0, 2030: 27.0, 2035: 32.0, 2050: 40.0},
+    "solar": {2025: 18.0, 2030: 45.0, 2035: 60.0, 2050: 80.0},
+}
+# Target-tracking government's rules (override per scenario with "government_params").
+GOVERNMENT_TARGETS = dict(
+    levy_threshold=30.0,     # GBP/MWh policy levy above which round budgets are cut
+    levy_budget_scale=0.6,   # budget multiplier while the levy is above the threshold
+    cap_step=0.15,           # cap rise after a round that failed for lack of bids under the cap
+    cap_ceiling=2.0,         # caps never exceed this multiple of the policy cap
+    budget_headroom=1.1,     # budget = missing MW x expected support x this
+)
+# Bills-first government: overrides GOVERNMENT_TARGETS (ASSUMPTION, illustrative).
+GOVERNMENT_BILLS = dict(levy_threshold=20.0, levy_budget_scale=0.4, cap_step=0.05)
+# Political government (ASSUMPTION, illustrative): UK general elections every 5 years, next by 2029.
+GOVERNMENT_POLITICAL = dict(
+    first_election=2029, election_every=5,
+    pre_election_years=2,        # rounds held in the two years before an election are cut back
+    pre_election_scale=0.3,      # share of the missing capacity funded before an election
+    post_election_scale=1.3,     # budget uplift in the other years (catch-up)
+    target_ambition=1.15,        # announced targets above the target path
+)
+# System operator's reliability standard (ukabm.institutions.SystemOperator, "standard" mode).
+SYSTEM_OPERATOR = dict(
+    lole_h=3,                # GB reliability standard: 3 hours loss of load expectation a year
+    weather_margin=0.0,      # extra de-rated capacity for weather beyond the model's one year (share)
+    t1_holdback=0.05,        # share of the target left to the T-1 auction
+)
+
+
 @dataclass
 class Policy:
     carbon_price_2025: float = 60.0      # GBP/t (UK ETS + Carbon Price Support)

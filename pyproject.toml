@@ -12,3 +12,6 @@ dev = ["pytest"]
 
 [tool.setuptools.packages.find]
 include = ["ukabm*"]
+
+[tool.pytest.ini_options]
+markers = ["slow: long runs, skipped unless UKABM_SLOW=1"]
