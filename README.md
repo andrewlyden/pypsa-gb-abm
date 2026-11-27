@@ -18,7 +18,7 @@ and hydrogen.
 ## Quick start
 ```bash
 pip install -e .            # numpy pandas scipy matplotlib mesa pypsa highspy
-pytest -q                   # 83 tests (+1 slow), ~11 min
+pytest -q                   # 89 tests (+1 slow), ~12 min
 python scripts/run_scenarios.py baseline --end 2030      # ~40 s
 python scripts/run_scenarios.py                          # all 6 scenarios 2025-2050 (~4 min each)
 python scripts/make_plots.py                             # -> docs/figures/
@@ -44,6 +44,7 @@ df = m.run()            # annual metrics: prices, mix, emissions, policy costs, 
 ukabm/config.py        technologies, fuels, policy parameters (indicative)
 ukabm/agents.py        GenCo agents (offers, CfD/CM bids, NPV investment), Plant
 ukabm/decisions.py     decision interface: DecisionMaker, RuleBased (default), registry (`decision_logic`)
+ukabm/observations.py  what a firm may know (Observation), action spaces, rewards (Outcome)
 ukabm/institutions.py  government agent: CfD round settings (volume, £ budget, caps); `fixed` | `targets`
 ukabm/market.py        vectorised hourly clearing, storage arbitrage, valley-filling
 ukabm/model.py         GBMarketModel (Mesa): annual loop, auctions, settlement, investment
@@ -265,13 +266,11 @@ re-run `scripts/run_gap.py` and update [docs/gap.md](docs/gap.md).
 behaviour" sources; items are numbered 34–39 so existing numbers stay stable, and their place here is
 their priority)*
 
-34. **Information sets and action spaces.** Decisions receive an explicit observation of what the agent
-    knows (its own plants and history, public prices and auction results, published policy and the
-    agent's own forecasts) instead of the whole model (`agent.model`), and return actions from a declared
-    space (bid ranges, technology and block choices). The rule-based logic is ported to observations with
-    identical results. Prerequisite for limited information (36) and for Q-learning and LLM agents
-    (24, 25): a learning or LLM agent must not be able to read the true future, and needs a stable state,
-    action and reward definition. Rewards: realised profit per plant and per firm (already in settlement).
+34. ✅ **Information sets and action spaces.** Done: `ukabm/observations.py`. Decisions receive an
+    `Observation` (own traits and plants, public market information and tools, the decision's fields)
+    instead of the model; answers are checked against declared action spaces; `learn(outcome)` gives
+    each firm its realised profit once a year. Rules and `expectations` reproduce earlier results
+    exactly (`tests/test_observations.py`). Q-learning (24) and LLM (25) agents now plug in here.
 35. **Uncertain futures.** Each seed draws a future the agents do not know in advance: fuel and carbon
     price shocks around the central paths, demand growth, weather year (with item 17), and policy
     events. The planner keeps perfect foresight of the drawn future, or plans over the distribution

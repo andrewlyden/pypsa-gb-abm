@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 
 from . import decisions
 from .config import TECHS
+from .observations import PlantView, validate
 
 try:  # Mesa 3.x
     import mesa
@@ -82,28 +83,34 @@ class GenCo(AgentBase):
         self.decider = decisions.make(decider or "rules")
 
     # ------------------------------------------- decisions (see ukabm.decisions)
+    # The GenCo builds an Observation (ukabm.observations) of what it may know, asks its decision maker,
+    # and checks the answer against the decision's action space. The decision maker never sees the model.
+    def _decide(self, kind, **fields):
+        obs = self.model.observation(self, kind, **fields)
+        return validate(kind, getattr(self.decider, kind)(obs), obs)
+
     def offer_price(self, plant: Plant, srmc: float, year: int) -> float:
-        return self.decider.offer_price(self, plant, srmc, year)
+        return self._decide("offer_price", plant=PlantView.of(plant, with_history=False), srmc=srmc, year=year)
 
     def expected_carbon(self, year):
-        return self.decider.expected_carbon(self, year)
+        return self._decide("expected_carbon", year=year)
 
     def decide_investment(self, forecast):
         """Merchant investment: (tech, MW, NPV per MW) or None."""
-        return self.decider.merchant_investment(self, forecast)
+        return self._decide("merchant_investment", forecast=forecast)
 
-    def cfd_bid(self, tech: str, forecast) -> float:
-        return self.decider.cfd_bid(self, tech, forecast)
+    def cfd_bid(self, tech: str, forecast) -> float | None:
+        return self._decide("cfd_bid", tech=tech, forecast=forecast)
 
     def cm_bid(self, plant_or_tech, expected_margin_per_kw: float, new: bool) -> float:
-        return self.decider.cm_bid(self, plant_or_tech, expected_margin_per_kw, new)
+        if new:
+            return self._decide("cm_bid", tech=plant_or_tech, margin_per_kw=expected_margin_per_kw, new=True)
+        return self._decide("cm_bid", plant=PlantView.of(plant_or_tech), tech=plant_or_tech.tech,
+                            margin_per_kw=expected_margin_per_kw, new=False)
 
     # ------------------------------------------------------------- helpers
     def npv_per_mw(self, tech: str, margin_per_mw_yr: float, rate: float | None = None) -> float:
-        t = TECHS[tech]
-        r = rate if rate is not None else self.wacc
-        annuity = (1 - (1 + r) ** -t.life) / r
-        return (margin_per_mw_yr - t.fom * 1000) * annuity - t.capex * 1000
+        return decisions.npv_per_mw(tech, margin_per_mw_yr, self.wacc if rate is None else rate)
 
     def step(self):  # Mesa hook; model orchestrates phases explicitly
         pass

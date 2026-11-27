@@ -21,7 +21,7 @@ def setup():
 
 def bid(m, g, tech, fc, seed=0):
     m.rng = np.random.default_rng(seed)          # same noise draw for each comparison
-    return ExpectationBids().cfd_bid(g, tech, fc)
+    return ExpectationBids().cfd_bid(m.observation(g, "cfd_bid", tech=tech, forecast=fc))
 
 
 def test_registered_and_selectable():

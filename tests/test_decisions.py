@@ -22,23 +22,23 @@ class CountingRules(RuleBased):
     def _count(self, k):
         self.calls[k] = self.calls.get(k, 0) + 1
 
-    def merchant_investment(self, agent, forecast):
+    def merchant_investment(self, obs):
         self._count("merchant")
-        return super().merchant_investment(agent, forecast)
+        return super().merchant_investment(obs)
 
-    def cfd_bid(self, agent, tech, forecast):
+    def cfd_bid(self, obs):
         self._count("cfd")
-        return super().cfd_bid(agent, tech, forecast)
+        return super().cfd_bid(obs)
 
-    def cm_bid(self, agent, plant_or_tech, expected_margin_per_kw, new):
+    def cm_bid(self, obs):
         self._count("cm")
-        return super().cm_bid(agent, plant_or_tech, expected_margin_per_kw, new)
+        return super().cm_bid(obs)
 
 
 class NeverInvest(RuleBased):
     name = "never_invest"
 
-    def merchant_investment(self, agent, forecast):
+    def merchant_investment(self, obs):
         return None
 
 
@@ -46,9 +46,9 @@ class Withholding(RuleBased):
     """Offers thermal plant at twice its cost: a strategic decision maker for the price test."""
     name = "withholding"
 
-    def offer_price(self, agent, plant, srmc, year):
-        p = super().offer_price(agent, plant, srmc, year)
-        return 2 * srmc if plant.tech in ("ccgt", "ocgt", "biomass") else p
+    def offer_price(self, obs):
+        p = super().offer_price(obs)
+        return 2 * obs.srmc if obs.plant.tech in ("ccgt", "ocgt", "biomass") else p
 
 
 register("counting", CountingRules)
@@ -108,4 +108,4 @@ def test_registry_and_make():
     with pytest.raises(TypeError):
         register("bad", dict)
     with pytest.raises(NotImplementedError):
-        DecisionMaker().cfd_bid(None, "solar", None)
+        DecisionMaker().cfd_bid(None)

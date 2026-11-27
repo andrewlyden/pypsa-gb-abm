@@ -26,6 +26,7 @@ from .data import PyPSAGBData
 from .costs import COMPONENTS as COST_COMPONENTS, fixed_costs, variable_cost
 from . import decisions
 from .institutions import CFD_TECHS, SystemOperator, make_government
+from .observations import MarketInfo, Observation, Outcome, PlantView, Traits
 from .market import Block, clear, merit_order, storage_arbitrage
 from .scenarios import IDEAL_TRAITS
 from .multienergy import HeatModule, GasNetworkModule, EVModule, HydrogenModule
@@ -429,6 +430,43 @@ class GBMarketModel(ModelBase):
         plants = [p for p in self.plants if p.active(target_year)] + list(extra)
         return self.run_market(target_year, plants)["price"]
 
+    # ------------------------------------------------------- observations (roadmap item 34)
+    def _market_info(self, genco):
+        """Public information and tools for *genco*, cached while the public state is unchanged."""
+        cfd = getattr(self, "last_cfd", {}) or {}
+        key = (id(genco), id(self.rng), self.year, id(self.last_price), self.cm_clearing, tuple(sorted(cfd.items())))
+        cache = genco.__dict__.setdefault("_market_cache", {})
+        if cache.get("key") != key:
+            last = None
+            if self.last_price is not None:
+                last = np.asarray(self.last_price).view()
+                last.flags.writeable = False
+            cache["key"], cache["info"] = key, MarketInfo(
+                year=self.year, policy=self.policy, banned_techs=tuple(self.scenario.get("banned_techs", [])),
+                last_price=last, cm_clearing=self.cm_clearing, cfd_clearing=dict(cfd), rng=self.rng,
+                capacity_factor=lambda tech: self.capacity_factor(tech),
+                cf_profile=lambda tech: self.cf_profile(tech),
+                expected_margin=lambda tech, price, **kw: self.expected_margin_per_mw(tech, price, genco, **kw),
+                forecast_horizons=lambda: self.forecast_horizons())
+        return cache["info"]
+
+    def observation(self, genco, kind, **fields):
+        """What *genco* may know for a decision of *kind* (ukabm.observations.Observation)."""
+        left = getattr(genco, "budget_left", genco.budget)
+        traits = Traits(genco.name, genco.wacc, genco.expectation, genco.markup, genco.risk_aversion,
+                        genco.budget, left, tuple(genco.tech_preference))
+        own = ()
+        if kind in ("merchant_investment", "cfd_bid", "cm_bid"):
+            own = tuple(PlantView.of(p) for p in self.plants
+                        if p.owner is genco and p.retire >= self.year)
+        if kind == "merchant_investment":
+            banned = self.scenario.get("banned_techs", [])
+            fields["options"] = tuple(
+                t for t in genco.tech_preference
+                if TECHS[t].investable and t not in banned and t != "nuclear"
+                and TECHS[t].capex * 1000 * TECHS[t].chunk_mw <= left)
+        return Observation(kind=kind, traits=traits, market=self._market_info(genco), own=own, **fields)
+
     def forecast_horizons(self, offsets=(8, 13)):
         """Long-horizon price forecasts for investment decisions, cached per model year. Fleet: the
         pipeline at t+3 held, plus wind and solar growing at their recent build rate (cannibalisation),
@@ -507,6 +545,8 @@ class GBMarketModel(ModelBase):
                     continue
                 for _ in range(2):
                     s = g.cfd_bid(tech, price_fc)
+                    if s is None:                       # the firm abstains
+                        continue
                     cap = pots[tech].cap if tech in pots else self.policy.cfd_admin_strike_cap[tech]
                     if s <= cap:
                         bids.append((s, g, tech))
@@ -542,6 +582,13 @@ class GBMarketModel(ModelBase):
         budgets = [pot.budget_gbp for pot in pots.values() if pot.budget_gbp is not None]
         self.cfd_last = dict(awarded_mw=sum(mw.values()), budget_gbp=sum(budgets) if budgets else np.nan)
         return built
+
+    def _learn(self, year, plants):
+        """Give each firm's decision maker its realised profit this year (the reward for learning agents)."""
+        for g in self.gencos:
+            by_plant = {p.pid: p.history[-1][1] for p in plants
+                        if p.owner is g and p.history and p.history[-1][0] == year}
+            g.decider.learn(Outcome(year=year, profit=float(sum(by_plant.values())), by_plant=by_plant))
 
     def existing_gross_margin_kw(self, p, price_fc):
         """Expected annual gross margin (before FOM, excluding CM payments) of an existing plant, GBP/kW:
@@ -684,6 +731,7 @@ class GBMarketModel(ModelBase):
         plants = self.active(y)
         res = self.run_market(y, plants)
         st = self.settle(y, plants, res)
+        self._learn(y, plants)
         sc = self.system_cost(y, plants, res)
         price = res["price"]
         self.last_price = price

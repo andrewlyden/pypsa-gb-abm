@@ -1,9 +1,11 @@
 """Decision interface: every choice a generation company makes goes through a DecisionMaker.
 
-The model asks the owning GenCo, and the GenCo asks its decision maker. Inputs are the agent itself
-(its traits, and through ``agent.model`` the year, fleet, policy and forecasting helpers) plus the
-arguments of each call (price forecasts, plants, technologies). Outputs are plain decisions: an offer
-price, an expected carbon price, a merchant investment, a CfD strike bid or a CM bid.
+The model asks the owning GenCo, and the GenCo asks its decision maker with an ``Observation``
+(``ukabm.observations``): the firm's traits and own plants, public market information and analysis
+tools, and the fields of the decision (forecast, technology, plant ...). A decision maker never sees the
+model. Outputs are plain decisions (an offer price, an expected carbon price, a merchant investment, a
+CfD strike bid or a CM bid), checked against the declared action space (``observations.ACTIONS``).
+After settlement each year ``learn`` receives the firm's realised profit (the reward for learning agents).
 
 ``RuleBased`` holds the model's original rules. Other implementations (government and system-operator
 rules, Q-learning, LLM agents; README roadmap items 2, 5, 6, 24, 25) subclass ``DecisionMaker``,
@@ -13,7 +15,7 @@ override the decisions they make, inherit the rest, and are registered by name:
     scenario["decision_logic"] = "my_logic"                          # every GenCo
     scenario["decision_logic"] = {"MerchantIPP": "my_logic"}         # named GenCos; others "rules"
 
-Implementations must draw random numbers only from ``agent.model.rng`` so runs stay reproducible.
+Implementations must draw random numbers only from ``obs.market.rng`` so runs stay reproducible.
 """
 from __future__ import annotations
 
@@ -24,12 +26,14 @@ import numpy as np
 from .config import STORAGE_TECHS, TECHS, VRE_TECHS  # noqa: F401  (STORAGE_TECHS for subclasses)
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .agents import GenCo, Plant
+    from .observations import Observation, Outcome
 
 
-def budget_left(agent) -> float:
-    """What the agent can still spend on merchant investment this year (set by ``GBMarketModel.invest``)."""
-    return getattr(agent, "budget_left", agent.budget)
+def npv_per_mw(tech: str, margin_per_mw_yr: float, rate: float) -> float:
+    """NPV per MW of *tech* earning a flat annual margin (before FOM) over its life at *rate*."""
+    t = TECHS[tech]
+    annuity = (1 - (1 + rate) ** -t.life) / rate
+    return (margin_per_mw_yr - t.fom * 1000) * annuity - t.capex * 1000
 
 
 class DecisionMaker:
@@ -37,25 +41,30 @@ class DecisionMaker:
 
     name = "base"
 
-    def offer_price(self, agent: "GenCo", plant: "Plant", srmc: float, year: int) -> float:
-        """Day-ahead offer price (GBP/MWh) for *plant* in *year*, given its short-run marginal cost."""
+    def offer_price(self, obs: "Observation") -> float:
+        """Day-ahead offer price (GBP/MWh) for ``obs.plant`` in ``obs.year``, given ``obs.srmc``."""
         raise NotImplementedError
 
-    def expected_carbon(self, agent: "GenCo", year: int) -> float:
-        """The carbon price (GBP/t) the agent expects in *year*."""
+    def expected_carbon(self, obs: "Observation") -> float:
+        """The carbon price (GBP/t) the firm expects in ``obs.year``."""
         raise NotImplementedError
 
-    def merchant_investment(self, agent: "GenCo", forecast) -> tuple[str, float, float] | None:
-        """One merchant investment (tech, MW, NPV GBP/MW) on the hourly *forecast* price, or None."""
+    def merchant_investment(self, obs: "Observation") -> tuple[str, float, float] | None:
+        """One merchant investment (tech, MW, NPV GBP/MW) with tech in ``obs.options``, on the hourly
+        ``obs.forecast`` price (t+3), or None."""
         raise NotImplementedError
 
-    def cfd_bid(self, agent: "GenCo", tech: str, forecast) -> float:
-        """Strike-price bid (GBP/MWh) for one block of *tech* in this year's CfD round."""
+    def cfd_bid(self, obs: "Observation") -> float | None:
+        """Strike-price bid (GBP/MWh) for one block of ``obs.tech`` in this year's CfD round, or None."""
         raise NotImplementedError
 
-    def cm_bid(self, agent: "GenCo", plant_or_tech, expected_margin_per_kw: float, new: bool) -> float:
-        """Capacity Market bid (GBP/kW/yr, de-rated) for an existing plant or one new-build block."""
+    def cm_bid(self, obs: "Observation") -> float:
+        """Capacity Market bid (GBP/kW/yr, de-rated): an existing plant (``obs.plant``, gross margin
+        ``obs.margin_per_kw``) or one new-build block of ``obs.tech`` (``obs.new``)."""
         raise NotImplementedError
+
+    def learn(self, outcome: "Outcome") -> None:
+        """Called once a year after settlement with the firm's realised profit. Default: nothing."""
 
 
 class RuleBased(DecisionMaker):
@@ -63,8 +72,8 @@ class RuleBased(DecisionMaker):
 
     name = "rules"
 
-    def offer_price(self, agent, plant, srmc, year):
-        p = agent.model.policy
+    def offer_price(self, obs):
+        p, plant, srmc, year = obs.market.policy, obs.plant, obs.srmc, obs.year
         if plant.tech in VRE_TECHS or plant.tech == "hydro":
             if plant.support == "ro" and year <= plant.ro_end:
                 return -p.ro_value          # RO units bid negative up to the ROC value
@@ -73,58 +82,53 @@ class RuleBased(DecisionMaker):
             return 0.0
         if plant.tech == "nuclear":
             return srmc - 15.0              # inflexible: bids below cost to stay on
-        return srmc * (1.0 + agent.markup)
+        return srmc * (1.0 + obs.traits.markup)
 
-    def expected_carbon(self, agent, year):
-        p = agent.model.policy
-        c = p.carbon_price(year)
-        if agent.expectation == "carbon_optimist":
+    def expected_carbon(self, obs):
+        p = obs.market.policy
+        c = p.carbon_price(obs.year)
+        if obs.traits.expectation == "carbon_optimist":
             return c * 1.3
-        if agent.expectation == "myopic":
-            return p.carbon_price(agent.model.year)  # assumes today's price persists
+        if obs.traits.expectation == "myopic":
+            return p.carbon_price(obs.market.year)   # assumes today's price persists
         return c
 
-    def merchant_investment(self, agent, forecast):
-        """Evaluate candidate techs on the forecast price series; build one block of the best."""
-        m = agent.model
+    def merchant_investment(self, obs):
+        """Evaluate the candidate techs (``obs.options``: investable, allowed, affordable) on the forecast
+        price series; build one block of the best."""
+        tr = obs.traits
         best = None
-        for tech in agent.tech_preference:
-            t = TECHS[tech]
-            if not t.investable or tech in m.scenario.get("banned_techs", []):
-                continue
-            if tech in VRE_TECHS and m.policy.cfd_enabled:
+        for tech in obs.options:
+            if tech in VRE_TECHS and obs.market.policy.cfd_enabled:
                 continue  # VRE goes via CfD auction when CfD is available
-            if tech == "nuclear":
-                continue  # nuclear only via government-led CfD/RAB route
-            if t.capex * 1000 * t.chunk_mw > budget_left(agent):
-                continue                    # unaffordable with what is left of this year's budget
-            margin = m.expected_margin_per_mw(tech, forecast, agent)
+            margin = obs.market.expected_margin(tech, obs.forecast)
             # cannibalisation haircut for VRE capture price and for own price impact
-            npv = agent.npv_per_mw(tech, margin * (1 - agent.risk_aversion))
+            npv = npv_per_mw(tech, margin * (1 - tr.risk_aversion), tr.wacc)
             if npv > 0 and (best is None or npv > best[1]):
                 best = (tech, npv)
         if best is None:
             return None
         return best[0], TECHS[best[0]].chunk_mw, best[1]
 
-    def cfd_bid(self, agent, tech, forecast):
+    def cfd_bid(self, obs):
         """Strike-price bid = levelised cost at a de-risked (CfD) WACC."""
-        t = TECHS[tech]
-        r = max(agent.wacc - 0.025, 0.035)
+        t = TECHS[obs.tech]
+        r = max(obs.traits.wacc - 0.025, 0.035)
         crf = r / (1 - (1 + r) ** -t.life)
-        cf = agent.model.capacity_factor(tech)
+        cf = obs.market.capacity_factor(obs.tech)
         lcoe = (t.capex * 1000 * crf + t.fom * 1000) / (8760 * cf) + t.vom
-        return lcoe * (1 + 0.05 * agent.model.rng.standard_normal())
+        return lcoe * (1 + 0.05 * obs.market.rng.standard_normal())
 
-    def cm_bid(self, agent, plant_or_tech, expected_margin_per_kw, new):
+    def cm_bid(self, obs):
         """Net missing money."""
-        if new:
-            t = TECHS[plant_or_tech]
-            crf = agent.wacc / (1 - (1 + agent.wacc) ** -15)  # 15-year CM agreement
-            missing = t.capex * crf + t.fom - expected_margin_per_kw
+        if obs.new:
+            t = TECHS[obs.tech]
+            w = obs.traits.wacc
+            crf = w / (1 - (1 + w) ** -15)  # 15-year CM agreement
+            missing = t.capex * crf + t.fom - obs.margin_per_kw
             return max(missing, 0.0) / t.derating
-        t = TECHS[plant_or_tech.tech]
-        return max(t.fom - expected_margin_per_kw, 0.0) / t.derating
+        t = TECHS[obs.plant.tech]
+        return max(t.fom - obs.margin_per_kw, 0.0) / t.derating
 
 
 REGISTRY: dict[str, type[DecisionMaker]] = {"rules": RuleBased}
@@ -178,46 +182,49 @@ class ExpectationBids(RuleBased):
     BASIS = 0.02          # share of contracted output not paid the strike (curtailment, negative hours)
     HAIRCUT = 0.15        # adaptive firms' cannibalisation haircut on the forecast capture price
 
-    def tail_capture(self, agent, tech, forecast):
-        m = agent.model
-        cf = m.cf_profile(tech)
-        if agent.expectation == "myopic" and m.last_price is not None:
-            price, haircut = m.last_price, 0.0
+    def tail_capture(self, obs, tech=None, forecast=None):
+        tech = tech or obs.tech
+        forecast = obs.forecast if forecast is None else forecast
+        cf = obs.market.cf_profile(tech)
+        if obs.traits.expectation == "myopic" and obs.market.last_price is not None:
+            price, haircut = obs.market.last_price, 0.0
         else:
             price = forecast
-            haircut = 0.0 if agent.expectation == "carbon_optimist" else self.HAIRCUT
+            haircut = 0.0 if obs.traits.expectation == "carbon_optimist" else self.HAIRCUT
         return float((price * cf).sum() / max(cf.sum(), 1e-9)) * (1 - haircut)
 
-    def cfd_bid(self, agent, tech, forecast):
+    def cfd_bid(self, obs):
+        tech = obs.tech
         t = TECHS[tech]
-        m = agent.model
-        gen = 8760 * m.capacity_factor(tech)                      # MWh per MW per year
+        tr = obs.traits
+        gen = 8760 * obs.market.capacity_factor(tech)             # MWh per MW per year
         n = min(self.CONTRACT_YEARS, t.life)
-        rc = max(agent.wacc - 0.025, 0.035)                       # contracted years
-        rm = agent.wacc                                           # merchant tail
+        rc = max(tr.wacc - 0.025, 0.035)                          # contracted years
+        rm = tr.wacc                                              # merchant tail
         a_contract = (1 - (1 + rc) ** -n) / rc
         a_tail = ((1 - (1 + rm) ** -t.life) / rm - (1 - (1 + rm) ** -n) / rm) if t.life > n else 0.0
         capex = t.capex * 1000
         fom = t.fom * 1000
-        tail = max(self.tail_capture(agent, tech, forecast) - t.vom, 0.0) * gen - fom
+        tail = max(self.tail_capture(obs) - t.vom, 0.0) * gen - fom
         need = capex + fom * a_contract - tail * a_tail          # PV the contract must cover
         strike = need / (a_contract * gen * (1 - self.BASIS)) + t.vom
-        strike /= max(1 - 0.5 * agent.risk_aversion, 0.5)        # risk premium
-        return strike * (1 + 0.02 * m.rng.standard_normal())
+        strike /= max(1 - 0.5 * tr.risk_aversion, 0.5)           # risk premium
+        return strike * (1 + 0.02 * obs.market.rng.standard_normal())
 
     # ------------------------------------------------ merchant and PPA investment (roadmap item 4)
     PPA_YEARS = 15
     PPA_DISCOUNT = 0.10    # PPA price below the expected capture price (the offtaker's margin and risk)
     PPA_RATE_CUT = 0.015   # contracted revenue lowers the cost of capital by this much
 
-    def margin_path(self, agent, tech, forecast):
+    def margin_path(self, obs, tech, forecast=None):
         """Expected annual margin per MW at each forecast year: t+3 (the model's forecast) and the long
-        horizons of ``model.forecast_horizons``. Battery services use the fleet expected in that year."""
-        m = agent.model
-        prices = {m.year + 3: forecast, **m.forecast_horizons()}
-        online = m.year + TECHS[tech].lead_time
-        fleet = max(m.year + 3, online)         # battery services: the fleet in the pipeline, not a horizon
-        return {y: m.expected_margin_per_mw(tech, p, agent, fleet_year=fleet, price_year=y, vre_haircut=0.0)
+        horizons of ``market.forecast_horizons``. Battery services use the fleet in the pipeline."""
+        mk = obs.market
+        forecast = obs.forecast if forecast is None else forecast
+        prices = {mk.year + 3: forecast, **mk.forecast_horizons()}
+        online = mk.year + TECHS[tech].lead_time
+        fleet = max(mk.year + 3, online)        # battery services: the fleet in the pipeline, not a horizon
+        return {y: mk.expected_margin(tech, p, fleet_year=fleet, price_year=y, vre_haircut=0.0)
                 for y, p in sorted(prices.items())}
 
     @staticmethod
@@ -239,24 +246,20 @@ class ExpectationBids(RuleBased):
                 npv += (margin * (1 - haircut) - t.fom * 1000) * df
         return npv
 
-    def merchant_investment(self, agent, forecast):
+    def merchant_investment(self, obs):
         """The best positive-NPV block on forecasts over the asset's life. Wind and solar may be built
         merchant or on a PPA alongside CfDs; other technologies as in RuleBased."""
-        m = agent.model
+        tr, year = obs.traits, obs.market.year
         best = None
-        for tech in agent.tech_preference:
+        for tech in obs.options:
             t = TECHS[tech]
-            if not t.investable or tech in m.scenario.get("banned_techs", []) or tech == "nuclear":
-                continue
-            if t.capex * 1000 * t.chunk_mw > budget_left(agent):
-                continue
-            path = self.margin_path(agent, tech, forecast)
-            online = m.year + t.lead_time
-            npv = self.path_npv(tech, path, online, agent.wacc, agent.risk_aversion)
+            path = self.margin_path(obs, tech)
+            online = year + t.lead_time
+            npv = self.path_npv(tech, path, online, tr.wacc, tr.risk_aversion)
             if tech in VRE_TECHS:          # PPA: a fixed price on the t+3 capture value, then merchant
-                ppa = path[m.year + 3] * (1 - self.PPA_DISCOUNT)
-                npv = max(npv, self.path_npv(tech, path, online, agent.wacc, agent.risk_aversion,
-                                             first=(self.PPA_YEARS, ppa, max(agent.wacc - self.PPA_RATE_CUT, 0.03))))
+                ppa = path[year + 3] * (1 - self.PPA_DISCOUNT)
+                npv = max(npv, self.path_npv(tech, path, online, tr.wacc, tr.risk_aversion,
+                                             first=(self.PPA_YEARS, ppa, max(tr.wacc - self.PPA_RATE_CUT, 0.03))))
             if npv > 0 and (best is None or npv > best[1]):
                 best = (tech, npv)
         if best is None:
