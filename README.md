@@ -18,7 +18,7 @@ and hydrogen.
 ## Quick start
 ```bash
 pip install -e .            # numpy pandas scipy matplotlib mesa pypsa highspy
-pytest -q                   # 48 tests, ~8 min
+pytest -q                   # 54 tests, ~9 min
 python scripts/run_scenarios.py baseline --end 2030      # ~40 s
 python scripts/run_scenarios.py                          # all 6 scenarios 2025-2050 (~4 min each)
 python scripts/make_plots.py                             # -> docs/figures/
@@ -42,6 +42,7 @@ df = m.run()            # annual metrics: prices, mix, emissions, policy costs, 
 ukabm/config.py        technologies, fuels, policy parameters (indicative)
 ukabm/agents.py        GenCo agents (offers, CfD/CM bids, NPV investment), Plant
 ukabm/decisions.py     decision interface: DecisionMaker, RuleBased (default), registry (`decision_logic`)
+ukabm/institutions.py  government agent: CfD round settings (volume, £ budget, caps); `fixed` | `targets`
 ukabm/market.py        vectorised hourly clearing, storage arbitrage, valley-filling
 ukabm/model.py         GBMarketModel (Mesa): annual loop, auctions, settlement, investment
 ukabm/multienergy.py   HeatModule (household agents), GasNetworkModule, EVModule, HydrogenModule
@@ -145,7 +146,7 @@ are seed-dependent (0–101 h across seeds in heat_push) and should not be quote
 | Merchant investment (5 heterogeneous GenCos, NPV on re-forecast prices) | ✅ works |
 | Decision interface (`ukabm.decisions`): every GenCo decision behind one `DecisionMaker`, selectable per scenario and GenCo | ✅ rules by default, results unchanged; ready for government, Q-learning and LLM decision makers |
 | CfD allocation rounds with pots; 2-way CfD settlement | ✅ works. ⚠️ Volume fixed at 6 GW/yr (60/20/20) with no £ budget; bids (levelised cost ± noise) never reach the caps, so the auction decides who builds, not how much (roadmap items 2–3) |
-| Government / system operator as agents (CfD budgets, CM target, rule changes) | ❌ not started: policy rules are fixed parameters (roadmap items 2, 5) |
+| Government / system operator as agents (CfD budgets, CM target, rule changes) | ⚠️ CfD government done (`ukabm.institutions`: `fixed` default, `targets` with £ budget, adaptive caps, levy guard); not yet the default in the headline runs. System operator for the CM: roadmap item 5 |
 | T-4 Capacity Market with sloping demand curve | ✅ works (no T-1, no penalties); fixed Nov 2026: no acceptance beyond the end of the demand curve, new-build bids on the t+3 forecast. ⚠️ target ~25 % above published (roadmap) |
 | Retirement on persistent losses / end of life | ✅ works |
 | PyPSA-GB link: zonal network, ESPENI profiles, DUKES siting, IC register, CM/CfD data | ✅ works (bundled snapshot or live clone) |
@@ -178,13 +179,11 @@ re-run `scripts/run_gap.py` and update [docs/gap.md](docs/gap.md).
    expectations, merchant investment, CfD and CM bids go through a `DecisionMaker`; scenario key
    `decision_logic` selects one by name, for all or named GenCos; `RuleBased` reproduces the earlier
    results exactly (`tests/test_decisions.py`). Items 2, 5, 6, 24 and 25 plug into it.
-2. **Government agent and a £-budget CfD auction.** New `ukabm/institutions.py` with a `Government` that
-   sets each round's budget per pot in £ (strike minus forecast reference price, times expected
-   generation, as in the allocation framework, simplified), the pot split and the administrative strike
-   prices. First objective, `government: "targets"`: track a capacity target path (Clean Power 2030, then
-   FES), raise a pot's cap after an under-subscribed round, cut the budget when the levy passes a bill
-   threshold. The auction clears pay-as-clear per pot until the budget is spent. `government: "fixed"`
-   keeps today's 6 GW/yr rule. Tests: budget respected; an empty round raises the cap next year.
+2. ✅ **Government agent and a £-budget CfD auction.** Done: `ukabm/institutions.py` (`fixed`, the
+   original 6 GW/yr rule and default; `targets`, tracking `config.CFD_TARGET_GW` with a £ budget per pot
+   at the expected strike, caps raised after a failed round, budgets cut above a £30/MWh levy). Tests in
+   `tests/test_government.py`. `targets` becomes the default once items 3–6 are in, and the gap is
+   re-run then.
 3. **CfD bids from expectations.** A firm bids the lowest strike that meets its hurdle NPV on its own
    forecast of reference prices, capture rates and costs (replacing levelised cost ± noise; the forecast
    is already passed to `cfd_bid` but unused). Firms abstain when the cap is below that strike, and a

@@ -89,6 +89,25 @@ NESO_CI_FACTORS = {"ccgt": 394.0, "ocgt": 651.0, "biomass": 120.0, "imports": 65
 NUCLEAR_SCHEDULE = [(2028, -2300), (2030, -1200), (2030, 1600), (2031, 1600), (2035, -1200)]
 
 
+# Capacity target path for the target-tracking government (ukabm.institutions, GW installed).
+# 2025: the model's starting fleet. 2030: lower ends of the Clean Power 2030 Action Plan ranges (DESNZ,
+# Dec 2024: offshore 43-50 GW, onshore 27-29 GW, solar 45-47 GW). 2035 and 2050: indicative
+# (ASSUMPTION, FES-like; to be sourced from FES 2025). Linear between points, flat after 2050.
+CFD_TARGET_GW = {
+    "wind_offshore": {2025: 15.5, 2030: 43.0, 2035: 60.0, 2050: 90.0},
+    "wind_onshore": {2025: 15.0, 2030: 27.0, 2035: 32.0, 2050: 40.0},
+    "solar": {2025: 18.0, 2030: 45.0, 2035: 60.0, 2050: 80.0},
+}
+# Target-tracking government's rules (override per scenario with "government_params").
+GOVERNMENT_TARGETS = dict(
+    levy_threshold=30.0,     # GBP/MWh policy levy above which round budgets are cut
+    levy_budget_scale=0.6,   # budget multiplier while the levy is above the threshold
+    cap_step=0.15,           # cap rise after a round that failed for lack of bids under the cap
+    cap_ceiling=2.0,         # caps never exceed this multiple of the policy cap
+    budget_headroom=1.1,     # budget = missing MW x expected support x this
+)
+
+
 @dataclass
 class Policy:
     carbon_price_2025: float = 60.0      # GBP/t (UK ETS + Carbon Price Support)

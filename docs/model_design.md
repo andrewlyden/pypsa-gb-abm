@@ -52,7 +52,8 @@
 |---|---|---|
 | GenCo ×5 (IntegratedUtility, MerchantIPP, OilMajor, InfraFund, GreenDeveloper) | offers, CfD bids (LCOE at de-risked WACC), CM bids (net missing money), merchant NPV investment, retirement | WACC 6–10 %, myopic/adaptive/carbon-optimist beliefs, mark-ups 0–8 %, risk aversion, budgets |
 | Households ×2000 (each ≈14k homes) | heating system at boiler replacement (logit on lifecycle cost + hassle) | heat demand, discount rate, hassle cost, on/off gas grid, boiler age |
-| Government (Policy) | carbon path, CfD target/pots, CM target & curve, HP grant, levy rebalancing | scenario |
+| Government (`ukabm.institutions`) | each CfD round's pots: volume limit, £ budget, administrative strike price; reacts to the last round and to the levy | `government`: `fixed` (default) or `targets` |
+| Policy (parameters) | carbon path, CM target & curve, HP grant, levy rebalancing | scenario |
 
 ### Decision interface (`ukabm.decisions`)
 Every GenCo decision goes through a `DecisionMaker`: `offer_price`, `expected_carbon`,
@@ -66,6 +67,28 @@ are registered by name. A scenario selects them with `decision_logic`: one name 
 `{genco_name: name}` for some (the rest keep `"rules"`). Each GenCo gets its own instance, so learning
 agents can keep state. Random draws must come from `agent.model.rng`. Government and system-operator
 agents, Q-learning and LLM decision makers (README roadmap items 2, 5, 6, 24, 25) plug in here.
+
+### Government and the CfD auction (`ukabm.institutions`)
+Each year the government sets every technology pot of the CfD round (`PotSettings`): a volume limit, an
+administrative strike price (bids above it are excluded) and an annual £ budget. Bids clear pay-as-clear
+per pot: blocks are accepted cheapest first while the pot is under its volume limit and while all accepted
+MW, paid the current bid as clearing strike, cost no more than the budget. Support per MW is valued as
+(strike − forecast capture price) × expected generation, floored at zero (a simplification of the
+allocation framework's budget impact). The government then sees the result (`observe`).
+
+* `fixed` (default): the original rule, 6 GW a year at 60/20/20 with the policy caps and no £ budget.
+  Results are identical to the code before the government agent.
+* `targets`: asks for the capacity missing at each technology's delivery year against
+  `config.CFD_TARGET_GW` (Clean Power 2030 lower bounds for 2030; indicative after), budgets it at the
+  strike it expects (the pot's last clearing, else the cap) with 10 % headroom, raises a pot's cap by
+  15 % (up to 2× the policy cap) after a round that failed for lack of bids under the cap, and cuts
+  budgets to 60 % while the policy levy is above £30/MWh (`config.GOVERNMENT_TARGETS`, overridable with
+  `government_params`; targets with `cfd_targets_gw`).
+
+Firms still bid levelised cost ± noise (item 3 changes this), and each GenCo offers at most two blocks
+per technology a year, so the supply of bids, not the government, limits early rounds in `targets`
+(up to 10 GW offshore a year; the developer pipeline is item 18). New annual columns:
+`cfd_awarded_mw`, `cfd_budget_bn`; per-round detail in `model.government.log`.
 
 ## Multi-energy hooks (extension points)
 * `HeatModule.hourly_load` — swap synthetic temperature for PyPSA-GB atlite cutouts; add HP flexibility.

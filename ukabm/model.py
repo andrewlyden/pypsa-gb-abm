@@ -25,6 +25,7 @@ from .config import (TECHS, VRE_TECHS, STORAGE_TECHS, INITIAL_FLEET_MW, EXISTING
 from .data import PyPSAGBData
 from .costs import COMPONENTS as COST_COMPONENTS, fixed_costs, variable_cost
 from . import decisions
+from .institutions import CFD_TECHS, make_government
 from .market import Block, clear, merit_order, storage_arbitrage
 from .scenarios import IDEAL_TRAITS
 from .multienergy import HeatModule, GasNetworkModule, EVModule, HydrogenModule
@@ -122,6 +123,8 @@ class GBMarketModel(ModelBase):
                 s.update(IDEAL_TRAITS[grp])
         # decisions go through ukabm.decisions (scenario 'decision_logic': a name, or {genco: name})
         self.gencos = [GenCo(self, decider=decisions.for_genco(self.scenario, s["name"]), **s) for s in specs]
+        self.government = make_government(self)   # runs the CfD rounds (scenario "government")
+        self.cfd_last = dict(awarded_mw=0.0, budget_gbp=np.nan)
         self.plants: list[Plant] = []
         self._pid = 0
         self._init_fleet()
@@ -432,26 +435,36 @@ class GBMarketModel(ModelBase):
 
     # ----------------------------------------------------------- policy auctions
     def cfd_round(self, year, price_fc):
+        """CfD allocation round. The government (ukabm.institutions) sets each technology pot's volume
+        limit, administrative strike price and GBP budget; bids clear pay-as-clear per pot within them."""
+        self.cfd_last = dict(awarded_mw=0.0, budget_gbp=np.nan)
         if not self.policy.cfd_enabled:
             return []
-        target = self.policy.cfd_budget_gw_per_year * 1000
-        pots = self.scenario.get("cfd_pots", {"wind_offshore": 0.6, "wind_onshore": 0.2, "solar": 0.2})
-        bids = []
+        pots = self.government.round_settings(year, price_fc)
+        bids, over_cap = [], {}
         for g in self.gencos:
-            for tech in ("wind_offshore", "wind_onshore", "solar"):
+            for tech in CFD_TECHS:
                 if tech in self.scenario.get("banned_techs", []):
                     continue
                 for _ in range(2):
                     s = g.cfd_bid(tech, price_fc)
-                    if s <= self.policy.cfd_admin_strike_cap[tech]:
+                    cap = pots[tech].cap if tech in pots else self.policy.cfd_admin_strike_cap[tech]
+                    if s <= cap:
                         bids.append((s, g, tech))
+                    elif tech in pots:
+                        over_cap[tech] = over_cap.get(tech, 0) + 1
         bids.sort(key=lambda x: x[0])
         won, mw = [], {k: 0.0 for k in pots}
-        for s, g, tech in bids:   # technology pots (AR-style ring-fenced budgets)
-            if mw.get(tech, 0) >= target * pots.get(tech, 0):
+        for s, g, tech in bids:   # technology pots (AR-style ring-fenced)
+            pot = pots.get(tech)
+            if pot is None or mw[tech] >= pot.max_mw:
+                continue
+            chunk = TECHS[tech].chunk_mw
+            # pay-as-clear: with this bid as the clearing strike, all accepted MW are paid it
+            if pot.budget_gbp is not None and (mw[tech] + chunk) * pot.support_per_mw(s) > pot.budget_gbp + 1e-6:
                 continue
             won.append((s, g, tech))
-            mw[tech] += TECHS[tech].chunk_mw
+            mw[tech] += chunk
         clearing = {}
         for s, g, tech in won:
             clearing[tech] = max(clearing.get(tech, 0), s)
@@ -463,6 +476,12 @@ class GBMarketModel(ModelBase):
             built.append(self.new_plant(g, tech, zone, t.chunk_mw, on, support="cfd",
                                         strike=clearing[tech], cfd_end=on + 19))
         self.last_cfd = clearing
+        result = {tech: dict(max_mw=pot.max_mw, accepted_mw=mw[tech], over_cap=over_cap.get(tech, 0),
+                             clearing=clearing.get(tech), cap=pot.cap, budget_gbp=pot.budget_gbp)
+                  for tech, pot in pots.items()}
+        self.government.observe(year, result)
+        budgets = [pot.budget_gbp for pot in pots.values() if pot.budget_gbp is not None]
+        self.cfd_last = dict(awarded_mw=sum(mw.values()), budget_gbp=sum(budgets) if budgets else np.nan)
         return built
 
     def cm_auction(self, year, price_fc=None):
@@ -632,7 +651,8 @@ class GBMarketModel(ModelBase):
                    elec_retail=elec_retail, gas_retail=gas_retail, gas_network_tariff=gasr["gas_network_tariff"],
                    gas_throughput_twh=gasr["gas_throughput_twh"], power_gas_twh=st["gas_burn_twh"],
                    hp_homes_m=hr["hp_homes"] / 1e6, ev_stock_m=self.ev.stock(y) / 1e6,
-                   retired_mw=retired, invested_mw=invested)
+                   retired_mw=retired, invested_mw=invested,
+                   cfd_awarded_mw=self.cfd_last["awarded_mw"], cfd_budget_bn=self.cfd_last["budget_gbp"] / 1e9)
         for k, v in sc.items():               # system cost by component, GBP bn/yr (ukabm.costs)
             rec[f"syscost_{k}_bn"] = v / 1e9
         rec["syscost_bn"] = sum(sc.values()) / 1e9
