@@ -34,13 +34,10 @@ from . import network as netmod
 
 log = logging.getLogger(__name__)
 
-try:
-    import mesa
-    ModelBase = mesa.Model
-except Exception:  # pragma: no cover
-    class ModelBase:
-        def __init__(self, seed=None):
-            pass
+import mesa
+
+ModelBase = mesa.Model
+PANEL_ROUTES = ("cfd", "cm", "merchant")
 
 # Interconnector trade (see interconnector_blocks). Price levels are foreign mean price / SRMC of an
 # existing GB CCGT, calibrated to 2025: capacity-weighted FR/NL/BE/NO2/DK1 day-ahead averaged
@@ -148,6 +145,12 @@ class GBMarketModel(ModelBase):
         self.cm_clearing = 30.0
         self.records, self.hourly = [], {}
         self.network_results = {}
+        self.auction_log: list[dict] = []        # one row per auction pot and year (see auctions())
+        # Mesa DataCollector: one row per firm and year (see firm_panel())
+        fields = (["year", "profit_gbp", "capacity_mw", "retired_mw"] + [f"added_{r}_mw" for r in PANEL_ROUTES]
+                  + [f"cap_{t}_mw" for t in TECHS])
+        self.datacollector = mesa.DataCollector(
+            agent_reporters={k: (lambda a, k=k: a.panel.get(k, 0.0)) for k in fields})
 
     # ------------------------------------------------------------------ fleet
     def new_plant(self, owner, tech, zone, mw, online, retire=None, **kw):
@@ -602,12 +605,17 @@ class GBMarketModel(ModelBase):
             zone = self.choose_zone(tech)
             on = year + t.lead_time
             built.append(self.new_plant(g, tech, zone, t.chunk_mw, on, support="cfd",
-                                        strike=clearing[tech], cfd_end=on + 19))
+                                        strike=clearing[tech], cfd_end=on + 19, route="cfd"))
         self.last_cfd = clearing
         result = {tech: dict(max_mw=pot.max_mw, accepted_mw=mw[tech], over_cap=over_cap.get(tech, 0),
                              clearing=clearing.get(tech), cap=pot.cap, budget_gbp=pot.budget_gbp)
                   for tech, pot in pots.items()}
         self.government.observe(year, result)
+        for tech, r in result.items():
+            self.auction_log.append(dict(year=year, auction="cfd", tech=tech, delivery=year + TECHS[tech].lead_time,
+                                         limit_mw=r["max_mw"], accepted_mw=r["accepted_mw"], clearing=r["clearing"],
+                                         cap=r["cap"], budget_gbp=r["budget_gbp"], new_mw=r["accepted_mw"],
+                                         bids_over_cap=r["over_cap"]))
         budgets = [pot.budget_gbp for pot in pots.values() if pot.budget_gbp is not None]
         self.cfd_last = dict(awarded_mw=sum(mw.values()), budget_gbp=sum(budgets) if budgets else np.nan)
         return built
@@ -706,9 +714,18 @@ class GBMarketModel(ModelBase):
                 if tech == "battery":
                     batt_svc = who[2]      # expected services of the marginal accepted battery chunk
                 new.append(self.new_plant(g, tech, self.choose_zone(tech), TECHS[tech].chunk_mw, dy,
-                                          cm_price=clearing, cm_start=dy, cm_end=dy + 14))
+                                          cm_price=clearing, cm_start=dy, cm_end=dy + 14, route="cm"))
         self.cm_log = getattr(self, "cm_log", [])
         self.cm_log.append(dict(year=dy, clearing=clearing, procured_mw=q, target_mw=target, peak=peak, n_offers=len(offers), offered=sum(o[1] for o in offers), ahead=ahead))
+        name = f"cm_t{ahead}"
+        self.auction_log.append(dict(year=year, auction=name, tech="all", delivery=dy, limit_mw=target,
+                                     accepted_mw=q, clearing=clearing, cap=cap, budget_gbp=np.nan,
+                                     new_mw=sum(p.mw for p in new), bids_over_cap=0))
+        for tech in sorted({p.tech for p in new}):
+            self.auction_log.append(dict(year=year, auction=name, tech=tech, delivery=dy, limit_mw=np.nan,
+                                         accepted_mw=sum(p.mw * TECHS[tech].derating for p in new if p.tech == tech),
+                                         clearing=clearing, cap=cap, budget_gbp=np.nan,
+                                         new_mw=sum(p.mw for p in new if p.tech == tech), bids_over_cap=0))
         if ahead != 4:
             return new
         self.cm_clearing = clearing
@@ -759,6 +776,7 @@ class GBMarketModel(ModelBase):
     def step(self):
         y = self.year
         plants = self.active(y)
+        n_before = len(self.plants)
         res = self.run_market(y, plants)
         st = self.settle(y, plants, res)
         self._learn(y, plants)
@@ -837,7 +855,43 @@ class GBMarketModel(ModelBase):
         self.hourly[y] = pd.DataFrame({"price": price, "demand": res["demand"], "heat": res["heat"],
                                        "ev": res["ev"], "h2": res["h2"], "export": res["export"],
                                        "load": res["base"] + res["heat"] + res["ev"]})   # inflexible load
+        self._firm_rows(y, plants, n_before)
+        self.datacollector.collect(self)
         self.year += 1
+
+    def _firm_rows(self, y, plants, n_before):
+        """This year's row of the firm panel for every firm: realised profit, operating capacity by
+        technology, capacity closed this year, and capacity committed this year by route (CfD award,
+        Capacity Market award, merchant decision)."""
+        for g in self.gencos:
+            own = [p for p in plants if p.owner is g]
+            row = dict(year=y, profit_gbp=float(sum(p.history[-1][1] for p in own if p.history and p.history[-1][0] == y)),
+                       capacity_mw=float(sum(p.mw for p in own)),
+                       retired_mw=float(sum(p.mw for p in own if p.retire == y)))
+            for tech in TECHS:
+                row[f"cap_{tech}_mw"] = float(sum(p.mw for p in own if p.tech == tech))
+            new = [p for p in self.plants[n_before:] if p.owner is g]
+            for r in PANEL_ROUTES:
+                row[f"added_{r}_mw"] = float(sum(p.mw for p in new if p.route == r))
+            g.panel = row
+
+    def firm_panel(self) -> pd.DataFrame:
+        """One row per firm and year, from the Mesa DataCollector: profit (GBP), operating capacity (MW,
+        total and by technology), MW closed, and MW committed that year by route."""
+        df = self.datacollector.get_agent_vars_dataframe().reset_index()
+        names = {g.unique_id: g.name for g in self.gencos}
+        df.insert(0, "firm", df["AgentID"].map(names))
+        df["year"] = df["year"].astype(int)
+        return df.drop(columns=[c for c in ("Step", "AgentID") if c in df]).sort_values(["year", "firm"]).reset_index(drop=True)
+
+    def auctions(self) -> pd.DataFrame:
+        """One row per auction pot and year. CfD rounds: one row per technology (volume limit, accepted
+        MW, clearing strike, cap, GBP budget). Capacity Market (cm_t4, cm_t1): a row with tech 'all'
+        (target, procured de-rated MW, clearing price, price cap, new-build MW) and one row per
+        new-build technology."""
+        cols = ["year", "auction", "tech", "delivery", "limit_mw", "accepted_mw", "clearing", "cap", "budget_gbp",
+                "new_mw", "bids_over_cap"]
+        return pd.DataFrame(self.auction_log, columns=cols)
 
     def invest(self, y):
         before = sum(p.mw for p in self.plants if p.online > y)
@@ -865,7 +919,7 @@ class GBMarketModel(ModelBase):
                 if d and budgets[g.name] > 0:
                     tech, mw, npv = d
                     t = TECHS[tech]
-                    self.new_plant(g, tech, self.choose_zone(tech), mw, y + t.lead_time)
+                    self.new_plant(g, tech, self.choose_zone(tech), mw, y + t.lead_time, route="merchant")
                     budgets[g.name] -= capex_kw(tech, y + t.lead_time) * 1000 * mw
                     done = True
                     break

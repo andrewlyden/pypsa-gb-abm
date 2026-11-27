@@ -1,27 +1,22 @@
-"""Agents: generation companies (operate, bid, invest), plants, and a government/policy agent.
+"""Agents: generation companies (operate, bid, invest) and their plants.
 
-Built on Mesa (https://mesa.readthedocs.io) when installed; falls back to a tiny shim so the
-model also runs without Mesa.
+Generation companies are Mesa agents (https://mesa.readthedocs.io): they are registered with the
+model, and a Mesa ``DataCollector`` records a panel of every firm in every year
+(``GBMarketModel.firm_panel``). The model, not a Mesa scheduler, orders the phases of the year.
+Households are held as arrays in ``ukabm.multienergy.HeatModule`` for speed, not as Mesa agents;
+the government and the system operator are in ``ukabm.institutions``.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+import mesa
+
 from . import decisions
 from .config import TECHS
 from .observations import PlantView, validate
 
-try:  # Mesa 3.x
-    import mesa
-    AgentBase = mesa.Agent
-except Exception:  # pragma: no cover
-    class AgentBase:  # minimal shim
-        _next = 0
-
-        def __init__(self, model):
-            self.model = model
-            AgentBase._next += 1
-            self.unique_id = AgentBase._next
+AgentBase = mesa.Agent
 
 
 @dataclass
@@ -46,6 +41,7 @@ class Plant:
     energy_history: list = field(default_factory=list)   # (year, profit excl. CM payments)
     availability: float | None = None   # overrides Tech.availability (e.g. legacy AGR fleet)
     efficiency: float | None = None     # overrides Tech.efficiency (e.g. older CCGT fleet)
+    route: str = "initial"              # how it came about: initial | pipeline | cfd | cm | merchant
 
     def active(self, year):
         return self.online <= year <= self.retire
@@ -81,6 +77,7 @@ class GenCo(AgentBase):
         self.tech_preference = tech_preference or list(TECHS)
         self.profit_history = []
         self.decider = decisions.make(decider or "rules")
+        self.panel = {}        # this year's row of the firm panel (GBMarketModel._firm_rows)
 
     # ------------------------------------------- decisions (see ukabm.decisions)
     # The GenCo builds an Observation (ukabm.observations) of what it may know, asks its decision maker,
