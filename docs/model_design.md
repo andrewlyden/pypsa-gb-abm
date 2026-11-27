@@ -54,6 +54,19 @@
 | Households ×2000 (each ≈14k homes) | heating system at boiler replacement (logit on lifecycle cost + hassle) | heat demand, discount rate, hassle cost, on/off gas grid, boiler age |
 | Government (Policy) | carbon path, CfD target/pots, CM target & curve, HP grant, levy rebalancing | scenario |
 
+### Decision interface (`ukabm.decisions`)
+Every GenCo decision goes through a `DecisionMaker`: `offer_price`, `expected_carbon`,
+`merchant_investment`, `cfd_bid` and `cm_bid`. The model calls the GenCo, and the GenCo calls its
+decision maker with itself (traits, and the year, fleet, policy and forecasting helpers through
+`agent.model`) and the call's arguments (price forecast, plant, technology). `RuleBased` holds the
+rules described above and is the default; results are identical to the code before the interface.
+
+Other decision makers subclass `RuleBased` (or `DecisionMaker`), override the decisions they make and
+are registered by name. A scenario selects them with `decision_logic`: one name for every GenCo, or
+`{genco_name: name}` for some (the rest keep `"rules"`). Each GenCo gets its own instance, so learning
+agents can keep state. Random draws must come from `agent.model.rng`. Government and system-operator
+agents, Q-learning and LLM decision makers (README roadmap items 2, 5, 6, 24, 25) plug in here.
+
 ## Multi-energy hooks (extension points)
 * `HeatModule.hourly_load` — swap synthetic temperature for PyPSA-GB atlite cutouts; add HP flexibility.
 * `GasNetworkModule.update(h2_blend=…)` — hydrogen blending / network repurposing.

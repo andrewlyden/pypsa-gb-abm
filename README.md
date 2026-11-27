@@ -18,7 +18,7 @@ and hydrogen.
 ## Quick start
 ```bash
 pip install -e .            # numpy pandas scipy matplotlib mesa pypsa highspy
-pytest -q                   # 43 tests, ~6 min
+pytest -q                   # 48 tests, ~8 min
 python scripts/run_scenarios.py baseline --end 2030      # ~40 s
 python scripts/run_scenarios.py                          # all 6 scenarios 2025-2050 (~4 min each)
 python scripts/make_plots.py                             # -> docs/figures/
@@ -41,6 +41,7 @@ df = m.run()            # annual metrics: prices, mix, emissions, policy costs, 
 ```
 ukabm/config.py        technologies, fuels, policy parameters (indicative)
 ukabm/agents.py        GenCo agents (offers, CfD/CM bids, NPV investment), Plant
+ukabm/decisions.py     decision interface: DecisionMaker, RuleBased (default), registry (`decision_logic`)
 ukabm/market.py        vectorised hourly clearing, storage arbitrage, valley-filling
 ukabm/model.py         GBMarketModel (Mesa): annual loop, auctions, settlement, investment
 ukabm/multienergy.py   HeatModule (household agents), GasNetworkModule, EVModule, HydrogenModule
@@ -142,6 +143,7 @@ are seed-dependent (0–101 h across seeds in heat_push) and should not be quote
 | 2025 calibration vs outturn (`scripts/compare_outturn.py`) | ✅ price +6 %, gas/imports/exports/nuclear/biomass within 10 %; CI (NESO basis) −13 % with explained residuals (curtailment, "other") |
 | Storage arbitrage (battery, pumped hydro), smart EV valley-filling, electrolysers | ✅ works (heuristic, perfect intra-day foresight; storage fleet dispatched in price-aware tranches) |
 | Merchant investment (5 heterogeneous GenCos, NPV on re-forecast prices) | ✅ works |
+| Decision interface (`ukabm.decisions`): every GenCo decision behind one `DecisionMaker`, selectable per scenario and GenCo | ✅ rules by default, results unchanged; ready for government, Q-learning and LLM decision makers |
 | CfD allocation rounds with pots; 2-way CfD settlement | ✅ works. ⚠️ Volume fixed at 6 GW/yr (60/20/20) with no £ budget; bids (levelised cost ± noise) never reach the caps, so the auction decides who builds, not how much (roadmap items 2–3) |
 | Government / system operator as agents (CfD budgets, CM target, rule changes) | ❌ not started: policy rules are fixed parameters (roadmap items 2, 5) |
 | T-4 Capacity Market with sloping demand curve | ✅ works (no T-1, no penalties); fixed Nov 2026: no acceptance beyond the end of the demand curve, new-build bids on the t+3 forecast. ⚠️ target ~25 % above published (roadmap) |
@@ -172,10 +174,10 @@ re-run `scripts/run_gap.py` and update [docs/gap.md](docs/gap.md).
 
 *A. Who decides*
 
-1. **Decision interface (deck slide 16).** Move `GenCo` investment, CfD bids and CM bids behind one
-   interface (inputs: forecasts, prices, policy state; outputs: decisions), with the current rules as the
-   default implementation and a test that results are identical for a fixed seed. Government (items 2,
-   6), system-operator (item 5), Q-learning (item 24) and LLM (item 25) decision makers all plug into it.
+1. ✅ **Decision interface (deck slide 16).** Done: `ukabm/decisions.py`. GenCo offers, carbon
+   expectations, merchant investment, CfD and CM bids go through a `DecisionMaker`; scenario key
+   `decision_logic` selects one by name, for all or named GenCos; `RuleBased` reproduces the earlier
+   results exactly (`tests/test_decisions.py`). Items 2, 5, 6, 24 and 25 plug into it.
 2. **Government agent and a £-budget CfD auction.** New `ukabm/institutions.py` with a `Government` that
    sets each round's budget per pot in £ (strike minus forecast reference price, times expected
    generation, as in the allocation framework, simplified), the pot split and the administrative strike
