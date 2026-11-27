@@ -17,7 +17,7 @@ and hydrogen.
 ## Quick start
 ```bash
 pip install -e .            # numpy pandas scipy matplotlib mesa pypsa highspy
-pytest -q                   # 10 tests, ~40 s
+pytest -q                   # 13 tests, ~45 s
 python scripts/run_scenarios.py baseline --end 2030      # ~40 s
 python scripts/run_scenarios.py                          # all 6 scenarios 2025-2050 (~4 min each)
 python scripts/make_plots.py                             # -> docs/figures/
@@ -66,12 +66,12 @@ distribution is too narrow (no negative hours). Full table: [results/calibration
 ## Headline results (single seed, illustrative)
 | scenario | price 2030 / 2050 (£/MWh) | CI 2050 (g/kWh), direct (NESO basis) | LOLE total 2025-50 (h) | HP homes 2050 |
 |---|---|---|---|---|
-| baseline | 82 / 41 | 13 (20) | 0 | 5.9 m |
-| high_carbon (£300/t 2050) | 89 / 45 | 8 (12) | 0 | 5.3 m |
-| no_cfd | 86 / 79 | 25 (35) | 0 | 4.0 m |
-| no_capacity_market | 89 / 49 | 11 (18) | 558 | 5.0 m |
-| heat_push (£11.5k grant, £25/MWh levy rebalancing) | 86 / 55 | 20 (28) | 0 | 27.2 m |
-| high_gas (£45/MWh_th) | 105 / 60 | 17 (25) | 0 | 13.1 m |
+| baseline | 82 / 43 | 13 (19) | 0 | 5.7 m |
+| high_carbon (£300/t 2050) | 89 / 46 | 7 (10) | 0 | 5.0 m |
+| no_cfd | 86 / 79 | 25 (35) | 0 | 4.1 m |
+| no_capacity_market | 90 / 54 | 11 (18) | 553 | 4.7 m |
+| heat_push (£11.5k grant, £25/MWh levy rebalancing) | 86 / 57 | 20 (28) | 0 | 27.2 m |
+| high_gas (£45/MWh_th) | 105 / 64 | 17 (25) | 0 | 13.1 m |
 
 Qualitative messages: CfDs drive offshore wind and lower long-run prices; removing the CM produces a
 missing-money scarcity episode (2027-29, ~500 h, prices ~£340/MWh) before merchant entry responds (classic
@@ -123,8 +123,9 @@ The daily agent takes the highest unfinished item it can complete in one run. It
    interconnector counter-trades. (d) By 2050 redispatch adds 5–15 g/kWh to NESO-basis CI
    (`intensity_neso_post_bm_g_kwh`), which the headline CI does not include yet.
 3. Battery revenues: add a stylised BM/ancillary revenue stack so merchant batteries can enter. Then check
-   Capacity Market over-procurement of OCGT (CM clears at the cap every year; the target is likely too high
-   with an unmanaged EV peak). Related: the 2025 price distribution is too narrow (no negative hours, p95
+   the Capacity Market: it clears at the cap because it is under-subscribed (offered de-rated capacity below
+   target; check the target vs NESO/EMR de-rated targets incl. managed EV/HP peak, and the `cm_new_chunks`
+   entry cap), plus a demand-curve edge case where an auction clears at £0 with procurement above target + 1.5 GW. Related: the 2025 price distribution is too narrow (no negative hours, p95
    £100 vs £123), which understates arbitrage spreads; consider must-run/min-stable generation and RO bidding.
 4. Validation check: tolerance bands (in `docs/assumptions.md`) on the `ukabm.outturn.compare` table for
    2025 (price, CI, generation mix, flows) and a test, so regressions show up in CI.
@@ -134,7 +135,10 @@ The daily agent takes the highest unfinished item it can complete in one run. It
    2025 currently uses NESO's historic generation mix and Elexon MID/FUELHH as the reference; confirm.
 7. *needs human*: choose what to pursue next among hydrogen (H2 storage/network vs exogenous price),
    strategic BM bidding, nodal/ETYS network in the loop, and RL agents.
-8. *needs human*: fuel and carbon price paths. The gas path (£32 → £25/MWh_th, 2025 → 2050) predates the
+8. Interconnector capacity after 2031: the register is flat at 14.7 GW from FAB Link (2031) to 2050, below
+   FES net-zero pathways; add dated pipeline projects (LionLink, Nautilus, MaresConnect, Tarchon, …) from the
+   NESO/Ofgem pipeline, or a sourced `ic_growth` path, so 2040s imports/exports are not capped low.
+9. *needs human*: fuel and carbon price paths. The gas path (£32 → £25/MWh_th, 2025 → 2050) predates the
    2026 gas-price spike (NBP Dec-26 ~210p/therm ≈ £72/MWh_th in November 2026); decide which price
    scenarios the model should carry.
 

@@ -61,7 +61,7 @@ axs[1, 0].set_ylim(-5, 25)
 fig.tight_layout(); fig.savefig(FIG / "scenario_comparison.png", dpi=130); plt.close(fig)
 
 fig, axs = plt.subplots(1, 3, figsize=(13, 3.8))
-axs[0].stackplot(base.index, base.demand_twh - base.heat_twh - base.ev_twh - base.h2_twh - base.export_twh,
+axs[0].stackplot(base.index, base.demand_twh - base.heat_twh - base.ev_twh - base.h2_twh,
                  base.heat_twh, base.ev_twh, base.h2_twh, base.export_twh,
                  labels=["base", "heat pumps", "EVs", "electrolysers", "exports"])
 axs[0].set_title("Electricity demand components (TWh)", fontsize=10); axs[0].legend(fontsize=7, loc="upper left")

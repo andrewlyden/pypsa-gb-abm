@@ -73,3 +73,15 @@ def test_2025_comparison_table():
     assert {"imports (TWh)", "exports (TWh)", "carbon intensity, NESO basis (g/kWh)"} <= set(tab.index)
     assert 2025 in load_outturn().index
     assert r.export_twh > 5 and r.intensity_neso_g_kwh > r.intensity_g_kwh
+
+
+def test_levy_and_demand_exclude_exports():
+    # CfD/RO/CM costs are recovered from GB supplier volumes only; exports are not GB demand
+    m = GBMarketModel(end=2025, network_every=0)
+    res = m.run_market(2025, m.active(2025))
+    dom = (res["base"] + res["heat"] + res["ev"] + res["h2"]).sum()
+    assert np.isclose(res["demand_domestic"].sum(), dom)
+    r = m.run().loc[2025]
+    assert r.export_twh > 5
+    assert np.isclose(r.demand_twh, dom / 1e6)
+    assert np.isclose(r.levy_gbp_mwh, (r.cfd_cost_bn + r.ro_cost_bn + r.cm_cost_bn) * 1e9 / (r.demand_twh * 1e6))

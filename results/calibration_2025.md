@@ -3,7 +3,7 @@
 | metric | model | outturn | model - outturn |
 |---|---|---|---|
 | price, time-weighted mean (GBP/MWh) | 84.6 | 79.9 | 4.7 |
-| price, model demand-weighted vs MID volume-weighted (GBP/MWh) | 85.6 | 80.9 | 4.7 |
+| price, model demand-weighted vs MID volume-weighted (GBP/MWh) | 85.7 | 80.9 | 4.7 |
 | price p05 (GBP/MWh) | 53.9 | 8.7 | 45.2 |
 | price p50 (GBP/MWh) | 86.2 | 82.2 | 4.0 |
 | price p95 (GBP/MWh) | 100.1 | 123.4 | -23.3 |
