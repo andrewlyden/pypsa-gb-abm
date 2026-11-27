@@ -3,22 +3,22 @@
 | metric | model | outturn | model - outturn |
 |---|---|---|---|
 | price, time-weighted mean (GBP/MWh) | 83.9 | 79.9 | 4.0 |
-| price, model demand-weighted vs MID volume-weighted (GBP/MWh) | 84.9 | 80.9 | 4.0 |
+| price, model demand-weighted vs MID volume-weighted (GBP/MWh) | 85.0 | 80.9 | 4.1 |
 | price p05 (GBP/MWh) | 47.3 | 8.7 | 38.6 |
 | price p50 (GBP/MWh) | 86.2 | 82.2 | 4.0 |
 | price p95 (GBP/MWh) | 100.1 | 123.4 | -23.3 |
 | negative-price hours | 0.0 | 244.0 | -244.0 |
 | carbon intensity, NESO basis (g/kWh) | 113.2 | 129.7 | -16.5 |
-| carbon intensity, NESO basis, after BM redispatch (g/kWh) | 123.8 | 129.7 | -5.9 |
+| carbon intensity, NESO basis, after BM redispatch (g/kWh) | 121.8 | 129.7 | -7.8 |
 | carbon intensity, direct combustion (g/kWh) | 86.0 | – | – |
-| constraint cost (GBP bn) | 1.0 | 1.8 | -0.8 |
-| constraint cost excl. BM premia (GBP bn) | 1.0 | 1.3 | -0.3 |
-| renewable curtailment in BM (TWh) | 7.8 | 10.4 | -2.6 |
+| constraint cost (GBP bn) | 0.8 | 1.8 | -1.0 |
+| constraint cost excl. BM premia (GBP bn) | 0.8 | 1.3 | -0.4 |
+| renewable curtailment in BM (TWh) | 6.4 | 10.4 | -4.0 |
 | gas (CCGT+OCGT) (TWh) | 69.5 | 77.3 | -7.8 |
 | nuclear (TWh) | 34.8 | 34.2 | 0.6 |
 | wind incl. embedded (TWh) | 94.4 | 85.8 | 8.6 |
-| gas after BM redispatch (TWh) | 76.1 | 77.3 | -1.2 |
-| wind after BM redispatch (TWh) | 86.6 | 85.8 | 0.7 |
+| gas after BM redispatch (TWh) | 74.7 | 77.3 | -2.6 |
+| wind after BM redispatch (TWh) | 88.0 | 85.8 | 2.2 |
 | solar (TWh) | 18.4 | 18.7 | -0.3 |
 | biomass (TWh) | 19.9 | 19.9 | -0.1 |
 | hydro (TWh) | 5.3 | 3.4 | 1.9 |
