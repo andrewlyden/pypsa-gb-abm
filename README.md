@@ -17,7 +17,7 @@ and hydrogen.
 ## Quick start
 ```bash
 pip install -e .            # numpy pandas scipy matplotlib mesa pypsa highspy
-pytest -q                   # 13 tests, ~45 s
+pytest -q                   # 27 tests, ~60 s
 python scripts/run_scenarios.py baseline --end 2030      # ~40 s
 python scripts/run_scenarios.py                          # all 6 scenarios 2025-2050 (~4 min each)
 python scripts/make_plots.py                             # -> docs/figures/
@@ -51,15 +51,17 @@ ukabm/outturn.py       model-vs-outturn comparison (data/outturn: NESO generatio
 | | model | outturn 2025 |
 |---|---|---|
 | price, time-weighted mean (£/MWh) | 84.6 | 79.9 (Elexon MID) |
-| carbon intensity, NESO basis: wholesale / after BM redispatch (g/kWh) | 112 / 123 | 130 (NESO, generation-weighted) |
-| gas / wind after BM redispatch (TWh) | 76 / 87 | 77 / 86 |
+| carbon intensity, NESO basis: wholesale / after BM redispatch (g/kWh) | 112 / 121 | 130 (NESO, generation-weighted) |
+| gas / wind after BM redispatch (TWh) | 75 / 88 | 77 / 86 |
 | nuclear / biomass (TWh) | 35 / 20 | 34 / 20 |
 | imports / exports (TWh) | 45 / 15 | 44 / 15 (Elexon FUELHH) |
-| constraint cost (£bn) | 1.04 | 1.83, of which ~0.54 BM premia not modelled (LCP Delta 2026, NESO data) |
-| renewable turn-down in the BM (TWh) | 7.9 | 10.4 |
+| constraint cost (£bn) | 0.85 | 1.83, of which ~0.54 BM premia not modelled (LCP Delta 2026, NESO data) |
+| renewable turn-down in the BM (TWh) | 6.5 | 10.4 |
 
 The network stage redispatches the copperplate schedule on the PyPSA-GB zones with dated ETYS boundary
-capabilities. It turns down Scottish wind behind B4/B6 and turns up gas in England, which closes most of the CI gap.
+capabilities. It turns down Scottish wind behind B4/B6 and turns up gas in England, which closes half of the CI gap.
+Interconnector flows enter at their landing zones (mostly southern England), so Scottish demand is not
+netted by imports; constraint cost and turn-down are ~35 % below outturn.
 Remaining residuals: the model has no CHP/waste "other" generation (4.7 TWh, ~+5 g/kWh) and its price
 distribution is too narrow (no negative hours). Full table: [results/calibration_2025.md](results/calibration_2025.md).
 
@@ -95,7 +97,7 @@ and carbon intensity until the fleet catches up.
 | T-4 Capacity Market with sloping demand curve | ✅ works (no T-1, no penalties) |
 | Retirement on persistent losses / end of life | ✅ works |
 | PyPSA-GB link: zonal network, ESPENI profiles, DUKES siting, IC register, CM/CfD data | ✅ works (bundled snapshot or live clone) |
-| Network stage: BM-style redispatch (bids/offers) on PyPSA-GB zones with dated ETYS boundary capabilities and monthly availability, 96 wind-stratified hours | ✅ 2025: £1.04bn vs £1.29bn outturn excl. BM premia; 7.9 vs 10.4 TWh turn-down; post-BM gas/wind within 1.5 TWh, CI 7 g/kWh low. Boundary cuts tested for bypass routes. ⚠️ Single GB wind shape for all zones; ~£0 in 2030–35 (see roadmap); redispatch is reported only, not settled |
+| Network stage: BM-style redispatch (bids/offers) on PyPSA-GB zones with dated ETYS boundary capabilities and monthly availability, 96 wind-stratified hours | ✅ 2025: £0.85bn vs £1.29bn outturn excl. BM premia; 6.5 vs 10.4 TWh turn-down; post-BM gas/wind within 3 TWh, CI 9 g/kWh low. Boundary cuts tested for bypass routes; IC flows at landing zones. Siting by resource share (national pricing); LMP siting is the `locational_signal` sensitivity. ⚠️ Single GB wind shape for all zones; ~£0 in 2030 (see roadmap); redispatch is reported only, not settled or passed to consumers (no BSUoS) |
 | Heat-pump household agents + gas network tariff feedback | ✅ works (stylised, synthetic temperature) |
 | Hydrogen: electrolysers + H2 turbine tech | ⚠️ stub-level: exogenous H2 price, no H2 storage/network |
 | Batteries | ⚠️ no new merchant batteries: flat price duration under OCGT-led CM; needs BM/ancillary revenue stack |
@@ -110,8 +112,9 @@ The daily agent takes the highest unfinished item it can complete in one run. It
 
 1. Multi-seed runs (5 seeds) for baseline + 2 policy scenarios; show uncertainty bands, not single lines,
    in the plots and the headline table.
-2. Network follow-ups (2025 constraint cost and turn-down are now within 20–25 % of outturn, both low):
-   (a) constraint cost drops to ~£0 in 2030–35 in every scenario. LCP Delta (Mar 2026) projects £6.1bn in
+2. Network follow-ups (2025 constraint cost and turn-down are ~35 % below outturn):
+   (a) constraint cost drops to ~£0.04bn in 2030 in every scenario (baseline: £0.42bn in 2035, £2.0bn in
+   2040, £3.9bn in 2050). LCP Delta (Mar 2026) projects £6.1bn in
    2030 under FES25 Holistic Transition (47 GW offshore, 41 TWh turn-down) and a £4.2bn peak in its
    slower-build Central case (36 GW). The model has only 17 GW offshore in 2030, and the Holistic
    Transition boundary build-out (B6 10→17 GW, EGL1–4) arrives on time. It also has no East Anglia (EC5)
@@ -119,9 +122,12 @@ The daily agent takes the highest unfinished item it can complete in one run. It
    AR6/AR7 awards) against the 2030 pipeline, represent EC5, and consider a delayed-network sensitivity. (b) Zonal wind profiles: Scottish and English wind
    currently share one GB shape. (c) Interconnector and storage positions are held fixed in the
    redispatch. Where that leaves load unserved behind a constraint, the stage reports it as
-   `network_shed_twh` (0.01 TWh in 2025, 0.76 TWh in no_capacity_market 2050). Consider allowing
-   interconnector counter-trades. (d) By 2050 redispatch adds 5–15 g/kWh to NESO-basis CI
-   (`intensity_neso_post_bm_g_kwh`), which the headline CI does not include yet.
+   `network_shed_twh` (0.08 TWh in 2025, 2.3 TWh in no_capacity_market 2050). Consider allowing
+   interconnector counter-trades. (d) By 2050 redispatch adds 1–31 g/kWh to NESO-basis CI
+   (`intensity_neso_post_bm_g_kwh`; baseline 19 → 40), which the headline CI does not include yet.
+   (e) Constraint costs are not recovered from consumers (no BSUoS in the retail price): heat_push 2050
+   has £4.6bn/yr that households do not see. (f) Siting has no locational signal under national pricing;
+   a TNUoS-style zonal generation charge (NESO published tariffs) would be the GB-consistent one.
 3. Battery revenues: add a stylised BM/ancillary revenue stack so merchant batteries can enter. Then check
    the Capacity Market: it clears at the cap because it is under-subscribed (offered de-rated capacity below
    target; check the target vs NESO/EMR de-rated targets incl. managed EV/HP peak, and the `cm_new_chunks`

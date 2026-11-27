@@ -32,13 +32,13 @@ explained residuals in the 2025 comparison:
 * **Wind +8–9 TWh / gas −8 TWh**: the wholesale stage is a copperplate, so it does not curtail Scottish wind.
   In 2025 ~8.8 TWh was curtailed in northern Scotland alone (Montel 2025 curtailment report) and replaced by
   gas in England through the Balancing Mechanism; NESO's mix is after those actions. The network stage
-  now reports the redispatch. After BM redispatch, 2025 wind is 86.5 TWh (outturn 85.8), gas is 75.9 TWh
-  (77.3) and NESO-basis CI is 123 g/kWh (130). Constraint cost is £1.04bn against £1.83bn outturn. The
+  now reports the redispatch. After BM redispatch, 2025 wind is 87.9 TWh (outturn 85.8), gas is 74.5 TWh
+  (77.3) and NESO-basis CI is 121 g/kWh (130). Constraint cost is £0.85bn against £1.83bn outturn. The
   outturn includes ~£0.54bn of BM premia that the model does not represent; without them it is £1.29bn.
-  Renewable turn-down is 7.9 TWh vs 10.4 TWh (LCP Delta 2026, from NESO data;
+  Renewable turn-down is 6.5 TWh vs 10.4 TWh (LCP Delta 2026, from NESO data;
   `data/outturn/gb_constraints.csv`). Both are low, plausibly because every zone shares one GB wind
-  shape and generation is sited at zone level.
-* **CI (NESO basis) ~17 g/kWh low before redispatch, ~7 g/kWh low after**: the curtailment effect above (+11 g/kWh) plus 4.7 TWh of "other"
+  shape, generation is sited at zone level, and interconnector counter-trades are not modelled.
+* **CI (NESO basis) ~17 g/kWh low before redispatch, ~9 g/kWh low after**: the curtailment effect above (+9 g/kWh) plus 4.7 TWh of "other"
   generation (CHP, waste, oil; NESO factor 300 g/kWh, ~+5 g/kWh) that the model does not represent.
 * **Price ~£5/MWh high, distribution too narrow**: no low-price/negative hours (no unit commitment,
   must-run or inflexibility; GB had 244 negative hours in 2025) and no scarcity tail (p95 £100 vs £123).

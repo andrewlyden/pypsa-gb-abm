@@ -17,7 +17,7 @@
         ▼                          ▼
   plant pipeline         PyPSA-GB zonal network (PyPSA + HiGHS), ETYS boundary capabilities by year:
   (lead times)           BM-style redispatch (bids/offers) → constraint cost, curtailment, post-BM mix/CI;
-                         zonal prices → locational siting signal
+                         zonal prices → siting signal only in the locational_signal (zonal-pricing) sensitivity
 ```
 
 ## Annual loop (`GBMarketModel.step`)
@@ -35,7 +35,9 @@
    and its headroom turned up at its offer, on the 20-zone network with year-dependent boundary
    capabilities and monthly availability (`PyPSAGBData.links_for_year`, `link_availability`). Outputs:
    annualised constraint cost, curtailment, net redispatch by technology and post-BM NESO-basis CI
-   (reporting only), and zonal prices for siting.
+   (reporting only). Interconnector flows are fixed injections at their landing zones. Zonal prices feed
+   siting only in the `locational_signal` sensitivity; by default siting follows resource shares
+   (GB national pricing).
 6. Retail tariffs (wholesale + network + levies) → household heating decisions; gas throughput (homes +
    industry + **power-sector gas burn**) → gas network tariff.
 7. Investment: forecast prices for *t+3* from the known pipeline; CfD round; T-4 CM; sequential merchant
