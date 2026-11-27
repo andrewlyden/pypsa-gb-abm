@@ -125,6 +125,7 @@ class GBMarketModel(ModelBase):
         self.gencos = [GenCo(self, decider=decisions.for_genco(self.scenario, s["name"]), **s) for s in specs]
         self.government = make_government(self)   # runs the CfD rounds (scenario "government")
         self.operator = SystemOperator(self)       # sets the CM target (scenario "system_operator")
+        self.scarcity_on = self.scenario.get("scarcity_adder", True)   # ORDC adder in market clearing
         self.cfd_last = dict(awarded_mw=0.0, budget_gbp=np.nan)
         self.plants: list[Plant] = []
         self._pid = 0
@@ -268,7 +269,7 @@ class GBMarketModel(ModelBase):
         curve = merit_order(allb, self.H)                # offers are fixed within the year
         base, heat, ev0, _ = self.demand(year)
         d1 = base + heat + ev0
-        p1, _, _ = clear(d1 + x_max, allb, self.policy.voll, curve=curve)
+        p1, _, _ = clear(d1 + x_max, allb, self.policy.voll, scarcity_on=self.scarcity_on, curve=curve)
         # flexibility reacts to pass-1 prices
         vre = sum(np.broadcast_to(b.avail, (self.H,)) for b in blocks
                   if self._tech_of.get(b.key) in VRE_TECHS)
@@ -283,22 +284,22 @@ class GBMarketModel(ModelBase):
             mw = sum(p.mw for p in plants if p.tech == tech)
             k = STORAGE_TRANCHES.get(tech, 1)
             for _ in range(k if mw > 0 else 0):
-                pk, _, _ = clear(flex - net_st, allb, self.policy.voll, curve=curve)
+                pk, _, _ = clear(flex - net_st, allb, self.policy.voll, scarcity_on=self.scarcity_on, curve=curve)
                 nk = storage_arbitrage(pk, mw / k, hrs, TECHS[tech].efficiency)
-                after, _, _ = clear(flex - net_st - nk, allb, self.policy.voll, curve=curve)
+                after, _, _ = clear(flex - net_st - nk, allb, self.policy.voll, scarcity_on=self.scarcity_on, curve=curve)
                 daily = (after * nk)[:self.H // 24 * 24].reshape(-1, 24).sum(1)
                 nk[:len(daily) * 24] *= np.repeat(daily > 0, 24)
                 stor[tech] = stor.get(tech, 0.0) + nk
                 net_st += nk
         d2 = base + heat + ev + h2 - net_st
-        price, disp, uns = clear(d2 + x_max, allb, self.policy.voll, curve=curve)
+        price, disp, uns = clear(d2 + x_max, allb, self.policy.voll, scarcity_on=self.scarcity_on, curve=curve)
         # pass 3: electrolysers withdraw where the pass-2 price is above their willingness to pay
         # (avoids flexibility-induced scarcity from a one-shot response)
         bad_h = price > self.h2.wtp()
         if np.any(bad_h & (h2 > 0)):
             h2 = np.where(bad_h, 0.0, h2)
             d2 = base + heat + ev + h2 - net_st
-            price, disp, uns = clear(d2 + x_max, allb, self.policy.voll, curve=curve)
+            price, disp, uns = clear(d2 + x_max, allb, self.policy.voll, scarcity_on=self.scarcity_on, curve=curve)
         xj = [j for j, b in enumerate(allb) if b.key <= -11]
         export = x_max - disp[:, xj].sum(1)              # bought-back volume = export not taken
         # demand = everything GB generation/imports serve (incl. exports, net storage), for the network

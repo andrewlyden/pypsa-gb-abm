@@ -136,6 +136,16 @@ All parameters are illustrative assumptions for comparing objectives, not estima
   39.4 GW published for 2029/30; the formula gives 49.4 GW. The first T-1 auctions are larger because
   the model starts without the agreements earlier auctions would have signed.
 
+### Convergence test (`competitive_benchmark`, `scripts/run_convergence.py`)
+Textbook conditions under which a competitive market should reproduce the least-cost plan: no CfD, no
+CM, scarcity priced only by unserved energy at VoLL (`scarcity_adder: False`), idealised firms on the
+`expectations` logic with up to 40 merchant decisions a year. A benchmark, not a policy scenario
+(`scenarios.BENCHMARKS`, not run by `run_scenarios.py`). First trial (seed 1, 2025–2035): gap 1.7 % of
+the optimum's PV cost (investment 0.7 %, operation 1.0 %), within the 3 % aim, but with a very different
+fleet (2035: 10 vs 46 GW offshore, 55 vs 30 GW onshore, 17 vs 2 GW batteries). The cost surface is flat
+near the optimum, so fleets can differ a lot at almost the same cost (README item 10, near-optimal space).
+Full run (3 seeds, to 2050) pending; slow test `tests/test_convergence.py` (`UKABM_SLOW=1`).
+
 ## Multi-energy hooks (extension points)
 * `HeatModule.hourly_load` — swap synthetic temperature for PyPSA-GB atlite cutouts; add HP flexibility.
 * `GasNetworkModule.update(h2_blend=…)` — hydrogen blending / network repurposing.

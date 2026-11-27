@@ -18,7 +18,7 @@ and hydrogen.
 ## Quick start
 ```bash
 pip install -e .            # numpy pandas scipy matplotlib mesa pypsa highspy
-pytest -q                   # 71 tests, ~10 min
+pytest -q                   # 73 tests (+1 slow), ~10 min
 python scripts/run_scenarios.py baseline --end 2030      # ~40 s
 python scripts/run_scenarios.py                          # all 6 scenarios 2025-2050 (~4 min each)
 python scripts/make_plots.py                             # -> docs/figures/
@@ -201,10 +201,10 @@ re-run `scripts/run_gap.py` and update [docs/gap.md](docs/gap.md).
    wind and solar pathway; the ideal-government rung), `"bills"` (lowest levy, slips when bills
    rise) and `"political"` (ambitious announcements, little funding before elections). Parameters in
    `config.GOVERNMENT_*`, documented in `docs/model_design.md`.
-7. **Convergence test.** Scenario `competitive_benchmark`: no CfD, no CM, scarcity pricing at VoLL,
-   idealised firms, merchant renewables, lifetime forecasts, small blocks. In theory a competitive market
-   then reproduces the least-cost plan; its gap to the planner measures the decision procedure alone.
-   Aim for < 3 %; if it is larger, find out why before interpreting other gaps. Add a regression test.
+7. **Convergence test.** Built: scenario `competitive_benchmark` (`scenarios.BENCHMARKS`; energy-only,
+   VoLL scarcity only, idealised firms on the `expectations` logic) and `scripts/run_convergence.py`.
+   First trial (seed 1, to 2035): 1.7 % gap, within the 3 % aim, with a very different fleet (see item
+   10). Still to do: the full run (3 seeds, to 2050) after the review fixes (item 0).
 
 *B. A fair benchmark*
 
