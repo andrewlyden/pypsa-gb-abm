@@ -59,6 +59,52 @@ def test_redispatch_toy_unconstrained_costs_nothing():
     assert np.allclose(out["cost_h"], 0.0) and np.allclose(out["up"], 0.0) and np.allclose(out["down"], 0.0)
 
 
+def test_redispatch_toy_injection_at_landing_zone():
+    # a fixed 100 MW interconnector import landing in N (demand_h excludes it) adds 100 MW to the
+    # wind that must be turned down behind the 100 MW boundary
+    base = _toy(100.0)
+    data = SimpleNamespace(buses=pd.DataFrame({"name": ["N", "S"], "x": [0.0, 0.0], "y": [1.0, 0.0]}),
+                           zone_demand_share=pd.Series({"N": 0.0, "S": 1.0}))
+    plants = [SimpleNamespace(pid=1, zone="N"), SimpleNamespace(pid=2, zone="S")]
+    blocks = [SimpleNamespace(key=1), SimpleNamespace(key=2)]
+    inj = pd.DataFrame({"N": [100.0], "S": [0.0]})
+    out = redispatch(data, plants, blocks, np.array([200.0]), np.array([[300.0, 0.0]]), np.array([[300.0, 500.0]]),
+                     np.array([[0.0, 80.0]]), np.array([[-40.0, 40.0]]),
+                     pd.DataFrame([dict(name="NS", bus0="N", bus1="S", p_nom=100.0)]), injection=inj)
+    assert np.isclose(out["down"][0, 0], base["down"][0, 0] + 100.0)
+    assert np.isclose(out["up"][0, 1], 100.0) and np.allclose(out["shed"], 0.0)   # 200 MW demand in S
+
+
+def test_interconnector_injection_at_landing_zones():
+    m = GBMarketModel(end=2025, network_every=0)
+    res = m.run_market(2025, m.active(2025))
+    hours = np.arange(0, m.H, 97)
+    inj = m.interconnector_injection(2025, res, hours)
+    imports = res["disp"][:, [j for j, b in enumerate(res["blocks"]) if -10 < b.key < 0]].sum(1)
+    assert np.allclose(inj.sum(1).values, (imports - res["export"])[hours])
+    landing = set(m.data._ic_in_service(2025).zone)
+    assert set(inj.columns[(inj.abs() > 1e-6).any()]) <= landing
+    # north of B6 only Moyle (SEM, Z5) lands; most capacity lands in southern England
+    north = [z for z in BOUNDARY_NORTH["B6"] if z in inj]
+    assert set(inj.columns[(inj.abs() > 1e-6).any()]) & set(north) <= {"Z5"}
+
+
+def test_siting_ignores_zonal_prices_under_national_pricing():
+    m = GBMarketModel(end=2025, network_every=0)
+    zones = m.data.zone_share("wind_offshore").index
+    m.network_results = {"zonal_price": pd.Series({z: (0.0 if z in BOUNDARY_NORTH["B6"] else 86.0) for z in zones})}
+
+    def north_share(signal):
+        m.scenario = {"locational_signal": signal} if signal is not None else {}
+        m.rng = np.random.default_rng(0)
+        picks = [m.choose_zone("wind_offshore") for _ in range(2000)]
+        return np.mean([z in BOUNDARY_NORTH["B6"] for z in picks])
+    resource = m.data.zone_share("wind_offshore")
+    expected = resource[[z for z in resource.index if z in BOUNDARY_NORTH["B6"]]].sum() / resource.sum()
+    assert abs(north_share(None) - expected) < 0.04          # default: resource share only
+    assert north_share(True) < north_share(None) - 0.1       # zonal-pricing sensitivity moves wind south
+
+
 def test_boundary_capabilities_by_year():
     d = PyPSAGBData()
     prev = None
@@ -173,7 +219,7 @@ def test_network_stage_2025_constraint_cost_and_post_bm_mix():
     # outturn 2025: GBP 1.83bn incl. ~0.54bn BM premia, 10.4 TWh renewable turn-down (LCP Delta 2026)
     assert 0.8 < r.constraint_cost_bn < 2.5
     assert 5.0 < r.curtailment_twh < 15.0
-    assert r.network_shed_twh < 0.05
+    assert r.network_shed_twh < 0.1    # fixed interconnector positions; no IC counter-trading in the stage
     # redispatch turns wind down and gas up, so post-BM CI is higher
     assert r.bm_net_wind_onshore + r.bm_net_wind_offshore < 0 < r.bm_net_ccgt + r.bm_net_ocgt
     assert r.intensity_neso_post_bm_g_kwh > r.intensity_neso_g_kwh

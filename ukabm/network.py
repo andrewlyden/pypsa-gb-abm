@@ -21,12 +21,14 @@ import pandas as pd
 log = logging.getLogger(__name__)
 
 
-def redispatch(data, plants, blocks, demand_h, schedule, avail, offers, bids, links, link_pu=None):
+def redispatch(data, plants, blocks, demand_h, schedule, avail, offers, bids, links, link_pu=None, injection=None):
     """Least-cost BM-style redispatch for the sample hours.
 
     demand_h: (S,) GB demand net of interconnector imports, MW. schedule, avail, offers, bids: (S, B)
     arrays for *blocks* (plant blocks only). links: inter-zonal links for the year; link_pu: optional
-    (S, links) DataFrame of available capacity share per hour (outages/maintenance).
+    (S, links) DataFrame of available capacity share per hour (outages/maintenance). injection: optional
+    (S, zones) DataFrame of fixed net injections (interconnector imports minus exports at their landing
+    zones), MW; demand_h is then GB demand excluding them.
     Returns dict with per-hour redispatch cost (GBP, bids/offers only), up/down volumes (S, B), load
     shed behind constraints (S,), flows, zonal prices.
     """
@@ -48,8 +50,9 @@ def redispatch(data, plants, blocks, demand_h, schedule, avail, offers, bids, li
             n.add("Link", l["name"], bus0=l.bus0, bus1=l.bus1, p_nom=l.p_nom, p_max_pu=pu, p_min_pu=-pu,
                   efficiency=1.0)
     for z, s in data.zone_demand_share.items():
-        if s > 0:
-            n.add("Load", f"load_{z}", bus=z, p_set=demand_h * s)
+        inj = injection[z].values if injection is not None and z in injection else 0.0
+        if s > 0 or np.any(inj != 0):
+            n.add("Load", f"load_{z}", bus=z, p_set=demand_h * s - inj)
             n.add("Generator", f"shed_{z}", bus=z, p_nom=1e5, marginal_cost=6000.0)
     pmap = {p.pid: p for p in plants}
     head = np.clip(avail - schedule, 0.0, None)

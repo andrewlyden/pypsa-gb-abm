@@ -441,11 +441,13 @@ class GBMarketModel(ModelBase):
         return new
 
     def choose_zone(self, tech):
-        """Locational choice: resource share (PyPSA-GB DUKES split) x network signal (zonal price
-        from the last PyPSA-GB redispatch; higher zonal price => more attractive)."""
+        """Locational choice by resource share (PyPSA-GB DUKES split). GB keeps national wholesale
+        pricing (REMA decision, July 2025), so by default generators see no zonal price signal.
+        Sensitivity `locational_signal=True` (zonal pricing): share x zonal price / mean, clipped to
+        [0.2, 2], with zonal prices from the last network-stage redispatch."""
         share = self.data.zone_share(tech).copy()
         zp = self.network_results.get("zonal_price") if self.network_results else None
-        if zp is not None and self.scenario.get("locational_signal", True):
+        if zp is not None and self.scenario.get("locational_signal", False):
             rel = (zp.reindex(share.index).fillna(zp.mean()) / max(zp.mean(), 1.0)).clip(0.2, 2.0)
             share = share * rel
         share = share.clip(lower=0) + 1e-9
@@ -546,6 +548,22 @@ class GBMarketModel(ModelBase):
                 break
         return sum(p.mw for p in self.plants if p.online > y) - before
 
+    def interconnector_injection(self, y, res, hours):
+        """Net interconnector injection (imports - exports, MW) by GB landing zone for the sample hours,
+        from the market's per-market import offers (keys -1-k) and export buy-back bids (-11-k); each
+        market's flow is split across its landing zones by capacity."""
+        disp = res["disp"][hours]
+        col = {b.key: j for j, b in enumerate(res["blocks"]) if b.key < 0}
+        share = self.data.interconnector_landing_share(y)
+        inj = pd.DataFrame(0.0, index=range(len(hours)), columns=list(self.data.buses.name))
+        for k, mkt in enumerate(sorted(self.data.interconnector_mw_by_market(y))):   # as interconnector_blocks
+            net = disp[:, col[-1 - k]].copy()
+            xb = res["blocks"][col[-11 - k]]
+            net -= np.broadcast_to(xb.avail, (self.H,))[hours] - disp[:, col[-11 - k]]   # export taken
+            for z, s in share[mkt].items():
+                inj[z] += net * s
+        return inj
+
     def network_sample(self, y):
         """Representative hours for the network stage: stratified by GB wind CF (constraint costs
         are driven by wind), equal hours per stratum, with weights = stratum size / sampled hours."""
@@ -592,8 +610,8 @@ class GBMarketModel(ModelBase):
         hours, wts = self.network_sample(y)
         cols = [j for j, b in enumerate(res["blocks"]) if b.key > 0]
         blocks = [res["blocks"][j] for j in cols]
-        imports = res["disp"][:, [j for j, b in enumerate(res["blocks"]) if -10 < b.key < 0]].sum(1)
         bc = lambda v: np.broadcast_to(v, (self.H,))[hours]
+        inj = self.interconnector_injection(y, res, hours)
         sched = res["disp"][np.ix_(hours, cols)]
         avail = np.stack([bc(b.avail) for b in blocks], 1)
         offers = np.stack([bc(b.price) for b in blocks], 1)
@@ -604,8 +622,8 @@ class GBMarketModel(ModelBase):
         offers = np.maximum(offers, bids)
         links = self.data.links_for_year(y)
         try:
-            out = netmod.redispatch(self.data, plants, blocks, (res["demand"] - imports)[hours], sched, avail,
-                                    offers, bids, links, self.data.link_availability(y, links, hours))
+            out = netmod.redispatch(self.data, plants, blocks, (res["demand"] - res["export"])[hours], sched, avail,
+                                    offers, bids, links, self.data.link_availability(y, links, hours), injection=inj)
         except Exception as e:  # keep the annual loop robust
             log.warning("network stage failed: %s", e)
             return {}
