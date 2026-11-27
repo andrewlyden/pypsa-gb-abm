@@ -1,21 +1,93 @@
-"""Scenario definitions (dicts are merged into Policy/Fuels/module kwargs).
+"""Scenarios: tables of overrides on the model's defaults, read from TOML and checked on use.
 
-Agent traits can be idealised per scenario with `agents_ideal`: a list of trait groups whose values are
-replaced by those of a social planner's agent (see IDEAL_TRAITS). The gap ladder (ukabm.gap) switches the
-groups on one at a time to attribute the optimal-vs-emergent gap to its sources.
+The built-in scenarios and benchmarks are in ``ukabm/data/scenarios.toml``; a user file has the same
+layout (``get_scenario("my_case", file="my_scenarios.toml")``). ``validate`` raises on any key the
+model does not read, so a misspelt key cannot silently leave a default in place.
+
+Agent traits can be idealised per scenario with ``agents_ideal``: a list of trait groups whose values
+are replaced by those of a social planner's agent (see IDEAL_TRAITS). The gap ladder (ukabm.gap)
+switches the groups on one at a time to attribute the optimal-vs-emergent gap to its sources.
 """
+from __future__ import annotations
+
 import copy
+import dataclasses
+import tomllib
+from pathlib import Path
 
-from .config import SOCIAL_DISCOUNT_RATE
+from .config import RESERVE, SOCIAL_DISCOUNT_RATE, Fuels, Policy
 
-SCENARIOS = {
-    "baseline": {},
-    "high_carbon": {"policy": {"carbon_price_2050": 300.0}},
-    "no_cfd": {"policy": {"cfd_enabled": False}},
-    "heat_push": {"policy": {"hp_grant": 11500.0, "gas_levy_rebalancing": 25.0}},
-    "no_capacity_market": {"policy": {"cm_enabled": False}},
-    "high_gas": {"fuels": {"gas_adder": 15.0}},     # central path + GBP 15/MWh_th every year
+BUILTIN = Path(__file__).resolve().parent / "data" / "scenarios.toml"
+
+# Every scenario key the model reads, with what it does. Sub-tables `policy`, `fuels` and `reserve`
+# are checked against config.Policy, config.Fuels and config.RESERVE.
+SCENARIO_KEYS = {
+    "policy": "overrides of config.Policy fields (carbon path, CfD, Capacity Market, grants, VoLL)",
+    "fuels": "overrides of config.Fuels fields (gas path or adder, other fuel prices)",
+    "multienergy": "keyword arguments of the heat, gas, ev and h2 modules: {heat: {...}, ...}",
+    "agents_ideal": "trait groups replaced by an idealised agent's values (IDEAL_TRAITS)",
+    "decision_logic": "decision maker by name, for all firms or {firm: name} (ukabm.decisions)",
+    "government": "who sets the CfD rounds: fixed | targets | least_cost | bills | political",
+    "government_params": "overrides of the government's rule parameters (config.GOVERNMENT_*)",
+    "cfd_pots": "fixed government: share of the round volume per technology",
+    "cfd_targets_gw": "target-tracking governments: capacity target path per technology",
+    "system_operator": "who sets the Capacity Market target: formula | standard",
+    "system_operator_params": "overrides of config.SYSTEM_OPERATOR",
+    "scarcity_adder": "ORDC-style scarcity adder in market clearing (default true)",
+    "max_merchant_decisions": "merchant investment decisions per year (default 6)",
+    "merchant_order": "order of firms in merchant investment: redraw (default) | fixed",
+    "cm_new_chunks": "new-build projects per firm and technology offered in a CM auction (default 4)",
+    "banned_techs": "technologies nobody may build",
+    "base_demand_growth": "annual growth of base demand (default 0.003)",
+    "ic_growth": "annual growth factor of interconnector capacity (default 1.0)",
+    "locational_signal": "site new plant on zonal prices of the network stage (default false)",
+    "reserve": "overrides of config.RESERVE; `scale` multiplies the requirement (0 = off)",
+    "new_build_cf": "annual capacity factor of new wind and solar by online year (config.NEW_BUILD_CF)",
 }
+_SUBTABLES = {
+    "policy": {f.name for f in dataclasses.fields(Policy)},
+    "fuels": {f.name for f in dataclasses.fields(Fuels)},
+    "multienergy": {"heat", "gas", "ev", "h2"},
+    "reserve": set(RESERVE) | {"scale"},
+}
+
+
+def validate(scenario: dict) -> dict:
+    """Raise ValueError if *scenario* has a key the model does not read. Returns the scenario."""
+    unknown = sorted(set(scenario) - set(SCENARIO_KEYS))
+    if unknown:
+        raise ValueError(f"unknown scenario key(s) {unknown}; valid keys: {sorted(SCENARIO_KEYS)}")
+    for table, allowed in _SUBTABLES.items():
+        bad = sorted(set(scenario.get(table) or {}) - allowed)
+        if bad:
+            raise ValueError(f"unknown key(s) {bad} in scenario['{table}']; valid keys: {sorted(allowed)}")
+    return scenario
+
+
+def _year_keys(x):
+    """TOML keys are strings: turn all-digit keys back into years, at any depth."""
+    if isinstance(x, dict):
+        return {(int(k) if isinstance(k, str) and k.isdigit() else k): _year_keys(v) for k, v in x.items()}
+    if isinstance(x, list):
+        return [_year_keys(v) for v in x]
+    return x
+
+
+def load_scenarios(file=None) -> tuple[dict, dict]:
+    """(scenarios, benchmarks) from a TOML *file* (default: the built-in file), validated."""
+    with open(file or BUILTIN, "rb") as f:
+        raw = _year_keys(tomllib.load(f))
+    out = raw.get("scenarios", {}), raw.get("benchmarks", {})
+    for group in out:
+        for name, sc in group.items():
+            try:
+                validate(sc)
+            except ValueError as e:
+                raise ValueError(f"scenario '{name}' in {file or BUILTIN}: {e}") from None
+    return out
+
+
+SCENARIOS, BENCHMARKS = load_scenarios()
 
 # Trait groups and the values an idealised agent takes. Groups follow the candidate gap sources
 # (deck slide 11): expectations ~ limited information, capital ~ risk and cost of capital,
@@ -37,25 +109,13 @@ LADDER = [
 ]
 
 
-# Benchmarks: not policy scenarios, so not in SCENARIOS (scripts/run_scenarios.py runs SCENARIOS).
-BENCHMARKS = {
-    # Convergence test (README roadmap item 7): textbook conditions under which a competitive market
-    # should reproduce the least-cost plan. Energy-only market (no CfD, no CM) with scarcity priced only
-    # by unserved energy at VoLL (no ORDC adder), idealised firms (unbiased adaptive expectations, social
-    # discount rate, no risk aversion or budget limit, no mark-up) that invest merchant in any technology
-    # on lifetime price forecasts (decision_logic "expectations"), with enough decisions a year to keep up.
-    "competitive_benchmark": {
-        "policy": {"cfd_enabled": False, "cm_enabled": False},
-        "agents_ideal": ["expectations", "capital", "strategic"],
-        "decision_logic": "expectations",
-        "scarcity_adder": False,
-        "max_merchant_decisions": 40,
-    },
-}
-
-
-def get_scenario(name: str) -> dict:
-    return copy.deepcopy(SCENARIOS[name] if name in SCENARIOS else BENCHMARKS[name])
+def get_scenario(name: str, file=None) -> dict:
+    """A copy of the scenario or benchmark called *name*, from the built-in file or from *file*."""
+    scenarios, benchmarks = (SCENARIOS, BENCHMARKS) if file is None else load_scenarios(file)
+    for group in (scenarios, benchmarks):
+        if name in group:
+            return copy.deepcopy(group[name])
+    raise KeyError(f"unknown scenario {name!r}; available: {sorted(scenarios) + sorted(benchmarks)}")
 
 
 def with_ideal(scenario: dict, groups) -> dict:

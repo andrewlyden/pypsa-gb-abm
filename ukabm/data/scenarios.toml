@@ -1,0 +1,42 @@
+# Scenario definitions of ukabm (README roadmap item 47: inputs as data).
+#
+# A scenario is a table of overrides on the model's defaults. Every key is checked against
+# ukabm.scenarios.SCENARIO_KEYS when a model is built, and `policy` and `fuels` against the fields of
+# config.Policy and config.Fuels, so a misspelt key is an error, not a silent default.
+# Your own file has the same layout:  get_scenario("my_case", file="my_scenarios.toml").
+# Keys that are years (e.g. in `fuels.gas_path`) are written as strings: "2030" = 35.0.
+
+[scenarios.baseline]
+
+[scenarios.high_carbon.policy]
+carbon_price_2050 = 300.0
+
+[scenarios.no_cfd.policy]
+cfd_enabled = false
+
+[scenarios.heat_push.policy]
+hp_grant = 11500.0
+gas_levy_rebalancing = 25.0
+
+[scenarios.no_capacity_market.policy]
+cm_enabled = false
+
+[scenarios.high_gas.fuels]
+gas_adder = 15.0            # central gas path + GBP 15/MWh_th in every year
+
+# Benchmarks are not policy scenarios: scripts/run_scenarios.py runs [scenarios] only.
+#
+# Convergence test (README roadmap item 7): textbook conditions under which a competitive market
+# should reproduce the least-cost plan. Energy-only market (no CfD, no CM) with scarcity priced only by
+# unserved energy at VoLL (no ORDC adder), idealised firms (unbiased adaptive expectations, social
+# discount rate, no risk aversion or budget limit, no mark-up) that invest merchant in any technology
+# on lifetime price forecasts (decision_logic "expectations"), with enough decisions a year to keep up.
+[benchmarks.competitive_benchmark]
+agents_ideal = ["expectations", "capital", "strategic"]
+decision_logic = "expectations"
+scarcity_adder = false
+max_merchant_decisions = 40
+
+[benchmarks.competitive_benchmark.policy]
+cfd_enabled = false
+cm_enabled = false

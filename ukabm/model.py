@@ -28,7 +28,7 @@ from . import decisions
 from .institutions import CFD_TECHS, SystemOperator, make_government
 from .observations import MarketInfo, Observation, Outcome, PlantView, Traits
 from .market import Block, clear, merit_order, storage_arbitrage
-from .scenarios import IDEAL_TRAITS
+from .scenarios import IDEAL_TRAITS, validate as validate_scenario
 from .multienergy import HeatModule, GasNetworkModule, EVModule, HydrogenModule
 from . import network as netmod
 
@@ -109,7 +109,7 @@ class GBMarketModel(ModelBase):
                  start: int = 2025, end: int = 2050, seed: int = 42,
                  network_every: int = 5, network_hours: int = 96):
         super().__init__(seed=seed)
-        self.scenario = scenario or {}
+        self.scenario = validate_scenario(scenario or {})    # an unknown key is an error
         self.rng = np.random.default_rng(seed)
         self.data = data or PyPSAGBData()
         self.prof = self.data.profiles
@@ -845,12 +845,18 @@ class GBMarketModel(ModelBase):
         self.cm_auction(y, price_fc)
         if self.operator.t1:
             self.cm_auction(y, price_fc, ahead=1)
-        # merchant: sequential, re-forecast after each decision (captures others' pipeline)
+        # merchant: sequential, re-forecast after each decision (captures others' pipeline). The order
+        # in which firms are asked is drawn again before every decision, so no firm has the first call
+        # on every project of the year (scenario "merchant_order": "redraw" | "fixed", the earlier rule
+        # of one order per year, under which the first firm took projects until its NPV or budget ran out).
+        redraw = self.scenario.get("merchant_order", "redraw") == "redraw"
         order = list(self.rng.permutation(len(self.gencos)))
         budgets = {g.name: g.budget for g in self.gencos}
-        for _ in range(self.scenario.get("max_merchant_decisions", 6)):
+        for k in range(self.scenario.get("max_merchant_decisions", 6)):
             price_fc = self.forecast(y + 3)
             done = False
+            if redraw and k > 0:
+                order = list(self.rng.permutation(len(self.gencos)))
             for i in order:
                 g = self.gencos[i]
                 g.budget_left = budgets[g.name]
