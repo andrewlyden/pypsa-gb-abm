@@ -35,8 +35,17 @@ def merit_order(blocks: list[Block], H: int):
     return order, P, Q, np.cumsum(Q, axis=1)
 
 
+def scarcity_markup(margin: np.ndarray, steps) -> np.ndarray:
+    """Stepped scarcity mark-up (GBP/MWh) for each hour's de-rated *margin* (MW): the price of the
+    deepest step the margin is below. *steps*: ((margin below, price), ...) from high to low margin."""
+    out = np.zeros(len(margin))
+    for below, price in steps:
+        out = np.where(margin < below, price, out)
+    return out
+
+
 def clear(demand: np.ndarray, blocks: list[Block], voll: float = 6000.0,
-          scarcity_sigma: float = 2500.0, scarcity_on: bool = True, curve=None):
+          scarcity_sigma: float = 2500.0, scarcity_on: bool = True, curve=None, adder=None):
     """Uniform-price clearing for every hour (vectorised).
 
     Returns price[h], dispatch[h, b] (ordered like *blocks*), unserved[h].
@@ -46,16 +55,23 @@ def clear(demand: np.ndarray, blocks: list[Block], voll: float = 6000.0,
     price is below the adder is accepted in full before the merit order is cleared. A
     price-responsive bid is therefore never served above its price, also in scarcity hours.
     *curve*: merit_order(blocks, H), to skip rebuilding it when only demand changes.
+    *adder*: an hourly scarcity mark-up computed by the caller (``scarcity_markup``), used instead of
+    the ORDC formula.
     """
     H = len(demand)
     order, P, Q, cum = curve if curve is not None else merit_order(blocks, H)
     d = np.maximum(demand, 0.0)
     pre = np.zeros_like(Q)        # buy-back volume accepted because of the scarcity adder
-    adder = np.zeros(H)
-    if scarcity_on:
+    markup = adder is not None       # a mark-up is added to the merit price; the ORDC adder is a floor
+    if markup:
+        adder = np.minimum(np.asarray(adder, dtype=float), voll)
+    elif scarcity_on:
         margin = cum[:, -1] - d
         lolp = 0.5 * erfc(margin / (scarcity_sigma * np.sqrt(2)))
         adder = np.minimum(voll * lolp, voll)
+    else:
+        adder = np.zeros(H)
+    if adder.any():
         bid = np.array([b.demand_bid for b in blocks])[order]
         pre = np.where(bid & (P < adder[:, None]), Q, 0.0)
         if pre.any():
@@ -71,7 +87,10 @@ def clear(demand: np.ndarray, blocks: list[Block], voll: float = 6000.0,
     disp_sorted = np.clip(d[:, None] - (cum - Q), 0.0, Q) + pre
     unserved = np.maximum(d - total, 0.0)
     # Blocks with negative price run even if demand is low: they are "must-run"; excess spilt
-    price = np.maximum(price, adder)
+    if markup:
+        price = np.minimum(price + adder, voll)
+    else:           # only where there is an adder: a price below zero (negative offers at the margin) stays
+        price = np.where(adder > 0, np.maximum(price, adder), price)
     dispatch = np.empty_like(disp_sorted)
     np.put_along_axis(dispatch, order, disp_sorted, axis=1)
     return price, dispatch, unserved

@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 from .agents import GenCo, Plant
-from .config import (capex_kw, fleet_mw, fom_kw, history_value, EXISTING_LIFE, EXISTING_MIN_YEARS, NEW_BUILD_CF, VRE_PROFILE, LEGACY_CM_PRICE, CPI_2012_TO_2024, RO_LAST_ONLINE, RO_SCHEME_END, RO_YEARS, TECHS, VRE_TECHS, STORAGE_TECHS, INITIAL_FLEET_MW, EXISTING_FLEET_EFFICIENCY,
+from .config import (capex_kw, fleet_mw, fom_kw, history_value, INTERCONNECTOR_DERATING, RO_BANDS, SCARCITY_STEPS, EXISTING_LIFE, EXISTING_MIN_YEARS, NEW_BUILD_CF, VRE_PROFILE, LEGACY_CM_PRICE, CPI_2012_TO_2024, RO_LAST_ONLINE, RO_SCHEME_END, RO_YEARS, TECHS, VRE_TECHS, STORAGE_TECHS, INITIAL_FLEET_MW, EXISTING_FLEET_EFFICIENCY,
                      NESO_CI_FACTORS, Policy, Fuels, BATTERY_ANCILLARY_POT, BATTERY_TRADING_PER_MW_VRE,
                      BATTERY_FLEET_FLOOR_MW)
 from .data import PyPSAGBData
@@ -27,7 +27,7 @@ from .costs import COMPONENTS as COST_COMPONENTS, fixed_costs, variable_cost
 from . import decisions
 from .institutions import CFD_TECHS, SystemOperator, make_government
 from .observations import MarketInfo, Observation, Outcome, PlantView, Traits
-from .market import Block, clear, merit_order, storage_arbitrage
+from .market import Block, clear as _clear, merit_order, scarcity_markup, storage_arbitrage
 from .scenarios import IDEAL_TRAITS, validate as validate_scenario
 from .multienergy import HeatModule, GasNetworkModule, EVModule, HydrogenModule
 from . import network as netmod
@@ -138,7 +138,10 @@ class GBMarketModel(ModelBase):
         self.gencos = [GenCo(self, decider=decisions.for_genco(self.scenario, s["name"]), **s) for s in specs]
         self.government = make_government(self)   # runs the CfD rounds (scenario "government")
         self.operator = SystemOperator(self)       # sets the CM target (scenario "system_operator")
-        self.scarcity_on = self.scenario.get("scarcity_adder", True)   # ORDC adder in market clearing
+        # scarcity mark-up in market clearing: True = the empirical stepped curve (config.SCARCITY_STEPS),
+        # "ordc" = the earlier VoLL x LoLP formula, False = none
+        self.scarcity_mode = self.scenario.get("scarcity_adder", True)
+        self.scarcity_on = bool(self.scarcity_mode)
         self.cfd_last = dict(awarded_mw=0.0, budget_gbp=np.nan)
         self.plants: list[Plant] = []
         self._pid = 0
@@ -197,7 +200,8 @@ class GBMarketModel(ModelBase):
                 online = int(r.online)
                 kw = {}
                 if r.support == "cfd":
-                    kw = dict(support="cfd", strike=float(r.strike_2012) * CPI_2012_TO_2024, cfd_end=int(r.support_end))
+                    kw = dict(support="cfd", strike=float(r.strike_2012) * CPI_2012_TO_2024, cfd_end=int(r.support_end),
+                              cfd_paid_negative=bool(getattr(r, "paid_negative", 0)))
                 elif r.support == "ro":
                     kw = dict(support="ro", ro_end=int(r.support_end))
                 if tech in ("hydro", "pumped_hydro"):
@@ -252,7 +256,8 @@ class GBMarketModel(ModelBase):
             for _ in range(n):
                 self.new_plant(self.gencos[k % len(self.gencos)], r.tech, self.choose_zone(r.tech), r.mw / n,
                                int(r.online), support="cfd", strike=float(r.strike_2012) * CPI_2012_TO_2024,
-                               cfd_end=int(r.support_end), route="pipeline")
+                               cfd_end=int(r.support_end), route="pipeline",
+                               cfd_paid_negative=bool(getattr(r, "paid_negative", 0)))
                 k += 1
 
     def legacy_cfd_strikes(self):
@@ -409,6 +414,17 @@ class GBMarketModel(ModelBase):
         curve = merit_order(allb, self.H)                # offers are fixed within the year
         base, heat, ev0, _ = self.demand(year)
         d1 = base + heat + ev0
+        # de-rated supply for the scarcity mark-up: GB plant as offered (thermal at its availability, wind
+        # and solar at output), storage and interconnectors at their Capacity Market de-rating factors
+        firm = sum(np.broadcast_to(b.avail, (self.H,)) for b in plant_blocks) if plant_blocks else np.zeros(self.H)
+        firm = firm + sum(p.mw * TECHS[p.tech].derating for p in plants if p.tech in STORAGE_TECHS)
+        firm = firm + INTERCONNECTOR_DERATING * ic_cap
+        curve_mode = self.scarcity_mode is True
+
+        def clear(d, *a, **kw):                          # d includes the export bids (x_max)
+            if curve_mode:
+                kw["adder"] = scarcity_markup(firm - (d - x_max), SCARCITY_STEPS)
+            return _clear(d, *a, **kw)
         p1, _, _ = clear(d1 + x_max, allb, self.policy.voll, scarcity_on=self.scarcity_on, curve=curve)
         # flexibility reacts to pass-1 prices
         vre = sum(np.broadcast_to(b.avail, (self.H,)) for b in plant_blocks
@@ -475,12 +491,14 @@ class GBMarketModel(ModelBase):
             var = self.plant_srmc(p, year) * e
             extra = 0.0
             if p.support == "cfd" and year <= p.cfd_end:
-                diff = float(((p.strike - price) * q).sum())
+                paid = q if p.cfd_paid_negative else np.where(price < 0, 0.0, q)   # round 4 on: nothing at negative prices
+                diff = float(((p.strike - price) * paid).sum())
                 extra += diff
                 cfd_cost += diff
             elif p.support == "ro" and year <= p.ro_end:
-                extra += self.policy.ro_value * e
-                ro_cost += self.policy.ro_value * e
+                roc = self.policy.ro_value * RO_BANDS.get(p.tech, 1.0) * e
+                extra += roc
+                ro_cost += roc
             cm = p.cm_payment_price(year) * 1000 * p.mw * t.derating
             cm_cost += cm
             profit = rev + extra + cm - var - fom_kw(p.tech, p.online) * 1000 * p.mw
@@ -1074,7 +1092,7 @@ class GBMarketModel(ModelBase):
                 bids[:, j] = NUCLEAR_BM_BID
             elif p.tech in VRE_TECHS or p.tech == "hydro":
                 if p.support == "ro" and year <= p.ro_end:
-                    bids[:, j] = -self.policy.ro_value
+                    bids[:, j] = -self.policy.ro_value * RO_BANDS.get(p.tech, 1.0)
                 elif p.support == "cfd" and year <= p.cfd_end:
                     bids[:, j] = -(p.strike - price)     # > 0 above the strike: turn-down saves the payback
             else:

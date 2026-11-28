@@ -42,6 +42,7 @@ class Plant:
     availability: float | None = None   # overrides Tech.availability (e.g. legacy AGR fleet)
     efficiency: float | None = None     # overrides Tech.efficiency (e.g. older CCGT fleet)
     route: str = "initial"              # how it came about: initial | pipeline | cfd | cm | merchant
+    cfd_paid_negative: bool = False     # CfD of the investment contracts or rounds 1-3: paid at negative prices
 
     def active(self, year):
         return self.online <= year <= self.retire

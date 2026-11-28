@@ -81,6 +81,8 @@ REGISTER_TECH = {"offshore": "wind_offshore", "offshore_scotland": "wind_offshor
                  "offshore_permitted_reduction": "wind_offshore", "onshore": "wind_onshore",
                  "remote_island_wind": "wind_onshore", "solar": "solar"}
 CFD_FROM = {"wind_offshore": 2017, "wind_onshore": 2023, "solar": 2023}   # first commissioning year on a CfD
+# contracts paid at negative prices (investment contracts always; rounds 2-3 unless six hours run negative)
+PAID_NEGATIVE = {"Investment Contract", "AR1", "AR2", "AR3"}
 # a station may be commissioned at most this many years before its contract's delivery year starts
 EARLY = {"wind_offshore": 1, "wind_onshore": 0, "solar": 0}
 # UK grid-scale battery power capacity at the end of each year, MW (DESNZ, DUKES 2026 Table 5.16)
@@ -227,15 +229,17 @@ def assign_support(st: pd.DataFrame, reg: pd.DataFrame, fleet_year: int):
                     take = min(left, reg.at[i, "mw"])
                     if take > 0:
                         out.append({**s, "mw": take, "support": "cfd", "strike_2012": reg.at[i, "strike_2012"],
-                                    "support_end": int(s.year) + CFD_YEARS - 1})
+                                    "support_end": int(s.year) + CFD_YEARS - 1,
+                                    "paid_negative": int(reg.at[i, "cfd_round"] in PAID_NEGATIVE)})
                         reg.at[i, "mw"] -= take
                         left -= take
             if left > 1e-6:
                 if tech in RO_LAST and s.year <= RO_LAST[tech]:
-                    out.append({**s, "mw": left, "support": "ro", "strike_2012": 0.0,
+                    out.append({**s, "mw": left, "support": "ro", "strike_2012": 0.0, "paid_negative": 0,
                                 "support_end": min(int(s.year) + RO_YEARS - 1, RO_SCHEME_END - 1)})
                 else:
-                    out.append({**s, "mw": left, "support": "merchant", "strike_2012": 0.0, "support_end": 0})
+                    out.append({**s, "mw": left, "support": "merchant", "strike_2012": 0.0, "support_end": 0,
+                                "paid_negative": 0})
     return pd.DataFrame(out), reg[reg.mw > 1e-6]
 
 
@@ -272,16 +276,17 @@ def build(fleet_year: int = 2025):
     width = st.tech.map(BAND).fillna(5).astype(int)
     st["band"] = (st.year // width) * width
     rows = []
-    for (tech, zone, band, support), g in st.groupby(["tech", "zone", "band", "support"]):
+    for (tech, zone, band, support, neg), g in st.groupby(["tech", "zone", "band", "support", "paid_negative"]):
         mw = g.mw.sum()
         rows.append(dict(tech=tech, zone=zone, online=int(round((g.year * g.mw).sum() / mw)), mw=mw, support=support,
+                         paid_negative=int(neg),
                          strike_2012=round((g.strike_2012 * g.mw).sum() / mw, 2),
                          support_end=int(round((g.support_end * g.mw).sum() / mw)) if support != "merchant" else 0))
     years = sorted(BATTERY_MW)
     for y0, y1 in zip(years[:-1], years[1:]):
         if y1 <= fleet_year and BATTERY_MW[y1] > BATTERY_MW[y0]:
             rows.append(dict(tech="battery", zone="", online=y1, mw=BATTERY_MW[y1] - BATTERY_MW[y0],
-                             support="merchant", strike_2012=0.0, support_end=0))
+                             support="merchant", paid_negative=0, strike_2012=0.0, support_end=0))
     fleet = pd.DataFrame(rows)
     fleet["share"] = fleet.mw / fleet.groupby("tech").mw.transform("sum")
     fleet = fleet.sort_values(["tech", "online", "zone"]).reset_index(drop=True)
@@ -290,6 +295,7 @@ def build(fleet_year: int = 2025):
     pipe = left.groupby(["tech", "online", "cfd_round"], as_index=False).agg(
         mw=("mw", "sum"), strike_2012=("strike_2012", lambda s: float(np.average(s, weights=left.loc[s.index, "mw"]))))
     pipe["support_end"] = pipe.online + CFD_YEARS - 1
+    pipe["paid_negative"] = pipe.cfd_round.isin(PAID_NEGATIVE).astype(int)
     return fleet, pipe.round({"mw": 1, "strike_2012": 2}), st
 
 

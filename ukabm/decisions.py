@@ -23,7 +23,8 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from .config import MUST_RUN_OFFER, STORAGE_TECHS, TECHS, VRE_TECHS, capex_kw, fom_kw  # noqa: F401
+from .config import (CFD_FROM_AR4_OFFER, MERCHANT_RENEWABLE_OFFER, MUST_RUN_OFFER, RO_BANDS, STORAGE_TECHS,  # noqa: F401
+                     TECHS, VRE_TECHS, capex_kw, fom_kw)
 
 if TYPE_CHECKING:  # pragma: no cover
     from .observations import Observation, Outcome
@@ -75,18 +76,17 @@ class RuleBased(DecisionMaker):
 
     def offer_price(self, obs):
         p, plant, srmc, year = obs.market.policy, obs.plant, obs.srmc, obs.year
-        if plant.tech in VRE_TECHS or plant.tech == "hydro":
+        roc = p.ro_value * RO_BANDS.get(plant.tech, 1.0)       # GBP/MWh of certificates
+        if plant.tech in VRE_TECHS or plant.tech == "hydro":   # by the terms of the support (config.RO_BANDS)
             if plant.support == "ro" and year <= plant.ro_end:
-                return -p.ro_value          # RO units bid negative up to the ROC value
+                return -roc
             if plant.support == "cfd" and year <= plant.cfd_end:
-                return -0.01                # CfD (post-AR4 negative-price rule simplified)
-            return 0.0
-        if plant.tech == "other":
-            return MUST_RUN_OFFER           # waste and CHP plant runs whatever the price
-        if plant.tech == "nuclear":
-            return srmc - 15.0              # inflexible: bids below cost to stay on
+                return -plant.strike if plant.cfd_paid_negative else CFD_FROM_AR4_OFFER
+            return MERCHANT_RENEWABLE_OFFER
+        if plant.tech in ("other", "nuclear"):
+            return MUST_RUN_OFFER           # waste, CHP and nuclear plant runs whatever the price
         if plant.support == "ro" and year <= plant.ro_end:
-            return srmc - p.ro_value        # fuelled RO plant (biomass): runs down to cost less the ROC value
+            return srmc - roc               # fuelled RO plant (biomass): runs down to cost less the ROC value
         return srmc * (1.0 + obs.traits.markup)
 
     def expected_carbon(self, obs):

@@ -41,32 +41,61 @@ GAS_T_PER_MWH = 0.184  # tCO2 per MWh_th natural gas
 # fixed O&M includes insurance and connection and use-of-system charges. tests/test_costs.py checks
 # that the numbers here equal the table. Nuclear, biomass, hydro and storage are not in that edition:
 # their values are indicative (ASSUMPTION).
+# Capacity Market de-rating factors: NESO, 2030-31 T-4 auction (PyPSA-GB data/market/scarcity/
+# neso_cm_derating_factors.csv): CCGT 0.9048, OCGT and engines 0.9297, nuclear 0.7566, biomass 0.8908,
+# hydro 0.906, coal 0.804 (2026-27), storage by duration (2 h 0.2231, 8 h and longer 0.9075).
 TECHS: dict[str, Tech] = {t.name: t for t in [
-    Tech("nuclear", 7000, 120, 8, 0.33, "uranium", 0.0, 60, 10, 0.80, 0.78, investable=True, chunk_mw=1600),
-    Tech("ccgt", 1034.6, 22.9, 5, 0.54, "gas", GAS_T_PER_MWH, 25, 3, 0.90, 0.88, chunk_mw=800),
-    Tech("ocgt", 664.1, 16.4, 5, 0.35, "gas", GAS_T_PER_MWH, 25, 2, 0.92, 0.94, chunk_mw=300),
-    Tech("gas_ccs", 2242.4, 35.5, 6, 0.47, "gas", GAS_T_PER_MWH * 0.1, 25, 6, 0.88, 0.88, chunk_mw=800),
-    Tech("h2_turbine", 1199.1, 21.4, 5, 0.51, "hydrogen", 0.0, 25, 3, 0.92, 0.94, chunk_mw=300),
+    Tech("nuclear", 7000, 120, 8, 0.33, "uranium", 0.0, 60, 10, 0.80, 0.7566, investable=True, chunk_mw=1600),
+    Tech("ccgt", 1034.6, 22.9, 5, 0.54, "gas", GAS_T_PER_MWH, 25, 3, 0.90, 0.9048, chunk_mw=800),
+    Tech("ocgt", 664.1, 16.4, 5, 0.35, "gas", GAS_T_PER_MWH, 25, 2, 0.92, 0.9297, chunk_mw=300),
+    Tech("gas_ccs", 2242.4, 35.5, 6, 0.47, "gas", GAS_T_PER_MWH * 0.1, 25, 6, 0.88, 0.9048, chunk_mw=800),
+    Tech("h2_turbine", 1199.1, 21.4, 5, 0.51, "hydrogen", 0.0, 25, 3, 0.92, 0.9048, chunk_mw=300),
     # biomass availability 0.70: GB biomass output 19.9 TWh in 2025 (NESO) = 60 % load factor on the
     # 3.8 GW fleet; Drax flexes its RO units seasonally and has long outages (Drax FY2025 results)
     # November 2026: 0.78 on the 3.0 GW of transmission-connected conversions gives the same 2025 output
-    Tech("biomass", 2500, 90, 6, 0.38, "biomass", 0.0, 25, 4, 0.78, 0.84, investable=False),
+    Tech("biomass", 2500, 90, 6, 0.38, "biomass", 0.0, 25, 4, 0.78, 0.8908, investable=False),
     Tech("wind_onshore", 1695.9, 39.9, 0, 1.0, None, 0.0, 35, 3, 1.0, 0.08, profile="wind_onshore", chunk_mw=500),
     Tech("wind_offshore", 2670.0, 141.6, 0, 1.0, None, 0.0, 30, 5, 1.0, 0.10, profile="wind_offshore", chunk_mw=1000),
     Tech("solar", 647.3, 9.1, 0, 1.0, None, 0.0, 38, 1, 1.0, 0.03, profile="solar", chunk_mw=500),
     # hydro availability 0.26: NESO's mix has 3.4-3.6 TWh of hydro a year (2024-25) on the model's 1.5 GW
-    Tech("hydro", 3000, 40, 0, 1.0, None, 0.0, 60, 5, 0.26, 0.37, investable=False),
-    Tech("battery", 600, 10, 1, 0.85, None, 0.0, 15, 1, 0.95, 0.20, chunk_mw=500),   # 2h; round-trip eff
-    Tech("pumped_hydro", 2500, 25, 1, 0.75, None, 0.0, 60, 8, 0.95, 0.80, investable=False),
+    Tech("hydro", 3000, 40, 0, 1.0, None, 0.0, 60, 5, 0.26, 0.906, investable=False),
+    Tech("battery", 600, 10, 1, 0.85, None, 0.0, 15, 1, 0.95, 0.2231, chunk_mw=500),   # 2h; round-trip eff
+    Tech("pumped_hydro", 2500, 25, 1, 0.75, None, 0.0, 60, 8, 0.95, 0.9075, investable=False),
     # Coal: for historical years only (the last GB station closed in September 2024). Indicative values.
-    Tech("coal", 1800, 40, 4, 0.36, "coal", 0.34, 45, 6, 0.85, 0.80, investable=False),
+    Tech("coal", 1800, 40, 4, 0.36, "coal", 0.34, 45, 6, 0.85, 0.804, investable=False),
     # "Other": the transmission-metered plant NESO's mix reports as OTHER (energy from waste, CHP, oil):
     # 3.3 TWh in 2024, 4.7 TWh in 2025, on about 0.7 GW (DUKES 2026 Table 5.12, other fuels). It runs
     # whatever the price (MUST_RUN_OFFER). Its emissions are outside the model's carbon cost; NESO's
     # carbon intensity counts it at 300 g/kWh (NESO_CI_FACTORS).
     Tech("other", 0, 0, 0, 1.0, "waste", 0.0, 60, 3, 0.65, 0.50, investable=False),
 ]}
-MUST_RUN_OFFER = -50.0       # GBP/MWh offer of plant that runs whatever the price ("other")
+MUST_RUN_OFFER = -50.0       # GBP/MWh offer of plant that runs whatever the price ("other", nuclear)
+
+# Day-ahead offers of supported renewables, by the terms of their support. These are the rules of
+# PyPSA-GB's wholesale stage (scripts/market/curtailment_order.py, revenue_tracking.py), which follow
+# the contract terms:
+# * Renewables Obligation plant earns its certificates on every MWh, so it offers at minus the
+#   certificate value: banding (ROCs/MWh) x ROC price. Bandings: PyPSA-GB data/market/support/
+#   support_schemes.csv (Ofgem); biomass conversions 1.0 (Ofgem banding table).
+# * CfDs of the investment contracts and allocation rounds 1-3 are paid through negative prices
+#   (rounds 2-3 unless six hours run negative), so they offer at minus the strike.
+# * CfDs from round 4 on are paid nothing when the price is negative: they offer at zero and receive
+#   no difference payment in hours with a negative price.
+# * Merchant wind, solar and hydro offer at a small variable cost and give way first.
+RO_BANDS = {"wind_onshore": 0.9, "wind_offshore": 2.0, "solar": 1.2, "hydro": 1.0, "biomass": 1.0}
+MERCHANT_RENEWABLE_OFFER = 0.5      # GBP/MWh
+CFD_FROM_AR4_OFFER = 0.0            # GBP/MWh
+
+# Scarcity mark-up on the day-ahead price as the de-rated margin falls: the stepped curve PyPSA-GB
+# fitted to the 2024 gap between N2EX day-ahead prices and its model price, binned on NESO's de-rated
+# margin (PyPSA-GB data/market/scarcity/scarcity_curve_2024.json; the step below 1 GW is the BSC
+# reserve scarcity price, LoLP x VoLL). (margin below, MW; GBP/MWh). The margin is available GB
+# capacity (thermal plant at its availability, wind and solar at output, storage and interconnectors
+# at Capacity Market de-rating factors) less demand. DESNZ's Dynamic Dispatch Model prices scarcity the
+# same way. Scenario key `scarcity_adder`: true (this curve) | "ordc" (the earlier formula) | false.
+SCARCITY_STEPS = ((20000.0, 6.81), (15000.0, 7.99), (12000.0, 10.15), (10000.0, 12.56), (8000.0, 17.16),
+                  (6000.0, 38.46), (4000.0, 86.66), (2000.0, 229.49), (1000.0, 1357.2))
+INTERCONNECTOR_DERATING = 0.6       # median of NESO's interconnector de-rating factors, 2030-31 T-4
 
 STORAGE_TECHS = {"battery": 2.0, "pumped_hydro": 8.0}   # duration hours
 
@@ -340,7 +369,7 @@ class Policy:
     cm_net_cone: float = 49.0            # GBP/kW/yr (PyPSA-GB cm_auction_parameters)
     cm_price_cap: float = 75.0
     cm_reliability_margin: float = 0.06  # target derated margin over peak
-    ro_value: float = 55.0               # GBP/MWh renewables obligation (legacy fleet)
+    ro_value: float = 65.0               # GBP per ROC: buy-out price 2024-25 GBP 64.73 (Ofgem); x config.RO_BANDS per MWh
     hp_grant: float = 7500.0             # Boiler Upgrade Scheme GBP
     gas_levy_rebalancing: float = 0.0    # GBP/MWh moved from electricity to gas bills
     voll: float = 6000.0

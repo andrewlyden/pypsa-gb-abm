@@ -74,12 +74,14 @@ class PlantView:
     availability: float | None
     history: tuple = ()
     energy_history: tuple = ()
+    cfd_paid_negative: bool = False
 
     @classmethod
     def of(cls, p, with_history: bool = True) -> "PlantView":
         return cls(p.pid, p.tech, p.zone, p.mw, p.online, p.retire, p.support, p.strike, p.cfd_end,
                    p.ro_end, p.cm_price, p.cm_start, p.cm_end, p.efficiency, p.availability,
-                   tuple(p.history) if with_history else (), tuple(p.energy_history) if with_history else ())
+                   tuple(p.history) if with_history else (), tuple(p.energy_history) if with_history else (),
+                   getattr(p, "cfd_paid_negative", False))
 
 
 @dataclass(frozen=True)
