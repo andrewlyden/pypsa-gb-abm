@@ -19,7 +19,11 @@ from ukabm.gap import ladder_tasks, run_many, summarise  # noqa: E402
 # market-design and policy levers, full model (deck slide 13)
 LEVERS = ["no_cfd", "no_capacity_market", "heat_push", "high_carbon", "high_gas"]
 # benchmark sensitivities, full model: the reserve and response requirement (config.RESERVE, item 9)
-SENSITIVITIES = [("reserve off", {"reserve": {"scale": 0}}), ("reserve x2", {"reserve": {"scale": 2}})]
+# and "pathway limits": onshore wind and solar held to the highest capacity in any FES 2025 pathway
+# (51 GW and 101 GW in 2050: planning and land limits the model does not have), as build rates for the
+# planner and the firms alike: (50.7 - 14.8 - 5.0 contracted) / 25 years and (101.0 - 20.3 - 8.2) / 25.
+SENSITIVITIES = [("pathway limits", {"build_limits": {"wind_onshore": 1240, "solar": 2900}}),
+                 ("reserve off", {"reserve": {"scale": 0}}), ("reserve x2", {"reserve": {"scale": 2}})]
 
 
 def main():

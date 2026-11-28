@@ -17,13 +17,26 @@ the datasets and their licences are in the [data register](data.md).
    model reproduces a CfD strike, a Capacity Market price or a pathway's fleet. Where the model misses
    one, the miss is reported, with what it implies about bidders, and left in.
 
-The reason for rule 4 is the number of observations. There are seven CfD rounds and a dozen T-4
-auctions, held under costs and rules that changed between them. A model with as many adjustable
-numbers as there are rounds can match all of them and learn nothing. PyPSA-GB's own work shows how
-unstable a fitted number would be: the capital-cost factor at which published offshore wind costs
-reproduce the cleared strike is 0.90 for Allocation Round 2, 0.52 for Round 3, 0.34 for Round 4, 0.85
-for Round 6 and 0.90 for Round 7 (`data/public_ownership/financing/private_cost_calibration.csv` in
-PyPSA-GB).
+The reason for rule 4 is what the auctions held so far show. There are seven CfD rounds and a dozen
+T-4 auctions, held under costs and rules that changed between them, and a model with as many
+adjustable numbers as there are rounds can match all of them and learn nothing. More to the point, the
+number one would fit is not stable. `python scripts/replay_cfd_rounds.py` sets every cleared strike
+beside the official levelised cost of the day ([results/cfd_rounds_replay.md](../results/cfd_rounds_replay.md)):
+
+| Cleared strike / official cost of the day | AR1 2015 | AR2 2017 | AR3 2019 | AR4 2022 | AR5 2023 | AR6 2024 | AR7 2025 |
+|---|---|---|---|---|---|---|---|
+| offshore wind | 0.84 | 0.63 | 0.42 | 0.78 | no bids under the cap | 1.75 | 0.89 |
+| onshore wind | 1.00 | – | – | 1.02 | 1.26 | 1.63 | 1.25 |
+| solar | 0.66 | – | – | 1.15 | 1.20 | 1.52 | 1.09 |
+
+A ratio estimated on Rounds 1 to 4 would have been wrong by a factor of two for Round 6. The published
+costs lag the market in both directions: too high while costs fell, too low after they rose in
+2022–2023. PyPSA-GB's own calibration finds the same instability (capital-cost factors of 0.34 to 0.90
+for offshore wind across rounds, `data/public_ownership/financing/private_cost_calibration.csv` there).
+So past auctions do tell us something about bidders, but what they tell is a range and a warning, not
+a parameter: firms bid on their own view of costs, which the official figures follow with a lag of a
+year or two. The sensible use of the auctions is the one made here: take the latest published costs,
+do not adjust them, and report how far the model's first round is from the round just held.
 
 ## What comes from where
 
@@ -68,18 +81,24 @@ calibration.
 What it shows:
 
 * **Wind and solar output** (before curtailment) is within 3 % of outturn in all five years.
-* **Net imports** are within 4 TWh in all five years, including 2022, when Great Britain exported on
-  balance for the first time. Gross flows in both directions are too large in 2021–2023.
-* **Gas generation** before redispatch is within 10 % in all five years.
-* **The mean price** is within 3 % of the day-ahead baseload price in 2023, 2024 and 2025, and 12 % low
-  in 2021 and 2022, the years of the gas crisis, when prices carried a premium the model does not have.
+* **Net imports** are within 6 TWh in all five years, including 2022, when Great Britain exported on
+  balance for the first time (−3 against −4 TWh). Gross flows in both directions are too large in
+  2021–2023.
+* **Gas generation** after redispatch is within 7 % in all five years (2025: 76 against 77 TWh).
+* **The mean price** is equal to the day-ahead baseload price in 2023, 6 % high in 2024 and 3 % high in
+  2025, and 10 % low in 2021 and 2022, the years of the gas crisis, when prices carried a premium the
+  model does not have.
 * **The price distribution is too narrow in every year.** The 5th percentile is about twice the
   outturn and there are no hours with a negative price, against 244 in 2025. In the cheapest hours the
   model imports at the neighbours' price plus the interconnector spread, and Great Britain is not in
-  surplus. The 95th percentile is 10–12 % low in 2024 and 2025 with the scarcity mark-up, which was
+  surplus. The 95th percentile is 9–12 % low in 2024 and 2025 with the scarcity mark-up, which was
   fitted (by PyPSA-GB) on 2024.
+* **Carbon intensity** on NESO's basis, after redispatch, is within 8 g/kWh in 2022–2025 and 17 g/kWh
+  low in 2021.
+* **Constraints in 2025:** £0.9bn against £1.3bn (outturn without Balancing Mechanism premia), and 7.7
+  against 10.4 TWh of renewable output turned down.
 * **Nuclear output** is right in 2021 and 2025 and 10–20 % low in 2022–2024: availability was set on a
-  poor year.
+  poor year. Coal and biomass in 2021–2023 are off by a few TWh in both directions.
 
 ## Check 2: the first auctions
 
@@ -87,16 +106,17 @@ What it shows:
 The model starts in 2025, so its first CfD round is the counterpart of Allocation Round 7 and its
 first T-4 auction that of the auction for 2029-30.
 
-* **Solar** clears within 1 % of the Round 7 strike.
-* **Offshore wind** clears about 20 % above it. With published costs and CEPA's hurdle rate the
-  levelised cost of an offshore project commissioning in 2030 is £105/MWh (DESNZ's own figure is £103);
-  Round 7 cleared at £91. The model's strike would equal the auction's with capital costs at 0.75 of the
-  published ones, or a required return about two points lower, which is within the ±1.1–1.7 points of
+* **Solar** clears within 2 % of the Round 7 strike (£66 against £65/MWh).
+* **Offshore wind** clears 15 % above it (£105 against £91). With published costs and CEPA's hurdle
+  rate the levelised cost of an offshore project commissioning in 2030 is £105/MWh (DESNZ's own figure
+  is £103). The model's strike would equal the auction's with capital costs at 0.80 of the published
+  ones, or a required return about a point and a half lower, which is within the ±1.1–1.7 points of
   uncertainty that CEPA gives.
-* **Onshore wind** clears about 13 % below the Round 7 strike: the published cost is lower than what
-  bidders asked.
-* **The Capacity Market** clears at about £38/kW for 2029 against £27 in the auction held; the auctions
-  held since 2014 have ranged from £6 to £65.
+* **Onshore wind** clears 21 % below the Round 7 strike (£57 against £72): the published cost is lower
+  than what bidders asked, as in every round since 2023.
+* **The Capacity Market** clears at £15/kW for 2029 against £27 in the auction held; the auctions held
+  since 2014 have ranged from £6 to £65, and the model's own price moves over that whole range from
+  year to year.
 
 Before the costs were taken from DESNZ's 2025 edition, including connection and use-of-system charges,
 the model's offshore bids were £53–66/MWh.
@@ -117,7 +137,8 @@ Where the baseline is outside the range of the four FES pathways:
   the pathways assume the policy that closes this gap.
 * **Offshore wind in 2030: 33 GW against 36–48 GW** (Clean Power 2030: 43–50 GW). The contracted
   pipeline gives 36 GW by 2031; a round held in 2025 delivers in 2030 and no more than 6 GW a year can
-  come online.
+  come online. On what is already contracted, the Clean Power 2030 range for offshore wind is out of
+  reach in this model.
 * **Batteries in 2030 and 2035: 13 and 20 GW against 20–33 GW.** Capacity Market agreements already
   held by batteries not yet built are not in the starting pipeline.
 

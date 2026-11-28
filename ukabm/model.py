@@ -325,7 +325,7 @@ class GBMarketModel(ModelBase):
         """MW of *tech* that can still be committed to come online in *online*: the build-rate limit
         (config.PLANNER_BUILD_MW_PER_YEAR, the same as the planner's) less what is already due that
         year. Unlimited for technologies without a limit or with scenario agent_build_limits false."""
-        limit = PLANNER_BUILD_MW_PER_YEAR.get(tech)
+        limit = {**PLANNER_BUILD_MW_PER_YEAR, **(self.scenario.get("build_limits", {}) or {})}.get(tech)
         if limit is None or not self.scenario.get("agent_build_limits", True):
             return float("inf")
         due = sum(p.mw for p in self.plants if p.tech == tech and p.online == online and p.online > self.start)

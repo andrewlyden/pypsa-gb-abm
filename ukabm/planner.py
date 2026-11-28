@@ -353,6 +353,7 @@ def plan(model, loads: dict, rate: float = SOCIAL_DISCOUNT_RATE, build_limits: d
     import pypsa
     _quiet()
     limits = dict(PLANNER_BUILD_MW_PER_YEAR if build_limits is None else build_limits)
+    limits.update(model.scenario.get("build_limits", {}) or {})       # the scenario's limits bind both runs
     periods = sorted(loads)
     step = periods[1] - periods[0] if len(periods) > 1 else 5
     hours = sample_hours(model, loads, every_nth_day, extreme_days)

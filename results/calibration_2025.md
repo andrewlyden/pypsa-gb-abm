@@ -2,34 +2,39 @@
 
 | metric | model | outturn | model - outturn |
 |---|---|---|---|
-| price, time-weighted mean (GBP/MWh) | 83.9 | 79.9 | 4.0 |
-| price, model demand-weighted vs MID volume-weighted (GBP/MWh) | 85.0 | 80.9 | 4.1 |
-| price p05 (GBP/MWh) | 47.3 | 8.7 | 38.6 |
-| price p50 (GBP/MWh) | 86.2 | 82.2 | 4.0 |
-| price p95 (GBP/MWh) | 100.1 | 123.4 | -23.3 |
+| price, mean vs day-ahead baseload (GBP/MWh) | 86.3 | 83.9 | 2.4 |
+| price, time-weighted mean vs MID (GBP/MWh) | 86.3 | 79.9 | 6.4 |
+| price, model demand-weighted vs MID volume-weighted (GBP/MWh) | 88.0 | 80.9 | 7.0 |
+| price p05 (GBP/MWh) | 21.7 | 8.7 | 12.9 |
+| price p50 (GBP/MWh) | 95.1 | 82.2 | 12.9 |
+| price p95 (GBP/MWh) | 108.5 | 123.4 | -14.9 |
 | negative-price hours | 0.0 | 244.0 | -244.0 |
-| carbon intensity, NESO basis (g/kWh) | 113.2 | 129.7 | -16.5 |
-| carbon intensity, NESO basis, after BM redispatch (g/kWh) | 121.8 | 129.7 | -7.8 |
-| carbon intensity, direct combustion (g/kWh) | 86.0 | – | – |
-| constraint cost (GBP bn) | 0.7 | 1.8 | -1.1 |
-| constraint cost excl. BM premia (GBP bn) | 0.7 | 1.3 | -0.6 |
-| renewable curtailment in BM (TWh) | 6.9 | 10.4 | -3.5 |
-| gas (CCGT+OCGT) (TWh) | 69.5 | 77.3 | -7.8 |
+| carbon intensity, NESO basis (g/kWh) | 114.2 | 129.7 | -15.4 |
+| carbon intensity, NESO basis, after BM redispatch (g/kWh) | 125.7 | 129.7 | -3.9 |
+| carbon intensity, direct combustion (g/kWh) | 84.6 | – | – |
+| constraint cost (GBP bn) | 0.9 | 1.8 | -0.9 |
+| constraint cost excl. BM premia (GBP bn) | 0.9 | 1.3 | -0.4 |
+| renewable curtailment in BM (TWh) | 7.7 | 10.4 | -2.7 |
+| gas (CCGT+OCGT) (TWh) | 67.3 | 77.3 | -10.0 |
+| wind and solar, available (TWh) | 111.8 | 114.7 | -2.9 |
 | nuclear (TWh) | 34.8 | 34.2 | 0.6 |
-| wind incl. embedded (TWh) | 94.4 | 85.8 | 8.6 |
-| gas after BM redispatch (TWh) | 74.7 | 77.3 | -2.6 |
-| wind after BM redispatch (TWh) | 87.6 | 85.8 | 1.7 |
-| solar (TWh) | 18.4 | 18.7 | -0.3 |
-| biomass (TWh) | 19.9 | 19.9 | -0.1 |
-| hydro (TWh) | 5.3 | 3.4 | 1.9 |
-| storage discharge (TWh) | 2.2 | 1.3 | 0.9 |
-| other (CHP, waste, oil) (TWh) | 0.0 | 4.7 | -4.7 |
-| imports (TWh) | 45.1 | 44.0 | 1.1 |
-| exports (TWh) | 15.6 | 14.8 | 0.8 |
-| net imports (TWh) | 29.5 | 29.1 | 0.3 |
-| total supply incl. imports (TWh) | 289.5 | 289.2 | 0.3 |
+| wind incl. embedded (TWh) | 93.5 | 85.8 | 7.7 |
+| gas after BM redispatch (TWh) | 75.8 | 77.3 | -1.5 |
+| wind after BM redispatch (TWh) | 85.8 | 85.8 | -0.0 |
+| solar (TWh) | 18.2 | 18.7 | -0.4 |
+| biomass (TWh) | 20.4 | 19.9 | 0.4 |
+| hydro (TWh) | 3.4 | 3.4 | 0.0 |
+| pumped storage discharge (TWh) | 1.2 | 1.3 | -0.1 |
+| coal (TWh) | 0.0 | 0.0 | 0.0 |
+| other (CHP, waste, oil) (TWh) | 4.0 | 4.7 | -0.7 |
+| imports (TWh) | 45.6 | 44.0 | 1.7 |
+| exports (TWh) | 13.7 | 14.8 | -1.1 |
+| net imports (TWh) | 31.9 | 29.1 | 2.7 |
+| total supply incl. imports (TWh) | 290.3 | 289.2 | 1.0 |
 
+The year on its own weather, fleet, fuel and carbon prices (money of the day) and neighbour prices.
 Outturn: NESO historic generation mix and carbon intensity (GB, incl. embedded wind/solar);
-Elexon MID price (APXMIDP) and FUELHH interconnector flows (scripts/fetch_outturn.py);
-constraint cost and curtailment: data/outturn/gb_constraints.csv (LCP Delta 2026, from NESO data).
-Rows 'after BM redispatch' add the network stage's annualised redispatch to the wholesale result.
+Ofgem day-ahead baseload price; Elexon MID price (APXMIDP) and FUELHH interconnector flows
+(scripts/fetch_outturn.py); constraint cost and curtailment: data/outturn/gb_constraints.csv
+(LCP Delta 2026, from NESO data). 'Wind and solar, available' adds the wind turned down in the
+Balancing Mechanism to outturn. Rows 'after BM redispatch' add the network stage's redispatch.
