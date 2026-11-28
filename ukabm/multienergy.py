@@ -117,13 +117,28 @@ class EVModule:
     logistic (ASSUMPTION)."""
 
     def __init__(self, stock_2025=1.5e6, stock_sat=30e6, mid_year=2036, k=0.35,
-                 mwh_per_ev=2.6, smart_share_2025=0.1, smart_share_2040=0.6):
+                 mwh_per_ev=2.6, smart_share_2025=0.1, smart_share_2040=0.6, drivers=None):
         self.__dict__.update(locals())
         del self.__dict__["self"]
 
     def stock(self, year):
+        """Battery electric vehicles: the FES pathway's (ukabm.drivers) if there is one, else a logistic path."""
+        if self.drivers is not None:
+            return self.drivers.ev_stock(year)
         s = self.stock_sat / (1 + np.exp(-self.k * (year - self.mid_year)))
         return max(s, self.stock_2025 if year >= 2025 else 0)
+
+    def energy_mwh(self, year):
+        """Annual charging demand: the pathway's road-transport electricity, else stock x use per vehicle."""
+        if self.drivers is not None:
+            return self.drivers.ev_twh(year) * 1e6
+        return self.stock(year) * self.mwh_per_ev
+
+    def share_in_profile(self, year):
+        """Share of the year's charging demand that is already in the measured demand profile."""
+        if self.drivers is not None:
+            return min(self.energy_mwh(2025) / max(self.energy_mwh(year), 1.0), 1.0)
+        return min(1.2e6 / max(self.stock(year), 1.0), 1.0)
 
     def smart_share(self, year):
         f = min(max((year - 2025) / 15, 0), 1)
@@ -131,7 +146,7 @@ class EVModule:
 
     def hourly_load(self, year, prof, price_forecast=None):
         H = len(prof)
-        e_total = self.stock(year) * self.mwh_per_ev
+        e_total = self.energy_mwh(year)
         hour = prof.hour.values
         shape = np.interp(hour, [0, 6, 8, 16, 18, 20, 22, 24], [0.6, 0.3, 0.4, 0.8, 1.6, 1.8, 1.2, 0.6])
         shape = shape / shape.sum()
@@ -152,10 +167,13 @@ class HydrogenModule:
     """Grid-connected electrolysers: run when price < willingness-to-pay (H2 value * efficiency).
     Capacity path exogenous (ASSUMPTION, FES-like). Hook for H2 storage/turbines and gas blending."""
 
-    def __init__(self, gw_2030=1.0, gw_2050=10.0, eff=0.7, h2_value=80.0):
+    def __init__(self, gw_2030=1.0, gw_2050=10.0, eff=0.7, h2_value=80.0, drivers=None):
         self.gw_2030, self.gw_2050, self.eff, self.h2_value = gw_2030, gw_2050, eff, h2_value
+        self.drivers = drivers
 
     def capacity_mw(self, year):
+        if self.drivers is not None:          # grid-connected electrolysers of the FES pathway
+            return self.drivers.electrolyser_mw(year)
         if year < 2027:
             return 0.0
         f = min(max((year - 2030) / 20, 0), 1)

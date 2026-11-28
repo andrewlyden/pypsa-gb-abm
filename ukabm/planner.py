@@ -299,7 +299,8 @@ def reference_net_load(model, period: int, load: np.ndarray) -> np.ndarray:
     plausible fleet is short of energy, so the reference does not depend on the agents' run or on the
     plan being made."""
     net = np.asarray(load, dtype=float).copy()
-    for tech, path in CFD_TARGET_GW.items():
+    for tech in CFD_TARGET_GW:
+        path = model.target_gw(tech)
         ys = sorted(path)
         gw = float(np.interp(period, ys, [path[y] for y in ys]))
         net -= gw * 1000 * model.cf_profile(tech, model.start)

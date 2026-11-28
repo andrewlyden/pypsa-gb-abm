@@ -44,6 +44,8 @@ SCENARIO_KEYS = {
     "reserve": "overrides of config.RESERVE; `scale` multiplies the requirement (0 = off)",
     "new_build_cf": "annual capacity factor of new wind and solar by online year (config.NEW_BUILD_CF)",
     "fleet": "starting fleet: table (default: data/fleet, real vintages and contracted pipeline) | random",
+    "fes_pathway": "FES 2025 pathway the exogenous drivers follow (default Holistic Transition; 'none' = earlier assumptions)",
+    "agent_build_limits": "firms face the planner's build-rate limits per technology and year (default true)",
     "firms": "firms: real (default: data/fleet/firms.csv, with their actual plants) | stylised (five firm types)",
 }
 _SUBTABLES = {

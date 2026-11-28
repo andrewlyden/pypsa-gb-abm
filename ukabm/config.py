@@ -380,6 +380,7 @@ class Policy:
     hp_grant: float = 7500.0             # Boiler Upgrade Scheme GBP
     gas_levy_rebalancing: float = 0.0    # GBP/MWh moved from electricity to gas bills
     voll: float = 6000.0
+    dpa_enabled: bool = True             # government tenders gas CCS and hydrogen power to its pathway (with fes_pathway)
     history_basis: str = "real"          # historical years: 2024 prices ("real") or money of the day ("nominal")
 
     def carbon_price(self, year: int) -> float:
@@ -406,8 +407,9 @@ GAS_PATH_CENTRAL = {2025: 29.4, 2026: 55.0, 2027: 63.0, 2028: 45.0, 2030: 35.0, 
 # STPR, 3.5 %). Both runs are costed at this rate, so the gap measures misallocation, not who finances it.
 SOCIAL_DISCOUNT_RATE = 0.035
 
-# Planner build-rate limits (MW of new capacity per year, by technology). Supply-chain limits that apply
-# to any decision-maker, so the planner cannot build what no one could. ASSUMPTION, of the order of the
+# Build-rate limits (MW of new capacity per year, by technology). Supply-chain limits that apply to any
+# decision-maker: the planner, and since November 2026 the firms too (auction awards and merchant
+# projects coming online in one year; scenario key agent_build_limits). ASSUMPTION, of the order of the
 # fastest rates in NESO FES 2025 Holistic Transition / Clean Power 2030. New nuclear is limited to what
 # the committed units already give both runs (Hinkley C, Sizewell C), because agents cannot build it.
 PLANNER_BUILD_MW_PER_YEAR = {

@@ -96,7 +96,7 @@ class TargetTracking(Government):
     def __init__(self, model):
         super().__init__(model)
         self.params = {**GOVERNMENT_TARGETS, **model.scenario.get("government_params", {})}
-        self.targets = {**CFD_TARGET_GW, **model.scenario.get("cfd_targets_gw", {})}
+        self.targets = {**{t: model.target_gw(t) for t in CFD_TECHS}, **model.scenario.get("cfd_targets_gw", {})}
         self.cap0 = {t: model.policy.cfd_admin_strike_cap[t] for t in CFD_TECHS}
         self.cap = dict(self.cap0)
         self.last_clearing: dict[str, float] = {}

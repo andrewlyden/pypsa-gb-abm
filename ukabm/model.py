@@ -19,12 +19,13 @@ import numpy as np
 import pandas as pd
 
 from .agents import GenCo, Plant
-from .config import (capex_kw, fleet_mw, fom_kw, history_value, INTERCONNECTOR_DERATING, RO_BANDS, SCARCITY_STEPS, EXISTING_LIFE, EXISTING_MIN_YEARS, NEW_BUILD_CF, VRE_PROFILE, LEGACY_CM_PRICE, CPI_2012_TO_2024, RO_LAST_ONLINE, RO_SCHEME_END, RO_YEARS, TECHS, VRE_TECHS, STORAGE_TECHS, INITIAL_FLEET_MW, EXISTING_FLEET_EFFICIENCY,
+from .config import (DEFAULTS, PLANNER_BUILD_MW_PER_YEAR, CFD_TARGET_GW, capex_kw, fleet_mw, fom_kw, history_value, INTERCONNECTOR_DERATING, RO_BANDS, SCARCITY_STEPS, EXISTING_LIFE, EXISTING_MIN_YEARS, NEW_BUILD_CF, VRE_PROFILE, LEGACY_CM_PRICE, CPI_2012_TO_2024, RO_LAST_ONLINE, RO_SCHEME_END, RO_YEARS, TECHS, VRE_TECHS, STORAGE_TECHS, INITIAL_FLEET_MW, EXISTING_FLEET_EFFICIENCY,
                      NESO_CI_FACTORS, Policy, Fuels, BATTERY_ANCILLARY_POT, BATTERY_TRADING_PER_MW_VRE,
                      BATTERY_FLEET_FLOOR_MW)
 from .data import PyPSAGBData
 from .costs import COMPONENTS as COST_COMPONENTS, fixed_costs, variable_cost
 from . import decisions
+from . import drivers as fes_drivers
 from .institutions import CFD_TECHS, SystemOperator, make_government
 from .observations import MarketInfo, Observation, Outcome, PlantView, Traits
 from .market import Block, clear as _clear, merit_order, scarcity_markup, storage_arbitrage
@@ -37,7 +38,8 @@ log = logging.getLogger(__name__)
 import mesa
 
 ModelBase = mesa.Model
-PANEL_ROUTES = ("cfd", "cm", "merchant")
+PANEL_ROUTES = ("cfd", "cm", "merchant", "dpa")
+DPA_TECHS = ("gas_ccs", "h2_turbine")     # contracted by the government (Dispatchable Power Agreement, hydrogen to power)
 MERGED_KEY = 10 ** 9          # keys of merged offer blocks inside run_market (plant ids are far smaller)
 
 # Interconnector trade (see interconnector_blocks). Price levels are foreign mean price / SRMC of an
@@ -146,6 +148,7 @@ class GBMarketModel(ModelBase):
         nb = self.scenario.get("new_build_cf", NEW_BUILD_CF)
         self._new_build_cf = dict(nb) if nb else {}
         self._cf_cache = {}
+        self.drivers = fes_drivers.make(self.scenario)      # exogenous drivers of a FES pathway, or None
         self.policy = Policy(**self.scenario.get("policy", {}))
         self.fuels = Fuels(**self.scenario.get("fuels", {}))
         self.start, self.end, self.year = start, end, start
@@ -177,8 +180,8 @@ class GBMarketModel(ModelBase):
         me = self.scenario.get("multienergy", {})
         self.heat = HeatModule(self, rng=np.random.default_rng(seed + 1), **me.get("heat", {}))
         self.gas = GasNetworkModule(**me.get("gas", {}))
-        self.ev = EVModule(**me.get("ev", {}))
-        self.h2 = HydrogenModule(**me.get("h2", {}))
+        self.ev = EVModule(**{"drivers": self.drivers, **me.get("ev", {})})
+        self.h2 = HydrogenModule(**{"drivers": self.drivers, **me.get("h2", {})})
         self.base_growth = self.scenario.get("base_demand_growth", 0.003)
         self.levy = 20.0            # GBP/MWh policy cost pass-through (updated endogenously)
         self.last_price = None
@@ -277,6 +280,7 @@ class GBMarketModel(ModelBase):
                 continue
             kw = dict(support="cfd", strike=92.50 * CPI_2012_TO_2024, cfd_end=on + 34) if on >= 2030 else {}
             self.new_plant(by_name.get(NUCLEAR_OWNER, self.gencos[i % 2]), "nuclear", zone, mw, on, ret, availability=av, **kw)
+        self._pathway_fleet(by_name)
         # contracted pipeline: CfD awards not yet built at the start (both runs start with it)
         pipe = None if table is None else self.data.pipeline_table(self.start)
         for r in ([] if pipe is None else pipe.itertuples()):
@@ -295,6 +299,73 @@ class GBMarketModel(ModelBase):
                                int(r.online), support="cfd", strike=float(r.strike_2012) * CPI_2012_TO_2024,
                                cfd_end=int(r.support_end), route="pipeline",
                                cfd_paid_negative=bool(getattr(r, "paid_negative", 0)))
+
+    def target_gw(self, tech):
+        """The government's capacity target path for wind or solar, {year: GW}: the FES pathway's
+        capacity (ukabm.drivers) if the scenario follows one, else config.CFD_TARGET_GW."""
+        return self.drivers.target_gw(tech) if self.drivers is not None else CFD_TARGET_GW[tech]
+
+    def _pathway_fleet(self, by_name):
+        """Nuclear and pumped-hydro capacity that the FES pathway has beyond the listed stations: decisions
+        of governments and regulated schemes (RAB, cap and floor), so given to both runs as committed
+        plant. Added in the year the pathway first exceeds what is there, in blocks of at least 400 MW."""
+        if self.drivers is None:
+            return
+        for tech, path, owner in (("nuclear", self.drivers.nuclear_mw, by_name.get(NUCLEAR_OWNER)),
+                                  ("pumped_hydro", self.drivers.pumped_hydro_mw, None)):
+            holders = [g for g in self.gencos if any(p.owner is g and p.tech == tech for p in self.plants)] or self.gencos
+            for y in range(max(self.start + 1, 2026), 2051):
+                have = sum(p.mw for p in self.plants if p.tech == tech and p.active(y))
+                gap = path(y) - have
+                if gap >= 400.0:
+                    g = owner or holders[y % len(holders)]
+                    self.new_plant(g, tech, self.choose_zone(tech), gap, y, route="pipeline")
+
+    def build_room(self, tech, online):
+        """MW of *tech* that can still be committed to come online in *online*: the build-rate limit
+        (config.PLANNER_BUILD_MW_PER_YEAR, the same as the planner's) less what is already due that
+        year. Unlimited for technologies without a limit or with scenario agent_build_limits false."""
+        limit = PLANNER_BUILD_MW_PER_YEAR.get(tech)
+        if limit is None or not self.scenario.get("agent_build_limits", True):
+            return float("inf")
+        due = sum(p.mw for p in self.plants if p.tech == tech and p.online == online and p.online > self.start)
+        return max(limit - due, 0.0)
+
+    def dpa_round(self, year, price_fc):
+        """Government tender for contracted low-carbon dispatchable plant. Gas CCS and hydrogen power are
+        built in GB only under a bilateral contract (a Dispatchable Power Agreement; the hydrogen to
+        power business model), so with a FES pathway the government contracts the capacity its pathway
+        has in the delivery year, within the build-rate limit. A project is paid its missing money per
+        de-rated kW over its life (the availability payment), recorded like a Capacity Market agreement
+        and recovered through the levy. Firms that invest in the technology take the projects in turn."""
+        if (self.drivers is None or not self.policy.dpa_enabled
+                or self.scenario.get("government", DEFAULTS["government"]) == "fixed"):
+            return []
+        built = []
+        for tech in DPA_TECHS:
+            if tech in self.scenario.get("banned_techs", []):
+                continue
+            t = TECHS[tech]
+            dy = year + t.lead_time
+            have = sum(p.mw for p in self.plants if p.tech == tech and p.active(dy))
+            need = min(self.drivers.dispatchable_mw(tech, dy) - have, self.build_room(tech, dy))
+            n = int(need // t.chunk_mw)
+            able = [g for g in self.gencos if tech in g.tech_preference] or self.gencos
+            new = []
+            for i in range(n):
+                g = able[(self._pid + i) % len(able)]
+                r = g.hurdle.get(tech, g.wacc)
+                margin = self.expected_margin_per_mw(tech, price_fc, g, include_cm=False) / 1000
+                annuity = capex_kw(tech, dy, r) * r / (1 - (1 + r) ** -t.life)
+                pay = max(annuity + fom_kw(tech, dy) - margin, 0.0) / t.derating
+                new.append(self.new_plant(g, tech, self.choose_zone(tech), t.chunk_mw, dy, cm_price=pay, cm_start=dy,
+                                          cm_end=dy + t.life - 1, route="dpa"))
+            built += new
+            self.auction_log.append(dict(year=year, auction="dpa", tech=tech, delivery=dy, limit_mw=max(need, 0.0),
+                                         accepted_mw=sum(p.mw for p in new),
+                                         clearing=float(np.mean([p.cm_price for p in new])) if new else np.nan,
+                                         cap=np.nan, budget_gbp=np.nan, new_mw=sum(p.mw for p in new), bids_over_cap=0))
+        return built
 
     def legacy_cfd_strikes(self):
         """Capacity-weighted strike (GBP/MWh, 2024 prices) of CfD contracts delivering by the start year."""
@@ -375,6 +446,9 @@ class GBMarketModel(ModelBase):
         """
         g = self.scenario.get("ic_growth", 1.0) ** max(year - 2025, 0)
         caps = {k: v * g for k, v in self.data.interconnector_mw_by_market(year).items()}
+        if self.drivers is not None and year > 2030:     # beyond the project register: the pathway's capacity
+            up = max(self.drivers.interconnector_mw(year) / max(sum(caps.values()), 1.0), 1.0)
+            caps = {k: v * up for k, v in caps.items()}
         # ASSUMPTION: foreign prices are anchored on the SRMC of an existing-fleet GB CCGT and fall
         # 25 % relative to it by 2050 (continental decarbonisation).
         ref = self.srmc("ccgt", year, efficiency=float(np.mean(EXISTING_FLEET_EFFICIENCY["ccgt"])))
@@ -409,11 +483,16 @@ class GBMarketModel(ModelBase):
         return out
 
     def demand(self, year, price_forecast=None, residual=None):
-        base = self.prof.demand_mw.values * (1 + self.base_growth) ** (year - self.data.profile_year)
+        if self.drivers is None:
+            growth = (1 + self.base_growth) ** (year - self.data.profile_year)
+        else:       # to 2025 at the base rate, then the pathway's demand other than EVs, heat pumps and electrolysis
+            growth = ((1 + self.base_growth) ** (min(year, 2025) - self.data.profile_year)
+                      * self.drivers.other_demand_index(year))
+        base = self.prof.demand_mw.values * growth
         heat = self.heat.hourly_load(year, self.prof) - self.heat.hourly_load(year, self.prof) * 0  # explicit
         heat_extra = heat * max(1 - 0.6e6 / max(self.heat.hp_homes, 1), 0)  # 2024 HPs already in base
         ev_sig = residual if residual is not None else price_forecast
-        ev_extra = self.ev.hourly_load(year, self.prof, ev_sig) * max(1 - 1.2e6 / self.ev.stock(year), 0)
+        ev_extra = self.ev.hourly_load(year, self.prof, ev_sig) * (1 - self.ev.share_in_profile(year))
         h2 = self.h2.hourly_load(year, price_forecast) if price_forecast is not None else 0 * base
         return base, heat_extra, ev_extra, h2
 
@@ -722,6 +801,8 @@ class GBMarketModel(ModelBase):
         if not self.policy.cfd_enabled:
             return []
         pots = self.government.round_settings(year, price_fc)
+        for tech, pot in pots.items():           # no more than can be built for the delivery year
+            pot.max_mw = min(pot.max_mw, self.build_room(tech, year + TECHS[tech].lead_time))
         bids, over_cap = [], {}
         for g in self.gencos:
             for tech in CFD_TECHS:
@@ -839,6 +920,17 @@ class GBMarketModel(ModelBase):
                         offers.append((bid * (1 + 0.03 * k), t.chunk_mw * t.derating, (g, tech)))
         offers += self._cm_battery_supply(batt, price_fc, dy)
         offers.sort(key=lambda x: x[0])
+        room = {}                                 # new build within the build-rate limit, cheapest first
+        kept = []
+        for o in offers:
+            if isinstance(o[2], tuple):
+                tech = o[2][1]
+                left = room.setdefault(tech, self.build_room(tech, dy))
+                if left < TECHS[tech].chunk_mw:
+                    continue
+                room[tech] = left - TECHS[tech].chunk_mw
+            kept.append(o)
+        offers = kept
         if ahead == 1 and target <= 0:          # nothing missing: no T-1 auction
             return []
         lo, hi, cap = target - 1500, target + 1500, self.policy.cm_price_cap
@@ -1050,6 +1142,7 @@ class GBMarketModel(ModelBase):
         before = sum(p.mw for p in self.plants if p.online > y)
         price_fc = self.forecast(y + 3)
         self.cfd_round(y, price_fc)
+        self.dpa_round(y, price_fc)
         self.cm_auction(y, price_fc)
         if self.operator.t1:
             self.cm_auction(y, price_fc, ahead=1)
@@ -1072,6 +1165,8 @@ class GBMarketModel(ModelBase):
                 if d and budgets[g.name] > 0:
                     tech, mw, npv = d
                     t = TECHS[tech]
+                    if self.build_room(tech, y + t.lead_time) < mw:
+                        continue                    # nothing more of it can be built for that year
                     self.new_plant(g, tech, self.choose_zone(tech), mw, y + t.lead_time, route="merchant")
                     budgets[g.name] -= capex_kw(tech, y + t.lead_time) * 1000 * mw
                     done = True
