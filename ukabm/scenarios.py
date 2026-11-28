@@ -97,7 +97,8 @@ SCENARIOS, BENCHMARKS = load_scenarios()
 # decisions) and path dependence.
 IDEAL_TRAITS = {
     "expectations": {"expectation": "adaptive"},              # carbon path known, no myopia/optimism
-    "capital": {"wacc": SOCIAL_DISCOUNT_RATE, "risk_aversion": 0.0, "budget_gbp": float("inf")},
+    "capital": {"wacc": SOCIAL_DISCOUNT_RATE, "risk_aversion": 0.0, "budget_gbp": float("inf"),
+                "tech_hurdle": False},     # one rate for every project: the social discount rate
     "strategic": {"markup": 0.0},
 }
 

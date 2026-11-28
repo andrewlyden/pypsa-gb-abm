@@ -136,9 +136,25 @@ class PyPSAGBData:
         if profiles is not None and str(profiles) != "espeni":
             self.profiles, self.profile_source = pd.read_csv(profiles), str(profiles)
         elif profiles is None and open_file.exists():
-            self.profiles, self.profile_source = pd.read_csv(open_file), "open"
+            self.profiles, self.profile_source = self._open_profiles(open_file), "open"
         self.profiles = complete_profiles(self.profiles)
         self.neighbour_price_shape = self._neighbour_shapes()
+
+    def _open_profiles(self, path) -> pd.DataFrame:
+        """The open NESO/Elexon profile of the profile year, with wind per MW of installed capacity.
+        The file's wind capacity factors are per MW that a wind farm has shown it can produce; the model
+        multiplies them by DESNZ's installed (nameplate) capacity, which is 2-6 % higher, so each wind
+        column is scaled by that year's ratio (data/profiles/validation.csv, nameplate_factor_*)."""
+        prof = pd.read_csv(path)
+        check = PROFILES / "validation.csv"
+        if check.exists():
+            v = pd.read_csv(check).set_index("year")
+            if self.profile_year in v.index:
+                for kind in ("offshore", "onshore"):
+                    k = float(v.loc[self.profile_year, f"nameplate_factor_{kind}"])
+                    for col in [c for c in prof.columns if c.startswith(f"wind_{kind}") and c.endswith("_cf")]:
+                        prof[col] = prof[col] * k
+        return prof
 
     # ------------------------------------------------------------------ raw
     def _load_raw(self):

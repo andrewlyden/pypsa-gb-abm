@@ -34,7 +34,7 @@ def npv_per_mw(tech: str, margin_per_mw_yr: float, rate: float, online: int | No
     costs of a plant coming online in *online* (config.COST_PATHS; None: the reference costs)."""
     t = TECHS[tech]
     annuity = (1 - (1 + rate) ** -t.life) / rate
-    return (margin_per_mw_yr - fom_kw(tech, online) * 1000) * annuity - capex_kw(tech, online) * 1000
+    return (margin_per_mw_yr - fom_kw(tech, online) * 1000) * annuity - capex_kw(tech, online, rate) * 1000
 
 
 class DecisionMaker:
@@ -106,7 +106,7 @@ class RuleBased(DecisionMaker):
                 continue  # VRE goes via CfD auction when CfD is available
             margin = obs.market.expected_margin(tech, obs.forecast)
             # cannibalisation haircut for VRE capture price and for own price impact
-            npv = npv_per_mw(tech, margin * (1 - tr.risk_aversion), tr.wacc,
+            npv = npv_per_mw(tech, margin * (1 - tr.risk_aversion), tr.rate(tech),
                              obs.market.year + TECHS[tech].lead_time)
             if npv > 0 and (best is None or npv > best[1]):
                 best = (tech, npv)
@@ -115,23 +115,23 @@ class RuleBased(DecisionMaker):
         return best[0], TECHS[best[0]].chunk_mw, best[1]
 
     def cfd_bid(self, obs):
-        """Strike-price bid = levelised cost at a de-risked (CfD) WACC."""
+        """Strike-price bid = levelised cost at the firm's required return on contracted revenue."""
         t = TECHS[obs.tech]
         online = obs.market.year + t.lead_time
-        r = max(obs.traits.wacc - 0.025, 0.035)
+        r = obs.traits.rate(obs.tech, contracted=True)
         crf = r / (1 - (1 + r) ** -t.life)
         cf = obs.market.capacity_factor(obs.tech)
-        lcoe = (capex_kw(obs.tech, online) * 1000 * crf + fom_kw(obs.tech, online) * 1000) / (8760 * cf) + t.vom
+        lcoe = (capex_kw(obs.tech, online, r) * 1000 * crf + fom_kw(obs.tech, online) * 1000) / (8760 * cf) + t.vom
         return lcoe * (1 + 0.05 * obs.market.rng.standard_normal())
 
     def cm_bid(self, obs):
         """Net missing money."""
         if obs.new:
             t = TECHS[obs.tech]
-            w = obs.traits.wacc
+            w = obs.traits.rate(obs.tech, contracted=True)
             crf = w / (1 - (1 + w) ** -15)  # 15-year CM agreement
             online = obs.market.year + 4    # T-4 delivery year
-            missing = capex_kw(obs.tech, online) * crf + fom_kw(obs.tech, online) - obs.margin_per_kw
+            missing = capex_kw(obs.tech, online, w) * crf + fom_kw(obs.tech, online) - obs.margin_per_kw
             return max(missing, 0.0) / t.derating
         t = TECHS[obs.plant.tech]
         return max(fom_kw(obs.plant.tech, obs.plant.online) - obs.margin_per_kw, 0.0) / t.derating
@@ -174,8 +174,9 @@ class ExpectationBids(RuleBased):
 
         capex = PV_contract(strike x gen x (1 - basis) - FOM)  +  PV_tail(capture x gen - FOM)
 
-    over a 20-year two-way CfD at the de-risked rate (WACC - 2.5 points, floor 3.5 %), then a merchant
-    tail to the end of the asset's life at the firm's WACC. The tail capture price is the firm's view:
+    over a 20-year two-way CfD at the firm's required return on contracted revenue (the technology's
+    hurdle rate shifted by the firm's cost of capital), then a merchant tail to the end of the asset's
+    life at that rate plus the merchant uplift. The tail capture price is the firm's view:
     *myopic* firms take this year's capture price, *adaptive* firms the t+3 forecast less a 15 %
     cannibalisation haircut, *carbon optimists* the t+3 forecast without the haircut. Risk aversion adds
     a premium on the required revenue, and ±2 % noise (from ``model.rng``) stands for project-specific
@@ -205,12 +206,12 @@ class ExpectationBids(RuleBased):
         tr = obs.traits
         gen = 8760 * obs.market.capacity_factor(tech)             # MWh per MW per year
         n = min(self.CONTRACT_YEARS, t.life)
-        rc = max(tr.wacc - 0.025, 0.035)                          # contracted years
-        rm = tr.wacc                                              # merchant tail
+        rc = tr.rate(tech, contracted=True)                       # contracted years
+        rm = tr.rate(tech)                                        # merchant tail
         a_contract = (1 - (1 + rc) ** -n) / rc
         a_tail = ((1 - (1 + rm) ** -t.life) / rm - (1 - (1 + rm) ** -n) / rm) if t.life > n else 0.0
         online = obs.market.year + t.lead_time
-        capex = capex_kw(tech, online) * 1000
+        capex = capex_kw(tech, online, rc) * 1000
         fom = fom_kw(tech, online) * 1000
         tail = max(self.tail_capture(obs) - t.vom, 0.0) * gen - fom
         need = capex + fom * a_contract - tail * a_tail          # PV the contract must cover
@@ -221,7 +222,7 @@ class ExpectationBids(RuleBased):
     # ------------------------------------------------ merchant and PPA investment (roadmap item 4)
     PPA_YEARS = 15
     PPA_DISCOUNT = 0.10    # PPA price below the expected capture price (the offtaker's margin and risk)
-    PPA_RATE_CUT = 0.015   # contracted revenue lowers the cost of capital by this much
+    PPA_RATE_CUT = 0.015   # contracted revenue lowers the cost of capital by this much (= config.MERCHANT_UPLIFT)
 
     def margin_path(self, obs, tech, forecast=None):
         """Expected annual margin per MW at each forecast year: t+3 (the model's forecast) and the long
@@ -242,7 +243,7 @@ class ExpectationBids(RuleBased):
         t = TECHS[tech]
         ys = sorted(path)
         fom = fom_kw(tech, online) * 1000
-        npv, df = -capex_kw(tech, online) * 1000, 1.0
+        npv, df = -capex_kw(tech, online, rate) * 1000, 1.0
         for k in range(1, t.life + 1):
             year = online + k - 1
             if first is not None and k <= first[0]:
@@ -263,11 +264,12 @@ class ExpectationBids(RuleBased):
             t = TECHS[tech]
             path = self.margin_path(obs, tech)
             online = year + t.lead_time
-            npv = self.path_npv(tech, path, online, tr.wacc, tr.risk_aversion)
+            rate = tr.rate(tech)
+            npv = self.path_npv(tech, path, online, rate, tr.risk_aversion)
             if tech in VRE_TECHS:          # PPA: a fixed price on the t+3 capture value, then merchant
                 ppa = path[year + 3] * (1 - self.PPA_DISCOUNT)
-                npv = max(npv, self.path_npv(tech, path, online, tr.wacc, tr.risk_aversion,
-                                             first=(self.PPA_YEARS, ppa, max(tr.wacc - self.PPA_RATE_CUT, 0.03))))
+                npv = max(npv, self.path_npv(tech, path, online, rate, tr.risk_aversion,
+                                             first=(self.PPA_YEARS, ppa, max(rate - self.PPA_RATE_CUT, 0.03))))
             if npv > 0 and (best is None or npv > best[1]):
                 best = (tech, npv)
         if best is None:

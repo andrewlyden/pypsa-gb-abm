@@ -3,7 +3,8 @@
 System cost is a resource cost for GB, in GBP/yr, the same definition for every run:
 
     capex     annuity of new-build capital (units online after the model start year) at the social
-              discount rate, while the unit is active; the pre-2025 fleet is sunk and excluded
+              discount rate, including financing over the build lag at that rate, while the unit is
+              active; the pre-2025 fleet is sunk and excluded
     fom       fixed O&M of every active unit
     fuel      fuel burnt (incl. VOM of thermal and storage plant)
     carbon    CO2 emitted x carbon price (the carbon price stands in for the social cost of carbon)
@@ -51,7 +52,7 @@ def fixed_costs(units, year: int, start: int, rate: float = SOCIAL_DISCOUNT_RATE
             fom += fom_kw(u.tech, u.online) * 1000 * u.mw
         # capital is sunk: the annuity runs over the economic life even if the plant closes early
         if u.online > start and u.online <= year <= u.online + t.life - 1:
-            capex += capex_kw(u.tech, u.online) * 1000 * u.mw * crf(rate, t.life)
+            capex += capex_kw(u.tech, u.online, rate) * 1000 * u.mw * crf(rate, t.life)
     return {"capex": capex, "fom": fom}
 
 

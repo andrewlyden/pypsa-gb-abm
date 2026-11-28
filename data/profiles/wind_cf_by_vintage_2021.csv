@@ -1,0 +1,6 @@
+tech,vintage,units,capacity_mw,cf_available,cf_metered,curtailment_added_back,units_excluded_commissioning,capacity_excluded_mw,vintage_basis
+offshore,pre-2015,24,3503.4,0.3528,0.3524,cf_available: yes; cf_metered: no,0,0.0,lookup: project commissioning year
+offshore,2015-2019,28,4365.2,0.3922,0.3821,cf_available: yes; cf_metered: no,0,0.0,lookup: project commissioning year
+offshore,2020 or later,5,1880.0,0.4556,0.4544,cf_available: yes; cf_metered: no,7,1683.4,lookup: project commissioning year
+onshore,2019 or earlier,91,5709.1,0.2621,0.228,cf_available: yes; cf_metered: no,0,0.0,B1610: in operation by Dec 2019
+onshore,2020 or later,3,177.0,0.2574,0.2414,cf_available: yes; cf_metered: no,11,435.7,B1610: first output

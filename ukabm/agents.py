@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 import mesa
 
 from . import decisions
-from .config import TECHS
+from .config import MERCHANT_UPLIFT, TECHS, hurdle_rate
 from .observations import PlantView, validate
 
 AgentBase = mesa.Agent
@@ -66,10 +66,14 @@ class GenCo(AgentBase):
     """
 
     def __init__(self, model, name, wacc=0.08, expectation="myopic", markup=0.0,
-                 risk_aversion=0.1, budget_gbp=3e9, tech_preference=None, decider=None):
+                 risk_aversion=0.1, budget_gbp=3e9, tech_preference=None, decider=None, tech_hurdle=True):
         super().__init__(model)
         self.name = name
         self.wacc = wacc
+        # required return by technology (config.HURDLE_RATE shifted by the firm's cost of capital) and
+        # the uplift for merchant revenue; tech_hurdle False: one rate, the firm's WACC (idealised capital)
+        self.hurdle = {t: hurdle_rate(t, wacc) for t in TECHS} if tech_hurdle else {}
+        self.merchant_uplift = MERCHANT_UPLIFT if tech_hurdle else 0.0
         self.expectation = expectation
         self.markup = markup
         self.risk_aversion = risk_aversion
@@ -107,8 +111,8 @@ class GenCo(AgentBase):
 
     # ------------------------------------------------------------- helpers
     def npv_per_mw(self, tech: str, margin_per_mw_yr: float, rate: float | None = None) -> float:
-        return decisions.npv_per_mw(tech, margin_per_mw_yr, self.wacc if rate is None else rate,
-                                    self.model.year + TECHS[tech].lead_time)
+        r = self.hurdle.get(tech, self.wacc) + self.merchant_uplift if rate is None else rate
+        return decisions.npv_per_mw(tech, margin_per_mw_yr, r, self.model.year + TECHS[tech].lead_time)
 
     def step(self):  # Mesa hook; model orchestrates phases explicitly
         pass

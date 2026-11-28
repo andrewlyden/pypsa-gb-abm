@@ -409,7 +409,7 @@ def plan(model, loads: dict, rate: float = SOCIAL_DISCOUNT_RATE, build_limits: d
                 continue
             if tech in model.scenario.get("banned_techs", []):
                 continue
-            cc = capex_kw(tech, p) * 1000 * crf(rate, t.life) + fom_kw(tech, p) * 1000
+            cc = capex_kw(tech, p, rate) * 1000 * crf(rate, t.life) + fom_kw(tech, p) * 1000
             name = f"new_{tech}_{p}"
             if tech in STORAGE_TECHS:
                 e = np.sqrt(t.efficiency)

@@ -4,9 +4,13 @@ All values are *indicative* and in real 2024 GBP. They are placeholders chosen t
 range of public sources (DESNZ Electricity Generation Costs 2023, NESO FES 2025, UK ETS prices)
 and MUST be reviewed before quantitative use. See docs/assumptions.md.
 """
+import csv
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import numpy as np
+
+PARAMETERS = Path(__file__).resolve().parents[1] / "data" / "parameters"
 
 
 @dataclass(frozen=True)
@@ -29,18 +33,25 @@ class Tech:
 
 GAS_T_PER_MWH = 0.184  # tCO2 per MWh_th natural gas
 
+# Capital cost, fixed O&M, variable O&M, efficiency and life of wind, solar and gas plant are those of
+# DESNZ Electricity Generation Costs 2025 for projects commissioning in 2030 (2024 prices), as built
+# into data/parameters/cost_paths.csv by scripts/build_costs.py: capital = pre-development +
+# construction + infrastructure (overnight; financing during construction is added by capex_kw);
+# fixed O&M includes insurance and connection and use-of-system charges. tests/test_costs.py checks
+# that the numbers here equal the table. Nuclear, biomass, hydro and storage are not in that edition:
+# their values are indicative (ASSUMPTION).
 TECHS: dict[str, Tech] = {t.name: t for t in [
     Tech("nuclear", 7000, 120, 8, 0.33, "uranium", 0.0, 60, 10, 0.80, 0.78, investable=True, chunk_mw=1600),
-    Tech("ccgt", 750, 20, 3, 0.55, "gas", GAS_T_PER_MWH, 25, 3, 0.90, 0.88, chunk_mw=800),
-    Tech("ocgt", 550, 12, 5, 0.38, "gas", GAS_T_PER_MWH, 25, 2, 0.92, 0.94, chunk_mw=300),
-    Tech("gas_ccs", 1800, 45, 6, 0.48, "gas", GAS_T_PER_MWH * 0.1, 25, 6, 0.88, 0.88, chunk_mw=800),
-    Tech("h2_turbine", 650, 15, 5, 0.40, "hydrogen", 0.0, 25, 3, 0.92, 0.94, chunk_mw=300),
+    Tech("ccgt", 1034.6, 22.9, 5, 0.54, "gas", GAS_T_PER_MWH, 25, 3, 0.90, 0.88, chunk_mw=800),
+    Tech("ocgt", 664.1, 16.4, 5, 0.35, "gas", GAS_T_PER_MWH, 25, 2, 0.92, 0.94, chunk_mw=300),
+    Tech("gas_ccs", 2242.4, 35.5, 6, 0.47, "gas", GAS_T_PER_MWH * 0.1, 25, 6, 0.88, 0.88, chunk_mw=800),
+    Tech("h2_turbine", 1199.1, 21.4, 5, 0.51, "hydrogen", 0.0, 25, 3, 0.92, 0.94, chunk_mw=300),
     # biomass availability 0.70: GB biomass output 19.9 TWh in 2025 (NESO) = 60 % load factor on the
     # 3.8 GW fleet; Drax flexes its RO units seasonally and has long outages (Drax FY2025 results)
     Tech("biomass", 2500, 90, 6, 0.38, "biomass", 0.0, 25, 4, 0.70, 0.84, investable=False),
-    Tech("wind_onshore", 1400, 30, 0, 1.0, None, 0.0, 25, 3, 1.0, 0.08, profile="wind_onshore", chunk_mw=500),
-    Tech("wind_offshore", 2500, 60, 0, 1.0, None, 0.0, 30, 5, 1.0, 0.10, profile="wind_offshore", chunk_mw=1000),
-    Tech("solar", 600, 10, 0, 1.0, None, 0.0, 30, 1, 1.0, 0.03, profile="solar", chunk_mw=500),
+    Tech("wind_onshore", 1695.9, 39.9, 0, 1.0, None, 0.0, 35, 3, 1.0, 0.08, profile="wind_onshore", chunk_mw=500),
+    Tech("wind_offshore", 2670.0, 141.6, 0, 1.0, None, 0.0, 30, 5, 1.0, 0.10, profile="wind_offshore", chunk_mw=1000),
+    Tech("solar", 647.3, 9.1, 0, 1.0, None, 0.0, 38, 1, 1.0, 0.03, profile="solar", chunk_mw=500),
     Tech("hydro", 3000, 40, 0, 1.0, None, 0.0, 60, 5, 0.40, 0.37, investable=False),
     Tech("battery", 600, 10, 1, 0.85, None, 0.0, 15, 1, 0.95, 0.20, chunk_mw=500),   # 2h; round-trip eff
     Tech("pumped_hydro", 2500, 25, 1, 0.75, None, 0.0, 60, 8, 0.95, 0.80, investable=False),
@@ -54,6 +65,34 @@ STORAGE_TECHS = {"battery": 2.0, "pumped_hydro": 8.0}   # duration hours
 # paths serve the agents, the planner and the system-cost accounting, in hindcasts and in future years.
 # Values and sources: data/parameters/cost_paths.csv (loaded below) and docs/assumptions.md.
 COST_PATHS: dict[str, dict[str, dict[int, float]]] = {}
+# Years between the (capital-weighted) spending of the capital cost and the first year of operation:
+# pre-development spent halfway through its period, construction halfway through its own (DESNZ
+# Electricity Generation Costs 2025 periods). Capital is carried over this lag at the discount rate of
+# whoever values the project, which is the financing cost during construction.
+BUILD_LAG = {"wind_offshore": 1.8, "wind_onshore": 1.2, "solar": 0.6, "ccgt": 1.5, "ocgt": 1.0, "gas_ccs": 1.5,
+             "h2_turbine": 1.6, "nuclear": 4.0, "battery": 0.5}
+# Hurdle rates by technology (pre-tax real) for projects with contracted revenue: CEPA (2025) for DESNZ,
+# as used in Electricity Generation Costs 2025 (solar and onshore wind 7.6 %, offshore wind and gas
+# 8.9 %, batteries 8.9 %, nuclear under RAB 7.6 %, CCUS and hydrogen power 8.9-10.1 %). A project on
+# merchant revenue needs MERCHANT_UPLIFT more (CEPA central estimate 1.5 points; survey range 1.5-3).
+# A firm's own cost of capital shifts every rate by (its wacc - REFERENCE_WACC). CEPA puts the
+# uncertainty of each rate at 1.1-1.7 points.
+HURDLE_RATE = {"wind_offshore": 0.089, "wind_onshore": 0.076, "solar": 0.076, "ccgt": 0.089, "ocgt": 0.089,
+               "gas_ccs": 0.089, "h2_turbine": 0.089, "battery": 0.089, "nuclear": 0.076}
+HURDLE_DEFAULT = 0.089
+MERCHANT_UPLIFT = 0.015
+REFERENCE_WACC = 0.077       # mean WACC of the model's firm types (ukabm.model.GENCO_SPECS)
+
+
+def _load_cost_paths(path: Path = PARAMETERS / "cost_paths.csv") -> None:
+    """Fill COST_PATHS from the cost table (scripts/build_costs.py); costs before the first published
+    year are held at that year's value."""
+    if not path.exists():
+        return
+    with open(path, newline="", encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            for item in ("capex", "fom"):
+                COST_PATHS.setdefault(r["tech"], {}).setdefault(item, {})[int(r["online"])] = float(r[item])
 
 
 def _path_value(tech: str, item: str, online: int | None, default: float) -> float:
@@ -64,9 +103,18 @@ def _path_value(tech: str, item: str, online: int | None, default: float) -> flo
     return float(np.interp(online, ys, [path[y] for y in ys]))
 
 
-def capex_kw(tech: str, online: int | None = None) -> float:
-    """Capital cost (GBP/kW) of *tech* coming online in *online* (None: the TECHS reference value)."""
-    return _path_value(tech, "capex", online, TECHS[tech].capex)
+def capex_kw(tech: str, online: int | None = None, rate: float | None = None) -> float:
+    """Capital cost (GBP/kW) of *tech* coming online in *online* (None: the TECHS reference value).
+    With *rate*, the cost includes financing over the build lag at that rate (BUILD_LAG)."""
+    c = _path_value(tech, "capex", online, TECHS[tech].capex)
+    return c if rate is None else c * (1 + rate) ** BUILD_LAG.get(tech, 0.0)
+
+
+def hurdle_rate(tech: str, wacc: float | None = None, contracted: bool = True) -> float:
+    """Required return on a *tech* project for a firm with cost of capital *wacc* (None: the reference
+    firm), with contracted revenue (CfD, Capacity Market agreement, PPA) or merchant."""
+    r = HURDLE_RATE.get(tech, HURDLE_DEFAULT) + (0.0 if wacc is None else wacc - REFERENCE_WACC)
+    return max(r + (0.0 if contracted else MERCHANT_UPLIFT), 0.01)
 
 
 def fom_kw(tech: str, online: int | None = None) -> float:
@@ -119,7 +167,17 @@ VRE_PROFILE = {"wind_onshore": "wind_onshore_cf", "wind_offshore": "wind_offshor
 # points, flat outside). The hourly profiles are measured on the existing fleet; new plant yields more
 # (larger rotors, higher hubs, sites further offshore). Empty: new build has the fleet's profile.
 # A scenario can override it with `new_build_cf`. Values and sources: docs/assumptions.md.
-NEW_BUILD_CF: dict = {}
+# Offshore and onshore wind: the first point is measured, the mean 2021-2025 capacity factor (output
+# plus turn-down added back) of the GB wind farms commissioned since 2020 (data/profiles/
+# wind_cf_by_vintage_<year>.csv: offshore 0.43-0.46, onshore 0.26-0.36); later points are the load
+# factors DESNZ Electricity Generation Costs 2025 assumes for projects commissioning in 2030, 2035
+# and 2040. Solar: DESNZ's UK load factor of 2022-2025 (0.10-0.11, Energy Trends 6.1), then its 2025
+# assumption of 0.12 for large-scale solar.
+NEW_BUILD_CF: dict = {
+    "wind_offshore": {2026: 0.445, 2030: 0.48, 2035: 0.49, 2040: 0.50},
+    "wind_onshore": {2026: 0.315, 2030: 0.36, 2035: 0.37},
+    "solar": {2026: 0.11, 2030: 0.12},
+}
 
 # GB fleet in 2025 (MW): the mean of installed capacity at the end of 2024 and of 2025 (DESNZ, DUKES
 # 2026 Table 5.12, GB, all generators; data/history/gb_capacity.csv), so that the 2025 operating year
@@ -288,3 +346,6 @@ class Fuels:
         if fuel == "gas":
             return self.gas(year)
         return getattr(self, fuel)
+
+
+_load_cost_paths()

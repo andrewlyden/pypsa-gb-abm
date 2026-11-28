@@ -44,6 +44,14 @@ class Traits:
     budget: float
     budget_left: float
     tech_preference: tuple
+    hurdle: dict = field(default_factory=dict)   # technology -> required return with contracted revenue
+    merchant_uplift: float = 0.0                 # added to the required return of a merchant project
+
+    def rate(self, tech: str, contracted: bool = False) -> float:
+        """The firm's required return on a *tech* project: the technology's hurdle rate shifted by the
+        firm's own cost of capital, plus the merchant uplift unless the revenue is contracted. Firms
+        without technology hurdle rates (idealised capital) use their WACC for everything."""
+        return self.hurdle.get(tech, self.wacc) + (0.0 if contracted else self.merchant_uplift)
 
 
 @dataclass(frozen=True)

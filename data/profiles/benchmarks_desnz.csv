@@ -1,0 +1,13 @@
+# DESNZ Energy Trends table ET 6.1 'Renewable electricity capacity and generation', edition published 29 September 2026,
+# sheets 'Annual' (UK), 'Northern Ireland - Annual' and 'Scotland- Annual'. https://www.gov.uk/government/statistics/energy-trends-section-6-renewables
+# Capacity is cumulative installed capacity at the end of the year (MW); generation in GWh; load factors in per cent, as published
+# (on the capacity at the beginning and the end of the year). The country sheets give wind as one total (onshore + offshore).
+year,onshore_mw_end,offshore_seabed_mw_end,offshore_floating_mw_end,solar_mw_end,onshore_gwh,offshore_gwh,solar_gwh,onshore_lf_pct,offshore_lf_pct,solar_lf_pct,ni_wind_mw_end,ni_wind_gwh,scot_wind_mw_end,scot_wind_gwh,scot_wind_lf_pct
+2018,13424.85,8150.5,30.0,13059.07,30382.41,26525.2,12668.4,26.66,40.08,11.2,1340.33,2933.23,8473.75,19111.1,27.18
+2019,13998.33,9856.3,32.0,13344.84,31859.74,31975.15,12418.05,26.52,40.54,10.74,1349.12,2999.97,9199.07,22009.76,28.43
+2020,14075.07,10350.85,32.0,13772.24,34872.9,40750.26,12547.1,28.28,45.92,10.54,1354.63,3327.42,9253.98,22505.93,27.77
+2021,14492.75,11175.85,79.63,14251.35,29326.62,35597.29,12128.36,23.44,37.75,9.88,1430.11,3345.4,9635.56,18846.25,22.78
+2022,14840.36,13767.85,79.63,14812.56,35101.71,45112.69,13983.25,27.32,41.29,10.98,1430.66,3371.43,11110.25,27189.51,29.92
+2023,15531.89,14655.05,79.63,17574.21,33332.44,49434.98,14891.53,25.06,39.71,10.5,1449.47,3602.89,12648.03,25868.33,24.86
+2024,16199.27,16060.05,79.63,19429.91,34813.27,48804.71,14991.71,24.98,36.18,9.22,1471.07,2722.96,14616.67,29824.93,24.91
+2025,16430.69,16570.05,79.63,21914.97,34419.45,52020.69,20124.56,24.08,36.4,11.11,1518.37,2882.62,14791.27,30850.02,23.95

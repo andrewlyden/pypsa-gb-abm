@@ -73,12 +73,18 @@ NUCLEAR_UNITS = [(2300, 1983, 2027, "Z9", 0.62), (1200, 1988, 2030, "Z6", 0.62),
                  (1600, 2038, 2097, "Z12", None), (1600, 2039, 2098, "Z12", None),  # Sizewell C
                  (1200, 1988, 2030, "Z9", 0.62)]                                    # Heysham 2 (AGR)
 
+# Firm types (ASSUMPTION; to be replaced by firms with real portfolios, README item 52). A firm's WACC
+# shifts every technology hurdle rate by (wacc - config.REFERENCE_WACC); the spread across types
+# (-1.7 to +2.3 points) is of the size of the uncertainty CEPA (2025) gives for its hurdle rates.
+# risk_aversion (a haircut on expected margins and a premium on CfD bids) is zero: risk is already priced
+# in the hurdle rates and the merchant uplift, and a second premium would count it twice. It remains
+# as a lever for scenarios.
 GENCO_SPECS = [
-    dict(name="IntegratedUtility", wacc=0.07, expectation="adaptive", markup=0.03, risk_aversion=0.10, budget_gbp=4e9),
-    dict(name="MerchantIPP", wacc=0.10, expectation="myopic", markup=0.08, risk_aversion=0.15, budget_gbp=1.5e9),
-    dict(name="OilMajor", wacc=0.08, expectation="adaptive", markup=0.02, risk_aversion=0.05, budget_gbp=6e9),
-    dict(name="InfraFund", wacc=0.06, expectation="adaptive", markup=0.0, risk_aversion=0.20, budget_gbp=3e9),
-    dict(name="GreenDeveloper", wacc=0.075, expectation="carbon_optimist", markup=0.0, risk_aversion=0.10, budget_gbp=2e9),
+    dict(name="IntegratedUtility", wacc=0.07, expectation="adaptive", markup=0.03, risk_aversion=0.0, budget_gbp=4e9),
+    dict(name="MerchantIPP", wacc=0.10, expectation="myopic", markup=0.08, risk_aversion=0.0, budget_gbp=1.5e9),
+    dict(name="OilMajor", wacc=0.08, expectation="adaptive", markup=0.02, risk_aversion=0.0, budget_gbp=6e9),
+    dict(name="InfraFund", wacc=0.06, expectation="adaptive", markup=0.0, risk_aversion=0.0, budget_gbp=3e9),
+    dict(name="GreenDeveloper", wacc=0.075, expectation="carbon_optimist", markup=0.0, risk_aversion=0.0, budget_gbp=2e9),
 ]
 
 
@@ -562,7 +568,7 @@ class GBMarketModel(ModelBase):
         """What *genco* may know for a decision of *kind* (ukabm.observations.Observation)."""
         left = getattr(genco, "budget_left", genco.budget)
         traits = Traits(genco.name, genco.wacc, genco.expectation, genco.markup, genco.risk_aversion,
-                        genco.budget, left, tuple(genco.tech_preference))
+                        genco.budget, left, tuple(genco.tech_preference), genco.hurdle, genco.merchant_uplift)
         own = ()
         if kind in ("merchant_investment", "cfd_bid", "cm_bid"):
             own = tuple(PlantView.of(p) for p in self.plants
