@@ -18,7 +18,7 @@ and hydrogen.
 ## Quick start
 ```bash
 pip install -e .            # numpy pandas scipy matplotlib mesa pypsa highspy
-pytest -q                   # 89 tests (+1 slow), ~12 min
+pytest -q                   # 94 tests (+1 slow), ~14 min
 python scripts/run_scenarios.py baseline --end 2030      # ~40 s
 python scripts/run_scenarios.py                          # all 6 scenarios 2025-2050 (~4 min each)
 python scripts/make_plots.py                             # -> docs/figures/
@@ -80,23 +80,28 @@ distribution is too narrow (no negative hours). Full table: [results/calibration
 ## Optimal versus emergent: the gap (illustrative)
 The same system solved two ways: the agents (many actors, today's market design) and a PyPSA
 multi-period least-cost plan (one planner, perfect foresight, 3.5 %), both costed by one least-cost
-dispatch over 8,760 h ([method and results](docs/gap.md)). Present value of system cost 2025–2054, £bn,
-median of 3 seeds:
+dispatch over 8,760 h, both holding the same reserve and response requirement ([method and results](docs/gap.md)). Present value of system cost 2025–2054, £bn,
+for the seed with the median gap, [range across 3 seeds]:
 
 | run | optimal | agents | gap [range] | of which investment / operation | gap % |
 |---|---|---|---|---|---|
-| baseline (full agents) | 321 | 352 | 32 [31–32] | 28 / 4 | 9.9 |
+| baseline (full agents) | 321 | 352 | 32 [31–32] | 28 / 3 | 9.9 |
 | baseline, idealised agents | 320 | 356 | 36 [34–38] | 33 / 3 | 11.2 |
-| no_cfd | 318 | 375 | 58 [56–59] | 56 / 2 | 18.2 |
-| no_capacity_market | 319 | 337 | 18 [16–18] | 14 / 4 | 5.6 |
-| heat_push | 390 | 425 | 35 [35–37] | 32 / 3 | 9.0 |
-| high_carbon | 310 | 346 | 36 [35–37] | 32 / 4 | 11.6 |
-| high_gas | 354 | 392 | 38 [37–39] | 33 / 5 | 10.7 |
+| baseline, no reserve requirement | 321 | 352 | 32 [31–32] | 28 / 4 | 9.9 |
+| no_cfd | 318 | 375 | 58 [55–58] | 56 / 2 | 18.1 |
+| no_capacity_market | 315 | 333 | 18 [16–18] | 14 / 4 | 5.7 |
+| heat_push | 390 | 425 | 35 [34–36] | 32 / 3 | 8.9 |
+| high_carbon | 310 | 346 | 35 [35–37] | 32 / 4 | 11.4 |
+| high_gas | 355 | 392 | 38 [37–39] | 32 / 5 | 10.6 |
 | competitive_benchmark (convergence test) | 315 | 323 | 10 [8–13] | 4 / 6 | 3.3 |
 
 * The gap is mostly **what is built**: too little solar and onshore wind by 2030, then too much
-  offshore wind, OCGT and batteries by 2050 (88 against 40 GW offshore), while the optimum builds
+  offshore wind, OCGT and batteries by 2050 (88 against 41 GW offshore), while the optimum builds
   onshore wind and gas CCS. The agents' system emits more than the optimum throughout.
+* **Valuing reserve and response does not close it.** With the same requirement on both sides the
+  optimum holds it mostly on gas headroom and pumped hydro plus 3 GW of batteries, against the agents'
+  25 GW; the gap is £32bn with or without it. The agents' battery build follows their revenue assumptions
+  (fixed ancillary and trading pots, arbitrage), not system need for these services, with or without the CM.
 * **Firm traits barely move it, but mostly because they cannot.** Renewable volumes are set by the CfD
   parameters (6 GW/yr, 60/20/20; bids never reach the caps) and firm capacity by the CM target formula,
   so firms decide who builds, not how much. Idealised firms leave a larger gap (£36bn). Items 1–7 make
@@ -228,10 +233,13 @@ re-run `scripts/run_gap.py` and update [docs/gap.md](docs/gap.md).
 
 8. **Speed.** Profile a gap run (forecast market clearings, planner LP, evaluator) and halve the batch
    time, e.g. by caching or reduced-hour forecasts. Items 14–17 and section D need many more runs.
-9. **Reserve and response in the optimum.** Agents build batteries partly for ancillary and intraday/BM
-   revenue (`config.BATTERY_*` pots), but the planner and the evaluator have no reserve or response
-   requirement, so those batteries count as pure cost. Add a requirement sized to the 2025 ancillary
-   market to `planner.plan` and `planner.evaluate`, and report how much of the gap it removes.
+9. ✅ **Reserve and response in the optimum.** Done: `planner.plan` and `planner.evaluate` hold 1,800 MW
+   of frequency response on storage (an hour of energy behind it) and operating reserve of 10 % of
+   available wind and solar on thermal and storage headroom, shortfall at £1,000/MWh (`config.RESERVE`,
+   scenario key `reserve`). It removes none of the gap (£31.7bn on, off and ~£31.4bn doubled): the
+   optimum adds 3 GW of batteries (5 GW doubled) against the agents' 25 GW, so the agents' batteries follow
+   their revenue pots, not system value ([docs/gap.md](docs/gap.md#does-valuing-reserve-and-response-close-it)). Planner
+   solve ~3× slower (~30 min).
 10. **Same-outcome optimum and the near-optimal space.** (a) Planner variants with the agents' emissions
     per period as a cap, and with the agents' loss of load as a constraint: the gap at equal emissions
     separates efficiency from ambition. (b) Map the near-optimal space: for cost slack of 2 % and 5 %,

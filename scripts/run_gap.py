@@ -3,6 +3,9 @@
     python scripts/run_gap.py                      # ladder (baseline, 4 rungs) + levers + sensitivities, seeds 1-3
     python scripts/run_gap.py --only ladder --seeds 1 --jobs 4
 Writes results/gap_costs.csv, gap_capacity.csv, gap_annual.csv and gap_summary.csv.
+
+Memory: each worker holds ~3 GB during its planner solve (full horizon, reserve on, ~30 min), so --jobs
+is limited by RAM before cores: 11 jobs is the limit on 32 GB. The full 33-run batch took 4.4 h on 11.
 """
 import argparse
 import os
