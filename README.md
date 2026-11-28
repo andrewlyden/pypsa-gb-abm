@@ -18,7 +18,7 @@ and hydrogen.
 ## Quick start
 ```bash
 pip install -e .            # numpy pandas scipy matplotlib mesa pypsa highspy
-pytest -q                   # 89 tests (+1 slow), ~12 min
+pytest -q                   # 94 tests (+1 slow), ~14 min
 python scripts/run_scenarios.py baseline --end 2030      # ~40 s
 python scripts/run_scenarios.py                          # all 6 scenarios 2025-2050 (~4 min each)
 python scripts/make_plots.py                             # -> docs/figures/
@@ -80,23 +80,28 @@ distribution is too narrow (no negative hours). Full table: [results/calibration
 ## Optimal versus emergent: the gap (illustrative)
 The same system solved two ways: the agents (many actors, today's market design) and a PyPSA
 multi-period least-cost plan (one planner, perfect foresight, 3.5 %), both costed by one least-cost
-dispatch over 8,760 h ([method and results](docs/gap.md)). Present value of system cost 2025–2054, £bn,
-median of 3 seeds:
+dispatch over 8,760 h, both holding the same reserve and response requirement ([method and results](docs/gap.md)). Present value of system cost 2025–2054, £bn,
+for the seed with the median gap, [range across 3 seeds]:
 
 | run | optimal | agents | gap [range] | of which investment / operation | gap % |
 |---|---|---|---|---|---|
-| baseline (full agents) | 321 | 352 | 32 [31–32] | 28 / 4 | 9.9 |
+| baseline (full agents) | 321 | 352 | 32 [31–32] | 28 / 3 | 9.9 |
 | baseline, idealised agents | 320 | 356 | 36 [34–38] | 33 / 3 | 11.2 |
-| no_cfd | 318 | 375 | 58 [56–59] | 56 / 2 | 18.2 |
-| no_capacity_market | 319 | 337 | 18 [16–18] | 14 / 4 | 5.6 |
-| heat_push | 390 | 425 | 35 [35–37] | 32 / 3 | 9.0 |
-| high_carbon | 310 | 346 | 36 [35–37] | 32 / 4 | 11.6 |
-| high_gas | 354 | 392 | 38 [37–39] | 33 / 5 | 10.7 |
+| baseline, no reserve requirement | 321 | 352 | 32 [31–32] | 28 / 4 | 9.9 |
+| no_cfd | 318 | 375 | 58 [55–58] | 56 / 2 | 18.1 |
+| no_capacity_market | 315 | 333 | 18 [16–18] | 14 / 4 | 5.7 |
+| heat_push | 390 | 425 | 35 [34–36] | 32 / 3 | 8.9 |
+| high_carbon | 310 | 346 | 35 [35–37] | 32 / 4 | 11.4 |
+| high_gas | 355 | 392 | 38 [37–39] | 32 / 5 | 10.6 |
 | competitive_benchmark (convergence test) | 315 | 323 | 10 [8–13] | 4 / 6 | 3.3 |
 
 * The gap is mostly **what is built**: too little solar and onshore wind by 2030, then too much
-  offshore wind, OCGT and batteries by 2050 (88 against 40 GW offshore), while the optimum builds
+  offshore wind, OCGT and batteries by 2050 (88 against 41 GW offshore), while the optimum builds
   onshore wind and gas CCS. The agents' system emits more than the optimum throughout.
+* **Valuing reserve and response does not close it.** With the same requirement on both sides the
+  optimum holds it mostly on gas headroom and pumped hydro plus 3 GW of batteries, against the agents'
+  25 GW; the gap is £32bn with or without it. The agents' battery build follows their revenue assumptions
+  (fixed ancillary and trading pots, arbitrage), not system need for these services, with or without the CM.
 * **Firm traits barely move it, but mostly because they cannot.** Renewable volumes are set by the CfD
   parameters (6 GW/yr, 60/20/20; bids never reach the caps) and firm capacity by the CM target formula,
   so firms decide who builds, not how much. Idealised firms leave a larger gap (£36bn). Items 1–7 make
@@ -218,19 +223,23 @@ re-run `scripts/run_gap.py` and update [docs/gap.md](docs/gap.md).
    wind and solar pathway; the ideal-government rung), `"bills"` (lowest levy, slips when bills
    rise) and `"political"` (ambitious announcements, little funding before elections). Parameters in
    `config.GOVERNMENT_*`, documented in `docs/model_design.md`.
-7. **Convergence test.** Built: scenario `competitive_benchmark` (`scenarios.BENCHMARKS`; energy-only,
+7. ✅ **Convergence test.** Done: scenario `competitive_benchmark` (`scenarios.BENCHMARKS`; energy-only,
    VoLL scarcity only, idealised firms on the `expectations` logic) and `scripts/run_convergence.py`.
-   First trial (seed 1, to 2035): 1.7 % gap, within the 3 % aim, with a very different fleet (see item
-   10). Still to do: the full run (3 seeds, to 2050) after the review fixes (item 0).
+   3 seeds to 2050: gap 2.6–4.1 % (median 3.3 %), mostly operation, with very different fleets at
+   nearly the same cost (item 10). An upper bound: build limits differ (item 20), battery services
+   (item 9) and heuristic storage dispatch ([docs/gap.md](docs/gap.md#convergence-test-can-the-agents-reach-the-optimum-at-all)).
 
 *B. A fair benchmark*
 
 8. **Speed.** Profile a gap run (forecast market clearings, planner LP, evaluator) and halve the batch
    time, e.g. by caching or reduced-hour forecasts. Items 14–17 and section D need many more runs.
-9. **Reserve and response in the optimum.** Agents build batteries partly for ancillary and intraday/BM
-   revenue (`config.BATTERY_*` pots), but the planner and the evaluator have no reserve or response
-   requirement, so those batteries count as pure cost. Add a requirement sized to the 2025 ancillary
-   market to `planner.plan` and `planner.evaluate`, and report how much of the gap it removes.
+9. ✅ **Reserve and response in the optimum.** Done: `planner.plan` and `planner.evaluate` hold 1,800 MW
+   of frequency response on storage (an hour of energy behind it) and operating reserve of 10 % of
+   available wind and solar on thermal and storage headroom, shortfall at £1,000/MWh (`config.RESERVE`,
+   scenario key `reserve`). It removes none of the gap (£31.7bn on, off and ~£31.4bn doubled): the
+   optimum adds 3 GW of batteries (5 GW doubled) against the agents' 25 GW, so the agents' batteries follow
+   their revenue pots, not system value ([docs/gap.md](docs/gap.md#does-valuing-reserve-and-response-close-it)). Planner
+   solve ~3× slower (~30 min).
 10. **Same-outcome optimum and the near-optimal space.** (a) Planner variants with the agents' emissions
     per period as a cap, and with the agents' loss of load as a constraint: the gap at equal emissions
     separates efficiency from ambition. (b) Map the near-optimal space: for cost slack of 2 % and 5 %,
@@ -327,7 +336,8 @@ their priority)*
 24. **Q-learning agents** (needs items 8 and 34). Q-learning implementations of firms' CfD bids, CM bids and offer mark-ups
     behind the item 1 interface (state: recent clearing prices, own margins; reward: profit), trained
     over repeated runs with fixed seeds. Compare their gap, prices and bids with the rule-based firms;
-    check for tacit collusion.
+    check for tacit collusion. Record each firm's states, actions and rewards per year with a Mesa
+    `DataCollector` (agent reporters), the panel that items 24 and 25 are compared on.
 25. **LLM agents on open-weight models, compared with rules and Q-learning** (needs item 34). LLM implementations of the
     government's round settings and firms' investment and bid decisions behind the item 1 interface.
     * *Models:* open-weight, Apache-2.0 by default (e.g. Qwen3, gpt-oss, Mistral Small), with the model
@@ -339,6 +349,10 @@ their priority)*
       run).
     * *Reproducibility:* temperature 0 and a seed; every response cached by (model, prompt) hash in
       `results/llm_cache/`, so a cached run repeats exactly and the cache can be published.
+    * *Framework:* evaluate Mesa-LLM (the Mesa extension for LLM-reasoning agents; LiteLLM, so Ollama
+      and hosted models; early, API may change) as the engine behind an LLM `DecisionMaker`, with the
+      item 34 `Observation`, action spaces and `validate` as the boundary, so the model never depends on
+      its API.
     * *Tests:* a fake client with canned responses, so CI needs no model. Development runs use a 4-bit
       7–8B model under Ollama (~1–3 h per run on a CPU laptop).
     * *Experiments:* rules vs Q-learning vs LLM on the scenarios of items 21–22, and a model-size ladder

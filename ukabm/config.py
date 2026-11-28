@@ -62,6 +62,28 @@ STORAGE_TECHS = {"battery": 2.0, "pumped_hydro": 8.0}   # duration hours
 BATTERY_ANCILLARY_POT = 100e6            # GBP/yr
 BATTERY_TRADING_PER_MW_VRE = 3960.0      # GBP/yr per MW of wind + solar capacity
 BATTERY_FLEET_FLOOR_MW = 5000.0          # 2025 fleet in INITIAL_FLEET_MW
+
+# Reserve and response in the optimum and the evaluator (README roadmap item 9). The agents' batteries
+# are paid for services the hourly market does not see (the two pots above); the system needs those
+# services whoever builds it, so the planner and the evaluator must hold them too. Stylised, matched
+# to the two pots:
+# * response (matches the fixed ancillary pot): a fixed MW of headroom on storage every hour, sized to
+#   the largest infrequent infeed loss of the GB SQSS (1,800 MW);
+# * reserve (matches the trading pot, which scales with wind and solar): headroom on any flexible plant
+#   or storage equal to a share of the hour's available wind and solar output (forecast error), plus a
+#   share of load.
+# Storage needs `hours` of stored energy behind each MW it holds. Reserve not held costs
+# `shortfall_cost` per MWh, so a fleet that cannot meet it is costed rather than infeasible.
+# A scenario can override any key with `reserve: {...}`; `scale` multiplies the three sizes (0 = off).
+RESERVE = dict(
+    response_mw=1800.0,
+    vre_share=0.10,
+    load_share=0.0,
+    hours=1.0,
+    shortfall_cost=1000.0,
+    generators=("ccgt", "ocgt", "gas_ccs", "h2_turbine", "biomass", "hydro"),
+    storage=("battery", "pumped_hydro"),
+)
 VRE_TECHS = {"wind_onshore", "wind_offshore", "solar"}
 
 # Initial GB fleet c. 2025 (MW). Indicative, consistent in magnitude with DUKES 2025 / NESO.
