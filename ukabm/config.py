@@ -11,6 +11,7 @@ from pathlib import Path
 import numpy as np
 
 PARAMETERS = Path(__file__).resolve().parents[1] / "data" / "parameters"
+HISTORY_DIR = Path(__file__).resolve().parents[1] / "data" / "history"
 
 
 @dataclass(frozen=True)
@@ -48,14 +49,24 @@ TECHS: dict[str, Tech] = {t.name: t for t in [
     Tech("h2_turbine", 1199.1, 21.4, 5, 0.51, "hydrogen", 0.0, 25, 3, 0.92, 0.94, chunk_mw=300),
     # biomass availability 0.70: GB biomass output 19.9 TWh in 2025 (NESO) = 60 % load factor on the
     # 3.8 GW fleet; Drax flexes its RO units seasonally and has long outages (Drax FY2025 results)
-    Tech("biomass", 2500, 90, 6, 0.38, "biomass", 0.0, 25, 4, 0.70, 0.84, investable=False),
+    # November 2026: 0.78 on the 3.0 GW of transmission-connected conversions gives the same 2025 output
+    Tech("biomass", 2500, 90, 6, 0.38, "biomass", 0.0, 25, 4, 0.78, 0.84, investable=False),
     Tech("wind_onshore", 1695.9, 39.9, 0, 1.0, None, 0.0, 35, 3, 1.0, 0.08, profile="wind_onshore", chunk_mw=500),
     Tech("wind_offshore", 2670.0, 141.6, 0, 1.0, None, 0.0, 30, 5, 1.0, 0.10, profile="wind_offshore", chunk_mw=1000),
     Tech("solar", 647.3, 9.1, 0, 1.0, None, 0.0, 38, 1, 1.0, 0.03, profile="solar", chunk_mw=500),
-    Tech("hydro", 3000, 40, 0, 1.0, None, 0.0, 60, 5, 0.40, 0.37, investable=False),
+    # hydro availability 0.26: NESO's mix has 3.4-3.6 TWh of hydro a year (2024-25) on the model's 1.5 GW
+    Tech("hydro", 3000, 40, 0, 1.0, None, 0.0, 60, 5, 0.26, 0.37, investable=False),
     Tech("battery", 600, 10, 1, 0.85, None, 0.0, 15, 1, 0.95, 0.20, chunk_mw=500),   # 2h; round-trip eff
     Tech("pumped_hydro", 2500, 25, 1, 0.75, None, 0.0, 60, 8, 0.95, 0.80, investable=False),
+    # Coal: for historical years only (the last GB station closed in September 2024). Indicative values.
+    Tech("coal", 1800, 40, 4, 0.36, "coal", 0.34, 45, 6, 0.85, 0.80, investable=False),
+    # "Other": the transmission-metered plant NESO's mix reports as OTHER (energy from waste, CHP, oil):
+    # 3.3 TWh in 2024, 4.7 TWh in 2025, on about 0.7 GW (DUKES 2026 Table 5.12, other fuels). It runs
+    # whatever the price (MUST_RUN_OFFER). Its emissions are outside the model's carbon cost; NESO's
+    # carbon intensity counts it at 300 g/kWh (NESO_CI_FACTORS).
+    Tech("other", 0, 0, 0, 1.0, "waste", 0.0, 60, 3, 0.65, 0.50, investable=False),
 ]}
+MUST_RUN_OFFER = -50.0       # GBP/MWh offer of plant that runs whatever the price ("other")
 
 STORAGE_TECHS = {"battery": 2.0, "pumped_hydro": 8.0}   # duration hours
 
@@ -194,8 +205,59 @@ NEW_BUILD_CF: dict = {
 INITIAL_FLEET_MW = {
     "nuclear": 5900, "ccgt": 30000, "ocgt": 3700, "biomass": 3000,
     "wind_onshore": 14800, "wind_offshore": 16400, "solar": 20300, "hydro": 1500,
-    "battery": 6400, "pumped_hydro": 2900,
+    "battery": 6400, "pumped_hydro": 2900, "other": 700,
 }
+
+
+def _load_table(path: Path, key: str) -> dict:
+    """{key value: {year: number}} from a tidy CSV with a `year` column (empty if the file is missing)."""
+    out: dict = {}
+    if path.exists():
+        with open(path, newline="", encoding="utf-8") as f:
+            for r in csv.DictReader(f):
+                if key in r:                      # long format: year, <key>, mw
+                    out.setdefault(r[key], {})[int(r["year"])] = float(r["mw"])
+                else:                             # wide format: year, col1, col2, ...
+                    for k, v in r.items():
+                        if k != "year" and v not in ("", "nan"):
+                            out.setdefault(k, {})[int(r["year"])] = float(v)
+    return out
+
+
+# GB installed capacity at the end of each year 2011-2025 by technology (DUKES 2026 Tables 5.12, 5.16),
+# and annual fuel, carbon and power prices 2010-2025 (scripts/build_history.py).
+GB_CAPACITY = _load_table(HISTORY_DIR / "gb_capacity.csv", "tech")
+HISTORY = _load_table(HISTORY_DIR / "annual_inputs.csv", "")
+
+
+def history_value(name: str, year: int, basis: str = "real") -> float | None:
+    """Historical annual value of *name* (gas, coal, carbon, power_day_ahead) in *year*: in 2024 prices
+    (basis "real") or in money of the day ("nominal"); basis "raw" reads a column as it is (e.g.
+    gbp_per_eur). None if the year is not in the table."""
+    key = name if basis == "raw" else f"{name}_{'2024' if basis == 'real' else 'nominal'}"
+    v = HISTORY.get(key, {}).get(year)
+    return None if v is None else float(v)
+
+
+def fleet_mw(year: int) -> dict:
+    """GB fleet (MW by technology) for a model that starts in *year*: INITIAL_FLEET_MW for 2025 and
+    later; for an earlier year the same definitions applied to that year's capacity table (mean of the
+    end of the previous year and of the year). Nuclear is set by ukabm.model.NUCLEAR_UNITS."""
+    if year >= 2025 or not GB_CAPACITY:
+        return dict(INITIAL_FLEET_MW)
+
+    def mean(k, y=year):
+        s = GB_CAPACITY.get(k, {})
+        vals = [s[t] for t in (y - 1, y) if t in s]
+        return sum(vals) / len(vals) if vals else 0.0
+    out = dict(INITIAL_FLEET_MW)
+    for k in ("wind_offshore", "wind_onshore", "solar", "ocgt", "coal"):
+        out[k] = mean(k)
+    out["battery"] = mean("battery_uk")
+    out["biomass"] = mean("biomass_transmission")
+    out["other"] = mean("other_fuels")
+    out["ccgt"] = INITIAL_FLEET_MW["ccgt"] * mean("ccgt") / mean("ccgt", 2025)
+    return {k: v for k, v in out.items() if v > 0}
 # Technical life (years) of plant in the starting fleet where it differs from the economic life of
 # new build in TECHS: GB CCGTs of the 1990s are still operating (DUKES 2026 Table 5.11 lists 11.4 GW
 # commissioned before 2000), so existing gas plant closes on age only at 40 (CCGT) or 45 (peaking
@@ -216,10 +278,8 @@ EXISTING_FLEET_EFFICIENCY = {"ccgt": (0.54, 0.46)}
 # 120). Imports: 65 = average implied by NESO's 2024-25 half-hourly CI after removing gas, biomass
 # and "other" (57 in 2024, 74 in 2025; computed from data/outturn source data). Technologies not
 # listed count as zero (gas_ccs uses its direct factor in the model).
-NESO_CI_FACTORS = {"ccgt": 394.0, "ocgt": 651.0, "biomass": 120.0, "imports": 65.0}
+NESO_CI_FACTORS = {"ccgt": 394.0, "ocgt": 651.0, "biomass": 120.0, "imports": 65.0, "coal": 937.0, "other": 300.0}
 
-# Existing nuclear retirements (MW, year) - indicative AGR closures; Hinkley C first unit
-NUCLEAR_SCHEDULE = [(2028, -2300), (2030, -1200), (2030, 1600), (2031, 1600), (2035, -1200)]
 
 
 # Capacity target path for the target-tracking government (ukabm.institutions, GW installed).
@@ -270,7 +330,7 @@ RO_LAST_ONLINE, RO_YEARS, RO_SCHEME_END = 2017, 20, 2037
 
 @dataclass
 class Policy:
-    carbon_price_2025: float = 60.0      # GBP/t (UK ETS + Carbon Price Support)
+    carbon_price_2025: float = 65.0      # GBP/t, UK ETS + Carbon Price Support: 2025 outturn GBP 67.4 = 65.1 in 2024 prices
     carbon_price_2050: float = 180.0
     cfd_enabled: bool = True
     cfd_budget_gw_per_year: float = 6.0  # capacity procured per allocation round
@@ -284,22 +344,27 @@ class Policy:
     hp_grant: float = 7500.0             # Boiler Upgrade Scheme GBP
     gas_levy_rebalancing: float = 0.0    # GBP/MWh moved from electricity to gas bills
     voll: float = 6000.0
+    history_basis: str = "real"          # historical years: 2024 prices ("real") or money of the day ("nominal")
 
     def carbon_price(self, year: int) -> float:
+        if year < 2025 or self.history_basis == "nominal":        # outturn (config.HISTORY) where there is one
+            h = history_value("carbon", year, self.history_basis)
+            if h is not None:
+                return h
         f = min(max((year - 2025) / 25, 0), 1)
         return self.carbon_price_2025 + f * (self.carbon_price_2050 - self.carbon_price_2025)
 
 
 # Central wholesale gas price path (GBP/MWh_th, NBP; 1 p/therm = 0.3412 GBP/MWh_th), linear between
 # points and flat after the last. Re-based in November 2026 for the 2026 price spike:
-# * 2025 = 32 (~90 p/therm outturn; the 2025 calibration year, unchanged);
+# * 2025 = 29.4: NBP day-ahead outturn 89.2 p/therm = GBP 30.45/MWh, 29.4 in 2024 prices (Ofgem);
 # * 2026 = 55: spot rose from ~80 p/therm at the start of the year to 218-234 p/therm in November
 #   (Trading Economics, 26 Nov 2026); annual mean is an ASSUMPTION;
 # * 2027 = 63: forward curve 25 Nov 2026, Q1-27 ~223 p/therm (GBP 76), Summer-27 ~160 p/therm (GBP 55)
 #   (Catalyst Commercial UK wholesale gas prices), Q4-27 assumed between the two;
 # * 2028 = 45, 2030 = 35: ASSUMPTION, easing as the spike unwinds (no reliable 2028 quote found);
 # * 2035 onwards: the pre-spike central path (32 -> 25 by 2050, interpolated).
-GAS_PATH_CENTRAL = {2025: 32.0, 2026: 55.0, 2027: 63.0, 2028: 45.0, 2030: 35.0, 2035: 29.2, 2050: 25.0}
+GAS_PATH_CENTRAL = {2025: 29.4, 2026: 55.0, 2027: 63.0, 2028: 45.0, 2030: 35.0, 2035: 29.2, 2050: 25.0}
 
 # Social discount rate for system-cost accounting and the planner benchmark (HM Treasury Green Book
 # STPR, 3.5 %). Both runs are costed at this rate, so the gap measures misallocation, not who finances it.
@@ -330,8 +395,19 @@ class Fuels:
     uranium: float = 2.5          # GBP/MWh_th
     biomass: float = 25.0
     hydrogen: float = 80.0        # GBP/MWh_th delivered (hook: could be endogenous)
+    coal: float = 14.0            # GBP/MWh_th where there is no outturn (2024: 13.99, DESNZ QEP 3.2.1)
+    waste: float = 0.0            # fuel of the must-run "other" plant
+    history_basis: str = "real"   # historical years: 2024 prices ("real") or money of the day ("nominal")
+
+    def _history(self, name: str, year: int) -> float | None:
+        if year < 2025 or self.history_basis == "nominal":
+            return history_value(name, year, self.history_basis)
+        return None
 
     def gas(self, year: int) -> float:
+        h = self._history("gas", year)
+        if h is not None:
+            return h + self.gas_adder
         if self.gas_2025 is not None and self.gas_2050 is not None:
             f = min(max((year - 2025) / 25, 0), 1)
             base = self.gas_2025 + f * (self.gas_2050 - self.gas_2025)
@@ -345,6 +421,9 @@ class Fuels:
             return 0.0
         if fuel == "gas":
             return self.gas(year)
+        if fuel == "coal":
+            h = self._history("coal", year)
+            return self.coal if h is None else h
         return getattr(self, fuel)
 
 

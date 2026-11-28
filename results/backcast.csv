@@ -1,0 +1,146 @@
+year,metric,model,outturn,diff
+2021,"price, mean vs day-ahead baseload (GBP/MWh)",111.492,127.467,-15.975
+2021,"price, time-weighted mean vs MID (GBP/MWh)",111.492,115.245,-3.753
+2021,"price, model demand-weighted vs MID volume-weighted (GBP/MWh)",112.983,119.999,-7.016
+2021,price p05 (GBP/MWh),78.968,42.114,36.854
+2021,price p50 (GBP/MWh),113.785,90.71,23.075
+2021,price p95 (GBP/MWh),124.16,248.882,-124.722
+2021,negative-price hours,0.0,32.5,-32.5
+2021,"carbon intensity, NESO basis (g/kWh)",164.615,186.684,-22.069
+2021,"carbon intensity, NESO basis, after BM redispatch (g/kWh)",170.85,186.684,-15.834
+2021,"carbon intensity, direct combustion (g/kWh)",131.785,,
+2021,constraint cost (GBP bn),0.68,,
+2021,constraint cost excl. BM premia (GBP bn),0.68,,
+2021,renewable curtailment in BM (TWh),3.993,,
+2021,gas (CCGT+OCGT) (TWh),102.764,107.273,-4.509
+2021,"wind and solar, available (TWh)",75.906,76.288,-0.382
+2021,nuclear (TWh),45.368,43.417,1.951
+2021,wind incl. embedded (TWh),64.27,62.174,2.096
+2021,gas after BM redispatch (TWh),107.394,107.273,0.121
+2021,wind after BM redispatch (TWh),60.277,62.174,-1.897
+2021,solar (TWh),11.636,11.792,-0.156
+2021,biomass (TWh),20.7,19.018,1.682
+2021,hydro (TWh),3.416,3.237,0.179
+2021,pumped storage discharge (TWh),0.522,1.805,-1.283
+2021,coal (TWh),1.534,4.974,-3.44
+2021,"other (CHP, waste, oil) (TWh)",4.686,1.832,2.854
+2021,imports (TWh),38.757,29.22,9.537
+2021,exports (TWh),14.882,4.405,10.477
+2021,net imports (TWh),23.876,24.815,-0.939
+2021,total supply incl. imports (TWh),293.892,284.868,9.024
+2022,"price, mean vs day-ahead baseload (GBP/MWh)",186.215,211.847,-25.632
+2022,"price, time-weighted mean vs MID (GBP/MWh)",186.215,198.19,-11.975
+2022,"price, model demand-weighted vs MID volume-weighted (GBP/MWh)",189.342,202.136,-12.794
+2022,price p05 (GBP/MWh),116.772,60.794,55.978
+2022,price p50 (GBP/MWh),192.551,179.69,12.861
+2022,price p95 (GBP/MWh),208.114,399.543,-191.429
+2022,negative-price hours,0.0,65.5,-65.5
+2022,"carbon intensity, NESO basis (g/kWh)",185.546,182.577,2.969
+2022,"carbon intensity, NESO basis, after BM redispatch (g/kWh)",192.823,182.577,10.246
+2022,"carbon intensity, direct combustion (g/kWh)",156.484,,
+2022,constraint cost (GBP bn),1.099,,
+2022,constraint cost excl. BM premia (GBP bn),1.099,,
+2022,renewable curtailment in BM (TWh),4.748,,
+2022,gas (CCGT+OCGT) (TWh),111.054,111.249,-0.195
+2022,"wind and solar, available (TWh)",92.207,94.35,-2.143
+2022,nuclear (TWh),34.777,44.728,-9.951
+2022,wind incl. embedded (TWh),79.249,77.218,2.031
+2022,gas after BM redispatch (TWh),116.371,111.249,5.122
+2022,wind after BM redispatch (TWh),74.501,77.218,-2.717
+2022,solar (TWh),12.958,13.272,-0.314
+2022,biomass (TWh),20.706,14.97,5.736
+2022,hydro (TWh),3.416,3.329,0.087
+2022,pumped storage discharge (TWh),0.748,1.921,-1.173
+2022,coal (TWh),6.676,4.273,2.403
+2022,"other (CHP, waste, oil) (TWh)",4.531,2.555,1.976
+2022,imports (TWh),24.908,16.228,8.68
+2022,exports (TWh),31.178,20.435,10.743
+2022,net imports (TWh),-6.27,-4.207,-2.063
+2022,total supply incl. imports (TWh),299.51,289.783,9.727
+2023,"price, mean vs day-ahead baseload (GBP/MWh)",95.038,97.302,-2.264
+2023,"price, time-weighted mean vs MID (GBP/MWh)",95.038,93.523,1.515
+2023,"price, model demand-weighted vs MID volume-weighted (GBP/MWh)",97.138,96.711,0.427
+2023,price p05 (GBP/MWh),36.119,21.098,15.021
+2023,price p50 (GBP/MWh),100.7,91.465,9.235
+2023,price p95 (GBP/MWh),115.863,161.373,-45.51
+2023,negative-price hours,0.0,214.0,-214.0
+2023,"carbon intensity, NESO basis (g/kWh)",139.584,151.229,-11.645
+2023,"carbon intensity, NESO basis, after BM redispatch (g/kWh)",146.476,151.229,-4.753
+2023,"carbon intensity, direct combustion (g/kWh)",108.378,,
+2023,constraint cost (GBP bn),0.583,,
+2023,constraint cost excl. BM premia (GBP bn),0.583,,
+2023,renewable curtailment in BM (TWh),4.689,,
+2023,gas (CCGT+OCGT) (TWh),82.763,86.709,-3.946
+2023,"wind and solar, available (TWh)",94.172,96.8,-2.628
+2023,nuclear (TWh),34.773,38.298,-3.525
+2023,wind incl. embedded (TWh),80.723,78.95,1.773
+2023,gas after BM redispatch (TWh),87.546,86.709,0.837
+2023,wind after BM redispatch (TWh),76.034,78.95,-2.916
+2023,solar (TWh),13.449,13.55,-0.101
+2023,biomass (TWh),20.276,13.358,6.918
+2023,hydro (TWh),3.416,3.248,0.168
+2023,pumped storage discharge (TWh),1.218,1.658,-0.44
+2023,coal (TWh),0.286,2.763,-2.477
+2023,"other (CHP, waste, oil) (TWh)",4.314,2.57,1.744
+2023,imports (TWh),38.513,33.522,4.991
+2023,exports (TWh),15.667,10.137,5.53
+2023,net imports (TWh),22.846,23.385,-0.539
+2023,total supply incl. imports (TWh),280.714,274.604,6.11
+2024,"price, mean vs day-ahead baseload (GBP/MWh)",78.037,75.692,2.345
+2024,"price, time-weighted mean vs MID (GBP/MWh)",78.037,71.382,6.655
+2024,"price, model demand-weighted vs MID volume-weighted (GBP/MWh)",79.505,73.549,5.956
+2024,price p05 (GBP/MWh),19.932,8.89,11.042
+2024,price p50 (GBP/MWh),85.272,73.91,11.362
+2024,price p95 (GBP/MWh),94.6,110.738,-16.138
+2024,negative-price hours,0.0,247.5,-247.5
+2024,"carbon intensity, NESO basis (g/kWh)",116.43,127.688,-11.258
+2024,"carbon intensity, NESO basis, after BM redispatch (g/kWh)",123.603,127.688,-4.085
+2024,"carbon intensity, direct combustion (g/kWh)",85.508,,
+2024,constraint cost (GBP bn),0.542,,
+2024,constraint cost excl. BM premia (GBP bn),0.542,,
+2024,renewable curtailment in BM (TWh),4.75,,
+2024,gas (CCGT+OCGT) (TWh),65.472,72.618,-7.146
+2024,"wind and solar, available (TWh)",103.099,105.006,-1.907
+2024,nuclear (TWh),34.77,38.365,-3.595
+2024,wind incl. embedded (TWh),88.839,82.654,6.185
+2024,gas after BM redispatch (TWh),70.475,72.618,-2.143
+2024,wind after BM redispatch (TWh),84.089,82.654,1.435
+2024,solar (TWh),14.26,14.064,0.196
+2024,biomass (TWh),20.086,18.82,1.266
+2024,hydro (TWh),3.416,3.583,-0.167
+2024,pumped storage discharge (TWh),1.235,1.884,-0.649
+2024,coal (TWh),0.168,1.572,-1.404
+2024,"other (CHP, waste, oil) (TWh)",4.08,3.337,0.743
+2024,imports (TWh),47.105,43.924,3.181
+2024,exports (TWh),10.468,10.625,-0.157
+2024,net imports (TWh),36.637,33.299,3.338
+2024,total supply incl. imports (TWh),280.885,280.94,-0.055
+2025,"price, mean vs day-ahead baseload (GBP/MWh)",83.97,83.933,0.037
+2025,"price, time-weighted mean vs MID (GBP/MWh)",83.97,79.887,4.083
+2025,"price, model demand-weighted vs MID volume-weighted (GBP/MWh)",85.395,80.915,4.48
+2025,price p05 (GBP/MWh),20.43,8.72,11.71
+2025,price p50 (GBP/MWh),91.277,82.22,9.057
+2025,price p95 (GBP/MWh),101.301,123.396,-22.095
+2025,negative-price hours,0.0,244.0,-244.0
+2025,"carbon intensity, NESO basis (g/kWh)",117.985,129.667,-11.682
+2025,"carbon intensity, NESO basis, after BM redispatch (g/kWh)",128.864,129.667,-0.803
+2025,"carbon intensity, direct combustion (g/kWh)",88.981,,
+2025,constraint cost (GBP bn),0.878,1.83,-0.952
+2025,constraint cost excl. BM premia (GBP bn),0.878,1.29,-0.412
+2025,renewable curtailment in BM (TWh),7.591,10.4,-2.809
+2025,gas (CCGT+OCGT) (TWh),70.82,77.306,-6.486
+2025,"wind and solar, available (TWh)",111.771,114.66,-2.89
+2025,nuclear (TWh),34.768,34.153,0.615
+2025,wind incl. embedded (TWh),93.515,85.846,7.669
+2025,gas after BM redispatch (TWh),78.699,77.306,1.393
+2025,wind after BM redispatch (TWh),85.924,85.846,0.078
+2025,solar (TWh),18.255,18.661,-0.406
+2025,biomass (TWh),19.79,19.933,-0.143
+2025,hydro (TWh),3.416,3.366,0.05
+2025,pumped storage discharge (TWh),1.044,1.311,-0.267
+2025,coal (TWh),0.0,0.0,0.0
+2025,"other (CHP, waste, oil) (TWh)",3.986,4.668,-0.682
+2025,imports (TWh),44.396,43.957,0.439
+2025,exports (TWh),14.806,14.811,-0.005
+2025,net imports (TWh),29.59,29.145,0.445
+2025,total supply incl. imports (TWh),291.743,289.229,2.514

@@ -16,7 +16,9 @@ CONSTRAINTS = OUTTURN.with_name("gb_constraints.csv")   # hand-entered from cite
 
 # (label, model column or callable on the annual record, outturn column)
 METRICS = [
-    ("price, time-weighted mean (GBP/MWh)", "price_mean", "price_mid_mean"),
+    # the model clears a day-ahead market: the day-ahead baseload price is its like-for-like comparator
+    ("price, mean vs day-ahead baseload (GBP/MWh)", "price_mean", "power_day_ahead_nominal"),
+    ("price, time-weighted mean vs MID (GBP/MWh)", "price_mean", "price_mid_mean"),
     # not like-for-like: the model weights by GB demand, MID by its own traded volume
     ("price, model demand-weighted vs MID volume-weighted (GBP/MWh)", "price_twa", "price_mid_volume_weighted"),
     ("price p05 (GBP/MWh)", "price_p05", "price_mid_p05"),
@@ -31,6 +33,8 @@ METRICS = [
      lambda o: o["constraint_cost_bn"] - o["constraint_premia_bn"]),
     ("renewable curtailment in BM (TWh)", "curtailment_twh", "renewable_turndown_twh"),
     ("gas (CCGT+OCGT) (TWh)", lambda r: r["gen_ccgt"] + r["gen_ocgt"] + r.get("gen_gas_ccs", 0.0), "gen_gas"),
+    ("wind and solar, available (TWh)", lambda r: r["gen_wind_onshore"] + r["gen_wind_offshore"] + r["gen_solar"],
+     lambda o: o["gen_wind"] + o["gen_solar"] + o.get("wind_turned_down_twh", float("nan"))),
     ("nuclear (TWh)", "gen_nuclear", "gen_nuclear"),
     ("wind incl. embedded (TWh)", lambda r: r["gen_wind_onshore"] + r["gen_wind_offshore"], "gen_wind"),
     ("gas after BM redispatch (TWh)", lambda r: r["gen_ccgt"] + r["gen_ocgt"] + r["bm_net_ccgt"] + r["bm_net_ocgt"],
@@ -40,8 +44,10 @@ METRICS = [
     ("solar (TWh)", "gen_solar", "gen_solar"),
     ("biomass (TWh)", "gen_biomass", "gen_biomass"),
     ("hydro (TWh)", "gen_hydro", "gen_hydro"),
-    ("storage discharge (TWh)", lambda r: r["gen_battery"] + r["gen_pumped_hydro"], "gen_storage"),
-    ("other (CHP, waste, oil) (TWh)", lambda r: 0.0, "gen_other"),
+    # NESO's STORAGE is the pumped-storage fleet only; batteries are not in the mix
+    ("pumped storage discharge (TWh)", "gen_pumped_hydro", "gen_storage"),
+    ("coal (TWh)", lambda r: r.get("gen_coal", 0.0), "gen_coal"),
+    ("other (CHP, waste, oil) (TWh)", lambda r: r.get("gen_other", 0.0), "gen_other"),
     ("imports (TWh)", "gen_imports", "ic_imports_twh"),
     ("exports (TWh)", "export_twh", "ic_exports_twh"),
     ("net imports (TWh)", lambda r: r["gen_imports"] - r["export_twh"], "ic_net_imports_twh"),
@@ -50,9 +56,20 @@ METRICS = [
 
 
 def load_outturn() -> pd.DataFrame:
+    """Outturn by year: the generation mix, prices and flows (scripts/fetch_outturn.py), constraint
+    costs, the day-ahead baseload price (data/history/annual_inputs.csv) and the wind turned down in the
+    Balancing Mechanism (data/profiles/validation.csv), which the model's wholesale stage has not yet removed."""
     out = pd.read_csv(OUTTURN, index_col="year")
     con = pd.read_csv(CONSTRAINTS, index_col="year").drop(columns="source")
-    return out.join(con, how="left")
+    out = out.join(con, how="left")
+    hist = OUTTURN.parents[1] / "history" / "annual_inputs.csv"
+    if hist.exists():
+        out = out.join(pd.read_csv(hist, index_col="year")[["power_day_ahead_nominal"]], how="left")
+    val = OUTTURN.parents[1] / "profiles" / "validation.csv"
+    if val.exists():
+        v = pd.read_csv(val, index_col="year")
+        out = out.join((v["turned_down_offshore_twh"] + v["turned_down_onshore_twh"]).rename("wind_turned_down_twh"), how="left")
+    return out
 
 
 def compare(record: pd.Series | dict, year: int) -> pd.DataFrame:
@@ -62,6 +79,6 @@ def compare(record: pd.Series | dict, year: int) -> pd.DataFrame:
     rows = []
     for label, mcol, ocol in METRICS:
         mv = mcol(r) if callable(mcol) else r.get(mcol, np.nan)
-        ov = ocol(out) if callable(ocol) else out[ocol] if ocol else np.nan
+        ov = ocol(out) if callable(ocol) else out.get(ocol, np.nan) if ocol else np.nan
         rows.append(dict(metric=label, model=float(mv), outturn=float(ov), diff=float(mv - ov)))
     return pd.DataFrame(rows).set_index("metric")

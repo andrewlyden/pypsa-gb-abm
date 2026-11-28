@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 from .agents import GenCo, Plant
-from .config import (capex_kw, fom_kw, EXISTING_LIFE, EXISTING_MIN_YEARS, NEW_BUILD_CF, VRE_PROFILE, LEGACY_CM_PRICE, CPI_2012_TO_2024, RO_LAST_ONLINE, RO_SCHEME_END, RO_YEARS, TECHS, VRE_TECHS, STORAGE_TECHS, INITIAL_FLEET_MW, EXISTING_FLEET_EFFICIENCY,
+from .config import (capex_kw, fleet_mw, fom_kw, history_value, EXISTING_LIFE, EXISTING_MIN_YEARS, NEW_BUILD_CF, VRE_PROFILE, LEGACY_CM_PRICE, CPI_2012_TO_2024, RO_LAST_ONLINE, RO_SCHEME_END, RO_YEARS, TECHS, VRE_TECHS, STORAGE_TECHS, INITIAL_FLEET_MW, EXISTING_FLEET_EFFICIENCY,
                      NESO_CI_FACTORS, Policy, Fuels, BATTERY_ANCILLARY_POT, BATTERY_TRADING_PER_MW_VRE,
                      BATTERY_FLEET_FLOOR_MW)
 from .data import PyPSAGBData
@@ -67,11 +67,16 @@ NUCLEAR_BM_BID = -300.0
 # Zones matter only for the network stage: Heysham 1 + Hartlepool in England (Z9); Torness in Z6
 # (south of B5, like the Western HVDC and EGL1 landings, see ukabm/data/pypsagb.py); Heysham 2 in
 # England (Z9), listed last so the owner assignment (i % 2) of the other units is unchanged.
-NUCLEAR_UNITS = [(2300, 1983, 2027, "Z9", 0.62), (1200, 1988, 2030, "Z6", 0.62),   # AGRs
+# Closure dates, November 2026: Heysham 1, Hartlepool, Heysham 2 and Torness are scheduled to generate
+# until March 2030 (EDF fleet update, Jan 2026; Centrica, July 2026), so 2029 is their last full year;
+# Sizewell B 2035. Hunterston B (closed Jan 2022) and Hinkley Point B (Aug 2022) are listed for
+# historical years (DUKES 2026 Table 5.11): last full years 2021.
+NUCLEAR_UNITS = [(2300, 1983, 2029, "Z9", 0.62), (1200, 1988, 2029, "Z6", 0.62),   # AGRs
                  (1200, 1995, 2035, "Z12", 0.88),                                   # Sizewell B
                  (1630, 2030, 2089, "Z17", None), (1630, 2031, 2090, "Z17", None),  # Hinkley Point C
                  (1600, 2038, 2097, "Z12", None), (1600, 2039, 2098, "Z12", None),  # Sizewell C
-                 (1200, 1988, 2030, "Z9", 0.62)]                                    # Heysham 2 (AGR)
+                 (1200, 1988, 2029, "Z9", 0.62),                                    # Heysham 2 (AGR)
+                 (985, 1976, 2021, "Z5", 0.62), (965, 1976, 2021, "Z17", 0.62)]     # Hunterston B, Hinkley Point B
 
 # Firm types (ASSUMPTION; to be replaced by firms with real portfolios, README item 52). A firm's WACC
 # shifts every technology hurdle rate by (wacc - config.REFERENCE_WACC); the spread across types
@@ -175,8 +180,9 @@ class GBMarketModel(ModelBase):
         ``fleet: "random"``, the earlier rule (zone shares, two random vintages per zone)."""
         table = None if self.scenario.get("fleet", "table") == "random" else self.data.fleet_table(self.start)
         mean_strike = self.legacy_cfd_strikes()
+        fleet = fleet_mw(self.start)
         k = 0
-        for tech, total in INITIAL_FLEET_MW.items():
+        for tech, total in fleet.items():
             rows = None if table is None else table[table.tech == tech]
             if tech == "nuclear" or rows is None or rows.empty:
                 continue
@@ -204,7 +210,7 @@ class GBMarketModel(ModelBase):
                 for zone, s in zones.items():
                     self.new_plant(self.gencos[k % len(self.gencos)], tech, zone, total * r.share * s, online, retire, **kw)
                     k += 1
-        for tech, total in INITIAL_FLEET_MW.items():
+        for tech, total in fleet.items():
             if tech == "nuclear" or (table is not None and (table.tech == tech).any()):
                 continue
             share = self.data.zone_share(tech)
@@ -234,6 +240,8 @@ class GBMarketModel(ModelBase):
             if p.tech not in VRE_TECHS and p.support not in ("cfd", "ro"):
                 p.cm_legacy = {y: c for y, c in LEGACY_CM_PRICE.items() if y < self.start + 4 and p.active(y)}
         for i, (mw, on, ret, zone, av) in enumerate(NUCLEAR_UNITS):
+            if ret < self.start:
+                continue
             kw = dict(support="cfd", strike=92.50 * CPI_2012_TO_2024, cfd_end=on + 34) if on >= 2030 else {}
             self.new_plant(self.gencos[i % 2], "nuclear", zone, mw, on, ret, availability=av, **kw)
         # contracted pipeline: CfD awards not yet built at the start (both runs start with it)
@@ -331,9 +339,17 @@ class GBMarketModel(ModelBase):
         ref = self.srmc("ccgt", year, efficiency=float(np.mean(EXISTING_FLEET_EFFICIENCY["ccgt"])))
         decarb = 1 - 0.25 * min(max((year - 2025) / 25, 0), 1)
         shape = self.data.neighbour_price_shape
+        # a historical year run in money of the day on its own weather: the continental prices are the
+        # observed ones, converted at the year's exchange rate, not a level tied to the GB gas plant
+        fx = history_value("gbp_per_eur", year, "raw") if (
+            self.policy.history_basis == "nominal" and year == self.data.profile_year) else None
+        observed = self.data.neighbour_prices_eur if fx else None
         imports, exports = [], []
         for k, (mkt, mw) in enumerate(sorted(caps.items())):
-            fp = ref * decarb * IC_PRICE_LEVEL[mkt if mkt in IC_PRICE_LEVEL else "continent"] * shape[mkt].values
+            if observed is not None and mkt in observed:
+                fp = observed[mkt].values * fx
+            else:
+                fp = ref * decarb * IC_PRICE_LEVEL[mkt if mkt in IC_PRICE_LEVEL else "continent"] * shape[mkt].values
             imports.append(Block(-1 - k, fp + IC_SPREAD, IC_AVAILABILITY * mw))
             exports.append(Block(-11 - k, fp - IC_SPREAD, IC_AVAILABILITY * mw, demand_bid=True))
         return imports, exports, sum(caps.values()), ref

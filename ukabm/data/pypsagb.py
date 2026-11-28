@@ -137,6 +137,8 @@ class PyPSAGBData:
             self.profiles, self.profile_source = pd.read_csv(profiles), str(profiles)
         elif profiles is None and open_file.exists():
             self.profiles, self.profile_source = self._open_profiles(open_file), "open"
+        if self.profiles is None:
+            raise FileNotFoundError(f"no hourly profile for {profile_year}: run scripts/build_profiles.py {profile_year}")
         self.profiles = complete_profiles(self.profiles)
         self.neighbour_price_shape = self._neighbour_shapes()
 
@@ -226,7 +228,8 @@ class PyPSAGBData:
         self.links = pd.read_csv(path / "zonal_links.csv")
         self.interconnectors = pd.read_csv(path / "interconnectors.csv")
         self.zone_demand_share = pd.read_csv(path / "zone_demand_share.csv", index_col=0)["share"]
-        self.profiles = pd.read_csv(path / f"profiles_{self.profile_year}.csv")
+        old = path / f"profiles_{self.profile_year}.csv"       # ESPENI-derived; only some years
+        self.profiles = pd.read_csv(old) if old.exists() else None
         self.zone_tech_share = pd.read_csv(path / "zone_tech_share.csv", index_col=0)
         self.cm_params = pd.read_csv(path / "cm_auction_parameters.csv")
         self.cfd_strikes = pd.read_csv(path / "cfd_strike_prices_by_round.csv")
@@ -238,6 +241,7 @@ class PyPSAGBData:
         are kept); the SEM proxy is (1.25 - 0.75 * GB wind CF) normalised to mean 1, since Irish
         and GB wind are strongly correlated and SEM is gas-marginal most hours."""
         prices = pd.read_csv(EXTERNAL / f"neighbour_prices_{self.profile_year}.csv").iloc[:len(self.profiles)]
+        self.neighbour_prices_eur = prices          # observed day-ahead prices of the profile year, EUR/MWh
         caps = self.interconnector_mw_by_market(self.profile_year)
         w = pd.Series({k: v for k, v in caps.items() if k in prices.columns})
         mean = float((prices[w.index].mean() * w).sum() / w.sum())
@@ -308,7 +312,16 @@ class PyPSAGBData:
         """Shares of each technology's capacity by zone, vintage and support for a model starting in
         *year* (data/fleet/fleet_<year>.csv), or None if there is no table for that year."""
         f = FLEET / f"fleet_{year}.csv"
-        return pd.read_csv(f, keep_default_na=False) if f.exists() else None
+        if f.exists():
+            return pd.read_csv(f, keep_default_na=False)
+        later = sorted(int(p.stem.split("_")[1]) for p in FLEET.glob("fleet_*.csv") if int(p.stem.split("_")[1]) > year)
+        if not later:
+            return None
+        # an earlier start: the plant of the next table that was already there, shares re-based
+        t = pd.read_csv(FLEET / f"fleet_{later[0]}.csv", keep_default_na=False)
+        t = t[t.online <= year].copy()
+        t["share"] = t.mw / t.groupby("tech").mw.transform("sum")
+        return t
 
     def pipeline_table(self, year: int) -> pd.DataFrame | None:
         """Capacity contracted but not yet built at the start of *year* (data/fleet/pipeline_<year>.csv)."""

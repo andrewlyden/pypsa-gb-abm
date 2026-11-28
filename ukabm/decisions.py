@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from .config import STORAGE_TECHS, TECHS, VRE_TECHS, capex_kw, fom_kw  # noqa: F401  (STORAGE_TECHS for subclasses)
+from .config import MUST_RUN_OFFER, STORAGE_TECHS, TECHS, VRE_TECHS, capex_kw, fom_kw  # noqa: F401
 
 if TYPE_CHECKING:  # pragma: no cover
     from .observations import Observation, Outcome
@@ -81,6 +81,8 @@ class RuleBased(DecisionMaker):
             if plant.support == "cfd" and year <= plant.cfd_end:
                 return -0.01                # CfD (post-AR4 negative-price rule simplified)
             return 0.0
+        if plant.tech == "other":
+            return MUST_RUN_OFFER           # waste and CHP plant runs whatever the price
         if plant.tech == "nuclear":
             return srmc - 15.0              # inflexible: bids below cost to stay on
         if plant.support == "ro" and year <= plant.ro_end:
