@@ -1096,6 +1096,9 @@ class GBMarketModel(ModelBase):
         for q in (5, 50, 95):
             rec[f"price_p{q:02d}"] = float(np.percentile(price, q))
         rec["cap_interconnector"] = res["ic_cap"] / 1e3
+        rec["cap_electrolyser"] = self.h2.capacity_mw(y) / 1e3
+        rec["peak_demand_gw"] = float((res["base"] + res["heat"] + res["ev"]).max()) / 1e3    # inflexible load
+        rec["hours_zero_or_less"] = int((price <= 0).sum())
         self.records.append(rec)
         self.hourly[y] = pd.DataFrame({"price": price, "demand": res["demand"], "heat": res["heat"],
                                        "ev": res["ev"], "h2": res["h2"], "export": res["export"],

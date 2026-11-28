@@ -224,3 +224,31 @@ are in the README; the review's section 9 proposes their order.
 
 Also new: a parameter register with sensitivity analysis and a replication count [46]; real firm
 portfolios [52]; an equilibrium model as the exact answer for the risk rung [54].
+
+## 10. What was done about it (28 Nov 2026)
+
+Most of section 9 was implemented in the same week; the table at the top of the
+[foundations review](review_2026-11_foundations.md) lists every finding and its status. In short:
+
+* **Inputs are now data with sources.** Profiles for 2021–2025 from NESO and Elexon; the starting
+  fleet, its owners and the contracted pipeline from DUKES and the CfD register; costs from DESNZ's 2025
+  generation costs; hurdle rates from CEPA; exogenous drivers from a FES 2025 pathway; historical
+  prices and capacities for back-casts. Much of this was already in PyPSA-GB, whose rules for offers
+  under support and whose scarcity curve are reused.
+* **The firms are real.** Twelve firms hold the plants their companies own. Their traits are set by
+  five types and remain assumptions.
+* **The defaults are the forward-looking rules** (README items 2–6): expectation-based bids, a
+  target-tracking government and a reliability-standard Capacity Market target. The earlier model is
+  the benchmark scenario `legacy_rules`.
+* **Nothing is fitted to auctions or pathways.** A handful of operating parameters are set on 2025 and
+  checked on 2021–2024; the first auctions and the 2030–2050 fleet are compared with the auctions held
+  and with published pathways ([calibration.md](calibration.md)).
+* **What the checks say.** The operating model holds over five years on energy and mean price, not on
+  the price distribution. The first offshore strike is 20 % above Round 7 and the onshore strike 13 %
+  below. The baseline is inside the range of the FES 2025 pathways on fleet and demand except for heat
+  pumps (5 million homes in 2050 against 9–24 million), offshore wind in 2030 and batteries to 2035.
+
+Still open, in the order the review proposed: the yardstick table (40), the convergence residual in
+steps (42), the investment hindcast from 2015 (43, with the data now in `data/history/`), firms'
+forecasts and non-delivery (45), sensitivity analysis on the parameter register (46), uncertain futures
+(35), and the behavioural decision arm (55).

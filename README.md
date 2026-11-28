@@ -246,7 +246,7 @@ re-run `scripts/run_gap.py` and update [docs/gap.md](docs/gap.md).
 11. **Planner with the agents' information.** A rolling-horizon planner that plans each period with one or
     two periods of foresight and only the fuel and carbon prices known at the time. Perfect-foresight gap
     minus rolling-horizon gap = the value of information.
-12. **FES: inputs and the planned benchmark.** Use NESO's Future Energy Scenarios (via PyPSA-GB, which
+12. **FES: inputs and the planned benchmark.** *(a) and (b) done, Nov 2026:* `ukabm/drivers.py` reads FES 2025 from `data/fes/` (scenario key `fes_pathway`); the government's targets are the pathway's capacities. *(c) open.* Use NESO's Future Energy Scenarios (via PyPSA-GB, which
     already builds its future years from FES; extend `scripts/extract_pypsagb_snapshot.py`) in three
     roles, kept apart to avoid circularity: (a) exogenous drivers, replacing today's "FES-like" guesses:
     base demand by year, EV stock, electrolyser and hydrogen demand, interconnector and nuclear pipeline,
@@ -298,25 +298,25 @@ their priority)*
 
 *C. Evidence*
 
-16. **Auction back-cast.** Add CfD AR1–AR6 (LCCC) and CM T-4 2014–2025 (EMR Delivery Body) clearing prices
+16. **Auction back-cast.** *Partly, Nov 2026:* auction results 2014–2026 are in `data/history/sources/`; `scripts/check_auctions.py` compares the model's first round and first T-4 with Round 7 and the 2029-30 auction, unfitted. Running the firms through every round since 2015 is item 43. Add CfD AR1–AR6 (LCCC) and CM T-4 2014–2025 (EMR Delivery Body) clearing prices
     and volumes by technology to `data/outturn`. Run the government and firm logic of items 2–6 over
     2014–2025 with the historical budgets and targets; compare prices and volumes; set tolerance bands and
     a test.
-17. **Weather years.** Extract demand, wind and solar profiles for 4–6 historical years from PyPSA-GB
+17. **Weather years.** *Partly, Nov 2026:* profiles for 2021–2025 are built from NESO and Elexon data (`scripts/build_profiles.py`) with neighbour prices for the same years, and used in the operating back-cast; the planner and the forward runs still use one year. Extract demand, wind and solar profiles for 4–6 historical years from PyPSA-GB
     (ESPENI and atlite, via `scripts/extract_pypsagb_snapshot.py` with `profile_year`), including a cold,
     still year (e.g. 2010) and a low-wind year (2021). The planner optimises over all years (weighted);
     agents and the evaluator draw a year per simulation year with a seed; gap results report the spread
     across years. Neighbour price shapes exist only for 2024: rescale, or fetch more years.
-18. **Developer pipeline.** Projects pass through leasing, consent and grid connection with sunk costs and
+18. **Developer pipeline.** *Partly, Nov 2026:* the starting fleet carries the contracted pipeline (CfD awards not yet built; `data/fleet/pipeline_2025.csv`). Consent, connection and attrition are not modelled. Projects pass through leasing, consent and grid connection with sunk costs and
     attrition; only consented projects may bid. Initial pipeline from the TEC register and Crown Estate
     leasing rounds.
-19. **Technology cost trajectories.** Year-dependent capex and FOM for solar, wind, batteries, gas CCS and
+19. **Technology cost trajectories.** *Done for wind, solar and gas plant, Nov 2026:* `data/parameters/cost_paths.csv` (DESNZ Electricity Generation Costs 2025) by commissioning year, in both runs. Batteries, nuclear and electrolysers open. Year-dependent capex and FOM for solar, wind, batteries, gas CCS and
     electrolysers (DESNZ Electricity Generation Costs 2023; NREL ATB) in both runs, so the timing of
     investment matters.
 
 *D. Experiments (the deck's questions)*
 
-20. **Gap robustness.** 5 seeds (currently 3); planner build limits ×0.5 and ×2
+20. **Gap robustness.** *Partly, Nov 2026:* the firms face the planner's build-rate limits (`agent_build_limits`). 5 seeds (currently 3); planner build limits ×0.5 and ×2
     (`config.PLANNER_BUILD_MW_PER_YEAR`); the planner restricted to the agents' option set per period.
 21. **Ladder with government and firm rungs.** Idealise the government (`"least_cost"`, the reliability
     standard met exactly) and the firms separately, run every order of the rungs and report each source's
@@ -383,10 +383,14 @@ their priority)*
     sourced `ic_growth` path.
 29. Demand flexibility and long-duration storage: heat-pump and industrial demand response and
     non-hydrogen long-duration storage, available to both runs.
-30. Price distribution too narrow (no negative hours, p95 £100 vs £123 in 2025): must-run/min-stable
-    generation and RO bidding. Battery capex (£600/kW for 2 h) needs a 2025 source.
-31. Validation check: tolerance bands (in `docs/assumptions.md`) on the `ukabm.outturn.compare` table for
-    2025 and a test, so regressions show up in CI.
+30. Price distribution too narrow. *Partly, Nov 2026:* offers by support terms, an empirical scarcity
+    curve and must-run plant are in, and the zero floor on prices was a bug, now removed; p95 is 10–12 %
+    low and there are still no negative-price hours in 2021–2025 (in the cheapest hours the model imports
+    at the neighbours' price plus the interconnector spread). Next: minimum stable generation and a
+    smaller spread at low prices. Battery capex (£600/kW for 2 h) needs a 2025 source.
+31. Validation check: tolerance bands on the `ukabm.outturn.compare` table and a test, so regressions
+    show up in CI. *Partly, Nov 2026:* the five-year back-cast (`scripts/run_backcast.py`) is the table;
+    bands and a CI test are open.
 32. Finance: cost of capital that depends on each firm's mix of merchant, contracted and capacity revenue;
     firm entry and exit.
 33. Carbon price from a UK ETS cap; nuclear and transmission investment as government decisions.
@@ -404,7 +408,7 @@ last only to keep the numbering stable.*
     price path and the Green Book appraisal values (£260 → £378/t, 2020 prices); (c) unserved energy:
     £6,000/MWh and the £16,950/MWh behind the 3 h standard, or a planner constrained to the standard.
     One table with each results release. First numbers: review section 2.
-41. **Separate wind profiles (F1).** Onshore, offshore and at least northern and southern profiles
+41. **Separate wind profiles (F1).** ✅ *Done, Nov 2026:* measured onshore and offshore profiles (and Scottish and English and Welsh series, not yet used) from Elexon per-unit output; new build on `config.NEW_BUILD_CF`. Onshore, offshore and at least northern and southern profiles
     from atlite through PyPSA-GB, in the agents, the planner and the evaluator. Today onshore and
     offshore wind share one hourly shape, so the planner's mix is set by its build limits. No statement
     about the wind mix before this. Extends items 17 and 27.
@@ -412,46 +416,46 @@ last only to keep the numbering stable.*
     0.5 % of system cost, by replacing the storage, interconnector and electrolyser heuristics in the
     benchmark; (ii) equal build limits and battery services on both sides (items 20, 9); (iii)
     investment: under 1 %. A test for each tolerance. No gap is read below the residual.
-43. **Investment hindcast 2015–2025 (F20).** Start the model from the 2015 fleet with historical fuel
+43. **Investment hindcast 2015–2025 (F20).** *Data ready, Nov 2026:* `data/history/` (prices, capacity by year, auctions, closures, costs as published at the time); the operating back-cast 2021–2025 is done (`scripts/run_backcast.py`). The investment hindcast itself is not run. Start the model from the 2015 fleet with historical fuel
     and carbon prices and auction parameters; compare the 2025 fleet, prices and auction results with
     outturn. Before tuning, fix a table of patterns and tolerances: fleet by technology, CfD and T-4
     clearing prices and volumes, negative-price hours, capture-price discounts, battery revenue against
     fleet size, heat-pump installations (literature review section 6). Extends item 16.
-44. **Calibrate costs and hurdle rates to the auctions (F10, F11).** 2025 technology costs and
+44. **Calibrate costs and hurdle rates to the auctions (F10, F11).** *Done differently, Nov 2026:* costs and hurdle rates are the published ones (DESNZ 2025, CEPA 2025) and the auctions are a check, not a target ([docs/calibration.md](docs/calibration.md)): the cost factor that would reproduce a cleared strike is not stable across rounds (0.34–0.90 for offshore wind in PyPSA-GB's calibration). 2025 technology costs and
     technology hurdle rates (CEPA 2025: 7.6 % solar and onshore, 8.9 % offshore and gas; CfD worth
     0.8–1.5 points) such that modelled AR6 and AR7 strikes and T-4 prices are within tolerance. Capacity
     Market: small engines, demand response and refurbishment as entrants, de-rating of batteries by
     duration, non-delivery. Before item 19.
-45. **Investment procedure (F8, F9).** Re-draw the order of firms at every decision. Add a price
+45. **Investment procedure (F8, F9).** *Partly, Nov 2026:* the order of firms is redrawn before every decision. The entry-consistent projection and the sweep over horizons are open. Re-draw the order of firms at every decision. Add a price
     projection that is consistent with entry (iterate until no firm wants to enter, or fill the horizon
     with least-cost additions). Run the convergence test across forecast horizons (t+3, t+5, t+8),
     projection rules and block sizes, and report the spread (Tao et al. 2021).
-46. **Parameter register, sensitivity analysis, replications (F21).** One table of every assumed or
+46. **Parameter register, sensitivity analysis, replications (F21).** *Register done, Nov 2026:* [docs/parameters.md](docs/parameters.md). Sensitivity analysis open. One table of every assumed or
     calibrated constant with its status (sourced, calibrated to what, assumed) and range. One factor at
     a time, then Morris screening, then Sobol indices on the gap and on the 2050 fleet (SALib). Choose
     the number of seeds from the stability of the outputs; report distributions. Needs item 8.
-47. **Inputs as data (F27).** Technology costs, policy parameters, calibration constants and scenarios
+47. **Inputs as data (F27).** *Partly, Nov 2026:* scenarios in `ukabm/data/scenarios.toml`, validated; costs, fleet, firms, profiles, drivers and history in `data/`. Policy constants are still in `config.py`. Technology costs, policy parameters, calibration constants and scenarios
     in YAML or TOML with defaults, overrides and a schema; an unknown scenario key is an error.
-48. **Data licences (F28).** The bundled 2024 profile comes from ESPENI, whose current versions are
+48. **Data licences (F28).** *Mostly done, Nov 2026:* the default profile is built from NESO and Elexon open data; [docs/data.md](docs/data.md) lists every dataset with its licence and what the maintainer still has to confirm. The bundled 2024 profile comes from ESPENI, whose current versions are
     CC BY-NC 4.0, in an MIT repository: rebuild it from Elexon and NESO data or fetch it at build time.
     A table of every dataset with version, source, licence and attribution. *Needs human* to confirm
     with the data owners.
-49. **Releases, citation, provenance, documentation (F29, F31).** `CITATION.cff`, `CHANGELOG`,
+49. **Releases, citation, provenance, documentation (F29, F31).** *Partly, Nov 2026:* `CITATION.cff`, `CHANGELOG.md`, `CONTRIBUTING.md`; new result files carry the commit. No release, DOI or hosted documentation. `CITATION.cff`, `CHANGELOG`,
     `CONTRIBUTING`, a tagged release with a Zenodo DOI; git hash, arguments, seed and data version
     stamped in every output; results rebuilt by one command and archived, not committed by hand; a
     hosted documentation site with a five-minute example and an API reference; the roadmap moved out of
     this README; a statement of what the model can and cannot be used for.
-50. **ODD+D description and TRACE record (F30).** The model described by the ODD protocol with the
+50. **ODD+D description and TRACE record (F30).** ✅ *Done, Nov 2026:* [docs/odd.md](docs/odd.md) and [docs/calibration.md](docs/calibration.md). The model described by the ODD protocol with the
     ODD+D additions for decisions (the theoretical and empirical basis of each rule) and a table from
     description to code; a TRACE document recording calibration, verification and corroboration.
-51. **Verification pack and AI-use disclosure (F32).** Analytical benchmarks (a merit order checked by
+51. **Verification pack and AI-use disclosure (F32).** *Partly, Nov 2026:* [docs/ai_use.md](docs/ai_use.md); the back-cast, auction check and pathway comparison. Invariants, mutation testing and an independent replication are open. Analytical benchmarks (a merit order checked by
     hand; item 42's tolerances); invariants asserted in every run (energy balance; payments equal
     receipts across firms, levy and consumers; capacity stock and flow); mutation testing of the test
     suite; a disclosure of which code was written with AI tools and how a person verified it; one
     independent replication of a headline number (e.g. dispatch in ASSUME or PyPSA-GB).
-52. **Real firm portfolios (F14).** Map the initial fleet to its actual owners (DUKES, REPD, TEC
+52. **Real firm portfolios (F14).** ✅ *Done, Nov 2026:* twelve firms with the plants their companies own (`data/fleet/`); traits by type. Map the initial fleet to its actual owners (DUKES, REPD, TEC
     register) and firm types, so that portfolio effects and market power can be studied.
-53. **Mesa: use it or drop it (F26).** Either agents, data collection and batch runs through Mesa, or
+53. **Mesa: use it or drop it (F26).** ✅ *Done, Nov 2026:* used; the firm panel is a Mesa DataCollector. Either agents, data collection and batch runs through Mesa, or
     remove the dependency and say what the model is built on.
 54. **Equilibrium cross-check for the risk rung (F6).** A small stochastic equilibrium model with
     CVaR investors and complete or incomplete risk trading (e.g. by ADMM) on the model's technologies,

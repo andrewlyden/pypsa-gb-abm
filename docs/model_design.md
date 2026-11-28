@@ -1,5 +1,9 @@
 # ukabm model design
 
+A description by the ODD protocol, with a table from each part to the code, is in [odd.md](odd.md);
+how parameters are set and checked is in [calibration.md](calibration.md). This page explains the
+design and its history.
+
 ## Architecture
 ```
                  ┌───────────── Government / policy (config.Policy) ─────────────┐
@@ -7,11 +11,11 @@
                  └───────┬──────────────────────┬───────────────────────┬────────┘
                          │ contracts            │ levies                │ grants
  ┌──────────────┐  offers ┌──────────────────┐ prices ┌──────────────────────────────┐
- │ GenCo agents │────────▶│ Hourly market     │──────▶│ Multi-energy modules          │
- │ (5, hetero-  │◀────────│ (uniform price,   │◀──────│ HeatModule (household agents) │
- │ geneous WACC,│ dispatch│  ORDC scarcity,   │ load  │ GasNetworkModule (tariffs)    │
- │ beliefs,     │         │  storage, flex,   │       │ EVModule (smart/unmanaged)    │
- │ mark-ups)    │         │  interconnectors) │       │ HydrogenModule (electrolysers)│
+ │ Firms (12,   │────────▶│ Hourly market     │──────▶│ Multi-energy modules          │
+ │ real port-   │◀────────│ (uniform price,   │◀──────│ HeatModule (household agents) │
+ │ folios, five │ dispatch│  scarcity mark-up,│ load  │ GasNetworkModule (tariffs)    │
+ │ types: rates,│         │  storage, flex,   │       │ EVModule (smart/unmanaged)    │
+ │ beliefs)     │         │  interconnectors) │       │ HydrogenModule (electrolysers)│
  └──────┬───────┘         └────────┬─────────┘       └──────────────────────────────┘
         │ invest/retire            │ sample hours
         ▼                          ▼
@@ -20,12 +24,34 @@
                          zonal prices → siting signal only in the locational_signal (zonal-pricing) sensitivity
 ```
 
+## Inputs (November 2026)
+* **Starting fleet** (`data/fleet/`, `scripts/build_fleet.py`): capacity by technology from DUKES 2026;
+  vintages, zones and owners from the DUKES station list; support from the CfD register and RO rules;
+  the contracted pipeline (CfD awards not yet built); nuclear units by name. With a FES pathway, the
+  pathway's nuclear and pumped hydro beyond the listed stations are committed plant in both runs.
+* **Profiles** (`data/profiles/`, `scripts/build_profiles.py`): hourly demand, onshore and offshore wind
+  and solar for 2021–2025 from NESO and Elexon data. `cf_profile(tech, online)` gives the fleet's shape to
+  plant online by the start year and a shape raised to `config.NEW_BUILD_CF` to later plant.
+* **Costs and rates** (`data/parameters/cost_paths.csv`, `config.HURDLE_RATE`): DESNZ 2025 costs by the
+  year a plant comes online; CEPA hurdle rates by technology, plus 1.5 points for merchant revenue,
+  shifted by the firm's cost of capital; capital carried over the build lag at the valuer's rate.
+* **Drivers** (`ukabm/drivers.py`, `data/fes/`): a FES 2025 pathway sets demand other than EVs, heat
+  pumps and electrolysis, the EV fleet, electrolysers, interconnectors, nuclear and pumped hydro, and
+  the government's wind and solar targets.
+* **History** (`data/history/`): fuel, carbon and power prices 2010–2025, capacity by year, auction
+  results, for back-casts.
+
 ## Annual loop (`GBMarketModel.step`)
 1. Commission pipeline / retire (end of life, 2 consecutive loss years without CM contract).
-2. Demand = ESPENI-2024 shape × growth + heat-pump load (temperature-shaped) + EVs + electrolysers.
+2. Demand = the weather year's measured shape × growth (the pathway's, for demand other than EVs, heat
+   pumps and electrolysis) + heat-pump load (temperature-shaped) + EVs + electrolysers.
 3. Market: pass 1 clears inflexible demand → smart EV valley-filling and electrolysers respond → storage
    is dispatched in tranches, each on the price left by the tranches before it, skipping days on which a
    tranche's own trades lose money → pass 2 → pass 3 withdraws electrolysers above their willingness-to-pay.
+   Offers that the clearing cannot tell apart (same price, same availability shape) are merged before
+   clearing and the dispatch split back pro rata. Supported plant offers by the terms of its support
+   (RO at minus the certificate value, early CfDs at minus the strike, later CfDs at zero); the price is
+   the marginal offer plus a scarcity mark-up that rises as the de-rated margin falls.
    The hourly merit order is built once per market run and reused across passes (`market.merit_order`). Interconnectors
    trade inside every pass: per neighbour market (FR, NL, BE, NO2, DK1, DE, SEM) an import offer at
    foreign price + spread and an export bid at foreign price − spread (a "buy-back" block, so exports
@@ -44,16 +70,21 @@
    (GB national pricing).
 6. Retail tariffs (wholesale + network + levies) → household heating decisions; gas throughput (homes +
    industry + **power-sector gas burn**) → gas network tariff.
-7. Investment: forecast prices for *t+3* from the known pipeline; CfD round; T-4 CM; sequential merchant
-   decisions, re-forecasting after each (agents see each other's commitments).
+7. Investment: forecast prices for *t+3* from the known pipeline; CfD round; the government's tender
+   for gas CCS and hydrogen power (`dpa_round`); T-4 and T-1 Capacity Market; sequential merchant
+   decisions, re-forecasting after each (agents see each other's commitments), the order of firms drawn
+   again before each. Awards and projects are limited by each technology's build rate
+   (`build_room`), the same limits as the planner's.
+8. Records: the annual row, the firm panel (`firm_panel()`, a Mesa DataCollector) and the auction table
+   (`auctions()`).
 
 ## Agents
 | agent | decisions | heterogeneity |
 |---|---|---|
-| GenCo ×5 (IntegratedUtility, MerchantIPP, OilMajor, InfraFund, GreenDeveloper) | offers, CfD bids (LCOE at de-risked WACC), CM bids (net missing money), merchant NPV investment, retirement | WACC 6–10 %, myopic/adaptive/carbon-optimist beliefs, mark-ups 0–8 %, risk aversion, budgets |
+| Firms ×12 (RWE, SSE, EDF, Orsted, ScottishPower, Uniper, Drax and five groups; `data/fleet/firms.csv`). `firms: "stylised"` gives the earlier five | offers, CfD bids (the lowest strike that meets the required return over the contract and a merchant tail), CM bids (net missing money), merchant and PPA investment on lifetime forecasts, retirement | real portfolios; by type (utility, generator, fund, major, developer): cost-of-capital spread −1.7 to +2.3 points, myopic/adaptive/carbon-optimist beliefs, mark-ups 0–8 %, budgets, technologies invested in |
 | Households ×2000 (each ≈14k homes) | heating system at boiler replacement (logit on lifecycle cost + hassle) | heat demand, discount rate, hassle cost, on/off gas grid, boiler age |
-| Government (`ukabm.institutions`) | each CfD round's pots: volume limit, £ budget, administrative strike price; reacts to the last round and to the levy | `government`: `fixed` (default) or `targets` |
-| System operator (`ukabm.institutions`) | CM target per auction (T-4, and T-1 under `standard`) | `system_operator`: `formula` (default) or `standard` |
+| Government (`ukabm.institutions`) | each CfD round's pots: volume limit, £ budget, administrative strike price; reacts to the last round and to the levy; tenders gas CCS and hydrogen power to its pathway | `government`: `targets` (default), `fixed`, `least_cost`, `bills`, `political` |
+| System operator (`ukabm.institutions`) | CM target per auction (T-4, and T-1 under `standard`) | `system_operator`: `standard` (default) or `formula` |
 | Policy (parameters) | carbon path, CM demand curve, HP grant, levy rebalancing | scenario |
 
 ### Decision interface (`ukabm.decisions`)

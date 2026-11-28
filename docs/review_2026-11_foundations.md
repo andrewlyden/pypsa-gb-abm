@@ -13,6 +13,44 @@ sources, each marked as read in full, abstract only or search result only, are i
 its reference list. (3) Checks against the committed results, and one new run: a baseline agent run
 (seed 1) with eight planner variants ([section 2](#2-how-far-the-optimum-moves-with-its-own-assumptions)).
 
+**Status, 28 November 2026.** The findings were acted on in the same week (branch
+`foundations/implementation`). The text below is the review as written; this table says where each
+finding stands now. Numbers quoted in the review (the 9.9 % gap, 88 GW of offshore wind, bids of
+£53–66/MWh) describe the model before these changes.
+
+| Finding | Now |
+|---|---|
+| F1 wind shapes | Done: measured onshore and offshore profiles, 2021–2025; new build on its own capacity factor |
+| F2 yardstick | Open: the sensitivity script exists; its table predates the changes |
+| F3 planner sampling | Done: extreme days in the sample; the default plan now beats the high-VoLL plan on the full year |
+| F4 one weather year | Partly: five weather years are built; forward runs still use one |
+| F5 foresight | Open |
+| F6 transfers and risk | Open |
+| F7 smaller points | Open |
+| F8 forecasts on the true future | Open |
+| F9 order of moves | Done: redrawn before every decision |
+| F10 costs and hurdle rates | Done from published sources (DESNZ 2025, CEPA 2025); auction check: offshore +20 %, onshore −13 %, solar 0 % against Round 7; not fitted |
+| F11 Capacity Market | Partly: reliability-standard target, NESO de-rating factors, build-rate limits; first T-4 £38/kW against £27 |
+| F12 non-delivery | Open |
+| F13 prices too smooth | Partly: support-based offers, empirical scarcity curve, the zero floor removed; still no negative-price hours in 2021–2025 |
+| F14 firms | Done: twelve firms with real portfolios; traits by type are assumptions |
+| F15 deterministic world | Open |
+| F16 institutions and households | Partly: targets and tenders follow FES 2025; household parameters unchanged |
+| F17 convergence residual | Partly: equal build limits on both sides; see [gap.md](gap.md) for the current residual |
+| F18 attribution | Open |
+| F19 what the gap can claim | See [gap.md](gap.md) |
+| F20 no test of investment | Partly: operating back-cast 2021–2025, auction check, pathway comparison; the 2015 hindcast is not run |
+| F21 uncertainty | Partly: parameter register; no sensitivity analysis |
+| F22–F25 learning and LLM agents | Open (notes on README items 24, 25) |
+| F26 Mesa | Done: firm panel through a Mesa DataCollector; Mesa is a hard dependency |
+| F27 inputs as data | Partly: scenarios in TOML with validation; costs, fleet, profiles, drivers and history in `data/`; policy constants still in code |
+| F28 licence | Done for the default inputs (NESO and Elexon open data); see the [data register](data.md) for what is left |
+| F29 releases, citation | Partly: CITATION.cff, CHANGELOG, CONTRIBUTING; no release or DOI |
+| F30 protocol description | Done: [odd.md](odd.md) |
+| F31 provenance | Partly: new result files carry the commit; older scripts do not |
+| F32 AI-written code | Partly: [ai_use.md](ai_use.md); no independent replication |
+| F33 structure | Open: `GBMarketModel` has grown |
+
 Each finding is tagged **new** (not in the roadmap or assumptions before this review), **sharpened**
 (known, now with evidence or a number) or **known**. Evidence is tagged *code* (read in the code),
 *results* (committed results), *run* (the new run) or *lit*.

@@ -56,30 +56,41 @@ def redispatch(data, plants, blocks, demand_h, schedule, avail, offers, bids, li
             n.add("Generator", f"shed_{z}", bus=z, p_nom=1e5, marginal_cost=6000.0)
     pmap = {p.pid: p for p in plants}
     head = np.clip(avail - schedule, 0.0, None)
-    names = []
+    # Plants in one zone with the same bid and the same offer in every hour are one generator to the
+    # LP: they are merged, and the group's redispatch is shared among them in proportion to what each
+    # has to give (its schedule for turn-down, its headroom for turn-up). The result is the same and
+    # the LP has a few hundred generators instead of thousands.
+    groups = {}
     for j, b in enumerate(blocks):
         p = pmap.get(b.key)
         if p is None:
             continue
-        for tag, cap, cost in (("s", schedule[:, j], bids[:, j]), ("h", head[:, j], offers[:, j])):
+        key = (p.zone, np.round(bids[:, j], 4).tobytes(), np.round(offers[:, j], 4).tobytes())
+        groups.setdefault(key, []).append(j)
+    names = []
+    for g, ((zone, _, _), idx) in enumerate(groups.items()):
+        j0 = idx[0]
+        for tag, cap, cost in (("s", schedule[:, idx].sum(axis=1), bids[:, j0]), ("h", head[:, idx].sum(axis=1), offers[:, j0])):
             if cap.max() <= 1e-6:
                 continue
-            n.add("Generator", f"{tag}{b.key}", bus=p.zone, p_nom=float(cap.max()),
+            n.add("Generator", f"{tag}{g}", bus=zone, p_nom=float(cap.max()),
                   p_max_pu=cap / cap.max(), marginal_cost=cost)
-            names.append((f"{tag}{b.key}", tag, j))
+            names.append((f"{tag}{g}", tag, idx, cap))
     n.optimize(solver_name="highs", solver_options={"output_flag": False}, progress=False,
                include_objective_constant=False)
     gen = n.generators_t.p
     up, down = np.zeros_like(schedule), np.zeros_like(schedule)
     cost_h = np.zeros(S)
-    for name, tag, j in names:
+    for name, tag, idx, cap in names:
         g = gen[name].values
+        safe = np.where(cap > 1e-9, cap, 1.0)
         if tag == "s":
-            down[:, j] = schedule[:, j] - g
-            cost_h -= bids[:, j] * down[:, j]
+            d = cap - g                                              # the group's turn-down
+            down[:, idx] = schedule[:, idx] * (d / safe)[:, None]
+            cost_h -= bids[:, idx[0]] * d
         else:
-            up[:, j] = g
-            cost_h += offers[:, j] * g
+            up[:, idx] = head[:, idx] * (g / safe)[:, None]
+            cost_h += offers[:, idx[0]] * g
     # Load the network cannot serve (shed at 6000 GBP/MWh in the LP) is reported separately and
     # left out of the redispatch cost: in the BM it would be resolved by actions this stage holds
     # fixed (interconnector counter-trades, storage), not by paying VoLL.

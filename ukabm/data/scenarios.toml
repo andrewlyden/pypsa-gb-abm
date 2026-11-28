@@ -44,12 +44,16 @@ merchant_order = "fixed"
 # unserved energy at VoLL (no ORDC adder), idealised firms (unbiased adaptive expectations, social
 # discount rate, no risk aversion or budget limit, no mark-up) that invest merchant in any technology
 # on lifetime price forecasts (decision_logic "expectations"), with enough decisions a year to keep up.
+# No government tender for gas CCS or hydrogen power either, and five identical firms that may build
+# any technology (firms "stylised"), within the same build-rate limits as the planner.
 [benchmarks.competitive_benchmark]
 agents_ideal = ["expectations", "capital", "strategic"]
 decision_logic = "expectations"
 scarcity_adder = false
 max_merchant_decisions = 40
+firms = "stylised"
 
 [benchmarks.competitive_benchmark.policy]
 cfd_enabled = false
 cm_enabled = false
+dpa_enabled = false
