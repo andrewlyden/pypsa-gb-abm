@@ -69,6 +69,13 @@ TECHS: dict[str, Tech] = {t.name: t for t in [
     # carbon intensity counts it at 300 g/kWh (NESO_CI_FACTORS).
     Tech("other", 0, 0, 0, 1.0, "waste", 0.0, 60, 3, 0.65, 0.50, investable=False),
 ]}
+# Who decides, by default (scenario keys of the same names override; README items 1-6). Since November
+# 2026: firms bid and invest on their own expectations over the life of the asset, the government
+# tracks its capacity targets within a GBP budget, and the system operator sets the Capacity Market
+# target from the reliability standard. The benchmark scenario "legacy_rules" has the earlier defaults
+# (rules / fixed / formula).
+DEFAULTS = {"decision_logic": "expectations", "government": "targets", "system_operator": "standard"}
+
 MUST_RUN_OFFER = -50.0       # GBP/MWh offer of plant that runs whatever the price ("other", nuclear)
 
 # Day-ahead offers of supported renewables, by the terms of their support. These are the rules of

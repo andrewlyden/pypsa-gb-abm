@@ -48,6 +48,13 @@ Rules (all in this file, none hand-tuned to model output):
   removed (WITHDRAWN below, with sources). No further attrition or delay is assumed.
 * batteries are not in the station list: their vintages are the yearly additions to grid-scale battery
   capacity in DUKES 2026 Table 5.16 (BATTERY_MW below), without a zone (the model places them).
+* owner: the station list names the company of every station; data/fleet/owners.csv maps the 54
+  companies to the model's twelve firms (seven named companies and five groups, data/fleet/firms.csv).
+  Thermal plant and hydro take their station's firm. Wind and solar in a zone are shared among the
+  firms in proportion to their listed capacity in that zone; capacity beyond the station list (small
+  and unlisted sites: 2.7 GW of onshore wind, 15 GW of solar) belongs to the firm "Independents", as do
+  firms with less than MIN_OWNER_SHARE of a zone. Batteries are split between Independents and
+  InfrastructureFunds (ASSUMPTION: no owner data in the sources used).
 """
 from __future__ import annotations
 
@@ -72,8 +79,12 @@ NATIONAL = ROOT / "data" / "history" / "gb_capacity.csv"
 VRE = ("wind_onshore", "wind_offshore", "solar")
 FIRST_VINTAGE = {"wind_onshore": 2006, "wind_offshore": 2009, "solar": 2011}   # year standing for the 2011 stock
 MIN_ZONE_SHARE = 0.03      # wind and solar: zones with less than this share of the listed capacity are dropped
+OWNERS = OUT / "owners.csv"
+FRINGE = "Independents"
+MIN_OWNER_SHARE = 0.05     # wind and solar: a firm with less than this share of a zone is merged into the fringe
+BATTERY_OWNERS = {"Independents": 0.5, "InfrastructureFunds": 0.5}
 
-BAND = {"wind_onshore": 3, "wind_offshore": 3, "solar": 3}      # years per vintage band; others 5
+BAND = {"wind_onshore": 4, "wind_offshore": 4, "solar": 4}      # years per vintage band; others 5
 RO_LAST = {"wind_onshore": 2018, "wind_offshore": 2018, "solar": 2016, "biomass": 2018}
 RO_YEARS, RO_SCHEME_END, CFD_YEARS = 20, 2037, 15
 ROUND_ORDER = ["Investment Contract", "AR1", "AR2", "AR3", "AR4", "AR5", "AR6", "AR7", "AR7a"]
@@ -250,6 +261,9 @@ def build(fleet_year: int = 2025):
     st = st[st.tech.notna() & (st.year <= fleet_year)].copy()
     st["year"] = st.year.fillna(st.groupby("tech").year.transform("median")).astype(int)
     st["zone"] = nearest_zone(st)
+    firm_of = pd.read_csv(OWNERS).set_index("company").firm
+    st["owner"] = st.company.map(firm_of).fillna(FRINGE)
+    listed = st[st.tech.isin(VRE)].groupby(["tech", "zone", "owner"]).mw.sum()     # station list, by firm
     # wind and solar: national vintages, zones from the station list
     nat = pd.read_csv(NATIONAL)
     vre_rows = []
@@ -265,7 +279,7 @@ def build(fleet_year: int = 2025):
             y = FIRST_VINTAGE[tech] if year == add.index[0] else int(year)
             vre_rows.append(dict(tech=tech, year=y, mw=float(mw), zshare=zs))
     vre = pd.DataFrame(vre_rows)
-    st = pd.concat([st[~st.tech.isin(VRE)][["tech", "year", "mw", "zone"]], vre[vre.mw > 0]], ignore_index=True)
+    st = pd.concat([st[~st.tech.isin(VRE)][["tech", "year", "mw", "zone", "owner"]], vre[vre.mw > 0]], ignore_index=True)
     st, left = assign_support(st, register(fleet_year), fleet_year)
     # spread the wind and solar rows over their zones
     parts = [st[~st.tech.isin(VRE)]]
@@ -273,20 +287,36 @@ def build(fleet_year: int = 2025):
         for zone, share in r.zshare.items():
             parts.append(pd.DataFrame([{**r.drop("zshare"), "zone": zone, "mw": r.mw * share}]))
     st = pd.concat(parts, ignore_index=True).drop(columns="zshare", errors="ignore")
+    # owners of wind and solar: each zone's capacity shared among the firms listed there, the rest to the fringe
+    parts = [st[~st.tech.isin(VRE)]]
+    for (tech, zone), g in st[st.tech.isin(VRE)].groupby(["tech", "zone"]):
+        total = g.mw.sum()
+        q = listed.get((tech, zone), pd.Series(dtype=float)) if (tech, zone) in listed.index.droplevel(2) else pd.Series(dtype=float)
+        q = q * min(1.0, total / q.sum()) if len(q) and q.sum() > 0 else q
+        share = (q / total).to_dict()
+        small = [o for o, s in share.items() if s < MIN_OWNER_SHARE and o != FRINGE]
+        for o in small:
+            share.pop(o)
+        share[FRINGE] = 1.0 - sum(s for o, s in share.items() if o != FRINGE)
+        for owner, s in share.items():
+            if s > 1e-9:
+                parts.append(g.assign(owner=owner, mw=g.mw * s))
+    st = pd.concat(parts, ignore_index=True)
     width = st.tech.map(BAND).fillna(5).astype(int)
     st["band"] = (st.year // width) * width
     rows = []
-    for (tech, zone, band, support, neg), g in st.groupby(["tech", "zone", "band", "support", "paid_negative"]):
+    for (tech, zone, band, support, neg, owner), g in st.groupby(["tech", "zone", "band", "support", "paid_negative", "owner"]):
         mw = g.mw.sum()
-        rows.append(dict(tech=tech, zone=zone, online=int(round((g.year * g.mw).sum() / mw)), mw=mw, support=support,
+        rows.append(dict(tech=tech, zone=zone, owner=owner, online=int(round((g.year * g.mw).sum() / mw)), mw=mw, support=support,
                          paid_negative=int(neg),
                          strike_2012=round((g.strike_2012 * g.mw).sum() / mw, 2),
                          support_end=int(round((g.support_end * g.mw).sum() / mw)) if support != "merchant" else 0))
     years = sorted(BATTERY_MW)
     for y0, y1 in zip(years[:-1], years[1:]):
         if y1 <= fleet_year and BATTERY_MW[y1] > BATTERY_MW[y0]:
-            rows.append(dict(tech="battery", zone="", online=y1, mw=BATTERY_MW[y1] - BATTERY_MW[y0],
-                             support="merchant", paid_negative=0, strike_2012=0.0, support_end=0))
+            for owner, s in BATTERY_OWNERS.items():
+                rows.append(dict(tech="battery", zone="", owner=owner, online=y1, mw=(BATTERY_MW[y1] - BATTERY_MW[y0]) * s,
+                                 support="merchant", paid_negative=0, strike_2012=0.0, support_end=0))
     fleet = pd.DataFrame(rows)
     fleet["share"] = fleet.mw / fleet.groupby("tech").mw.transform("sum")
     fleet = fleet.sort_values(["tech", "online", "zone"]).reset_index(drop=True)
@@ -313,6 +343,8 @@ def main():
     print("\nby commissioning period:")
     st["period"] = pd.cut(st.year, [0, 1999, 2009, 2014, 2019, 2030], labels=["<2000", "2000-09", "2010-14", "2015-19", "2020-"])
     print(st.pivot_table(index="tech", columns="period", values="mw", aggfunc="sum", fill_value=0, observed=False).round(0))
+    print("\nfleet by firm, GW (station list scaled to shares; totals are set in ukabm.config):")
+    print((fleet.pivot_table(index="owner", columns="tech", values="mw", aggfunc="sum", fill_value=0) / 1e3).round(1).to_string())
     print(f"\n{len(fleet)} fleet rows; contracted pipeline (MW):")
     print(pipe.to_string(index=False))
 

@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from .config import (CFD_FROM_AR4_OFFER, MERCHANT_RENEWABLE_OFFER, MUST_RUN_OFFER, RO_BANDS, STORAGE_TECHS,  # noqa: F401
+from .config import (DEFAULTS, CFD_FROM_AR4_OFFER, MERCHANT_RENEWABLE_OFFER, MUST_RUN_OFFER, RO_BANDS, STORAGE_TECHS,  # noqa: F401
                      TECHS, VRE_TECHS, capex_kw, fom_kw)
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -161,10 +161,10 @@ def make(spec) -> DecisionMaker:
 
 
 def for_genco(scenario: dict, genco_name: str) -> DecisionMaker:
-    """The decision maker *scenario* assigns to the GenCo called *genco_name* (default: rules)."""
-    spec = scenario.get("decision_logic", "rules")
+    """The decision maker *scenario* assigns to the GenCo called *genco_name* (default: config.DEFAULTS)."""
+    spec = scenario.get("decision_logic", DEFAULTS["decision_logic"])
     if isinstance(spec, dict):
-        spec = spec.get(genco_name, "rules")
+        spec = spec.get(genco_name, DEFAULTS["decision_logic"])
     return make(spec)
 
 

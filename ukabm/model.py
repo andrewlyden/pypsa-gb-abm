@@ -84,6 +84,26 @@ NUCLEAR_UNITS = [(2300, 1983, 2029, "Z9", 0.62), (1200, 1988, 2029, "Z6", 0.62),
 # risk_aversion (a haircut on expected margins and a premium on CfD bids) is zero: risk is already priced
 # in the hurdle rates and the merchant uplift, and a second premium would count it twice. It remains
 # as a lever for scenarios.
+# Firms with real portfolios (README item 52). data/fleet/firms.csv lists twelve firms: seven named
+# companies and five groups, each with the plants its companies own (DUKES station list; data/fleet/
+# owners.csv). What a firm is like is set by its type, not fitted per firm: the five types carry the
+# traits of the five stylised firms below (same values), and the technologies a type invests in.
+# ASSUMPTION: the types, their traits and their technology sets are the authors' judgement; the
+# cost-of-capital spread across types is of the size of CEPA's (2025) uncertainty on hurdle rates.
+FIRM_TYPES = {
+    "utility": dict(wacc=0.07, expectation="adaptive", markup=0.03, risk_aversion=0.0, budget_gbp=2e9,
+                    tech_preference=None),                                   # every technology
+    "generator": dict(wacc=0.10, expectation="myopic", markup=0.08, risk_aversion=0.0, budget_gbp=1e9,
+                      tech_preference=["ccgt", "ocgt", "gas_ccs", "h2_turbine", "battery"]),
+    "major": dict(wacc=0.08, expectation="adaptive", markup=0.02, risk_aversion=0.0, budget_gbp=4e9,
+                  tech_preference=["wind_offshore", "solar", "gas_ccs", "h2_turbine", "battery"]),
+    "fund": dict(wacc=0.06, expectation="adaptive", markup=0.0, risk_aversion=0.0, budget_gbp=3e9,
+                 tech_preference=["wind_offshore", "wind_onshore", "solar", "battery"]),
+    "developer": dict(wacc=0.075, expectation="carbon_optimist", markup=0.0, risk_aversion=0.0, budget_gbp=2e9,
+                      tech_preference=["wind_onshore", "solar", "battery", "ocgt"]),
+}
+NUCLEAR_OWNER = "EDF"
+
 GENCO_SPECS = [
     dict(name="IntegratedUtility", wacc=0.07, expectation="adaptive", markup=0.03, risk_aversion=0.0, budget_gbp=4e9),
     dict(name="MerchantIPP", wacc=0.10, expectation="myopic", markup=0.08, risk_aversion=0.0, budget_gbp=1.5e9),
@@ -130,7 +150,11 @@ class GBMarketModel(ModelBase):
         self.fuels = Fuels(**self.scenario.get("fuels", {}))
         self.start, self.end, self.year = start, end, start
         self.network_every, self.network_hours = network_every, network_hours
-        specs = [dict(s) for s in GENCO_SPECS]
+        firms = self.data.firms_table() if self.scenario.get("firms", "real") == "real" else None
+        if firms is None:
+            specs = [dict(s) for s in GENCO_SPECS]
+        else:
+            specs = [dict(name=r.firm, **FIRM_TYPES[r.type]) for r in firms.itertuples()]
         for grp in self.scenario.get("agents_ideal", []):   # idealised trait groups (scenarios.IDEAL_TRAITS)
             for s in specs:
                 s.update(IDEAL_TRAITS[grp])
@@ -184,7 +208,13 @@ class GBMarketModel(ModelBase):
         table = None if self.scenario.get("fleet", "table") == "random" else self.data.fleet_table(self.start)
         mean_strike = self.legacy_cfd_strikes()
         fleet = fleet_mw(self.start)
+        by_name = {g.name: g for g in self.gencos}
         k = 0
+
+        def owner_of(name):                 # the plant's real owner if it is one of the model's firms
+            nonlocal k
+            k += 1
+            return by_name.get(name) or self.gencos[(k - 1) % len(self.gencos)]
         for tech, total in fleet.items():
             rows = None if table is None else table[table.tech == tech]
             if tech == "nuclear" or rows is None or rows.empty:
@@ -212,8 +242,7 @@ class GBMarketModel(ModelBase):
                     new, old = EXISTING_FLEET_EFFICIENCY[tech]
                     kw["efficiency"] = new + (old - new) * min(max(self.start - online, 0) / (life - 1), 1.0)
                 for zone, s in zones.items():
-                    self.new_plant(self.gencos[k % len(self.gencos)], tech, zone, total * r.share * s, online, retire, **kw)
-                    k += 1
+                    self.new_plant(owner_of(getattr(r, "owner", None)), tech, zone, total * r.share * s, online, retire, **kw)
         for tech, total in fleet.items():
             if tech == "nuclear" or (table is not None and (table.tech == tech).any()):
                 continue
@@ -247,18 +276,25 @@ class GBMarketModel(ModelBase):
             if ret < self.start:
                 continue
             kw = dict(support="cfd", strike=92.50 * CPI_2012_TO_2024, cfd_end=on + 34) if on >= 2030 else {}
-            self.new_plant(self.gencos[i % 2], "nuclear", zone, mw, on, ret, availability=av, **kw)
+            self.new_plant(by_name.get(NUCLEAR_OWNER, self.gencos[i % 2]), "nuclear", zone, mw, on, ret, availability=av, **kw)
         # contracted pipeline: CfD awards not yet built at the start (both runs start with it)
         pipe = None if table is None else self.data.pipeline_table(self.start)
         for r in ([] if pipe is None else pipe.itertuples()):
             t = TECHS[r.tech]
             n = max(int(round(r.mw / t.chunk_mw)), 1)
+            # who holds the contracts is not in the sources used: projects go to the firms that invest in
+            # the technology, in proportion to what they already own of it (largest remainder first)
+            able = [g for g in self.gencos if r.tech in g.tech_preference] or self.gencos
+            own = np.array([sum(p.mw for p in self.plants if p.owner is g and p.tech == r.tech) + 1.0 for g in able])
+            quota = own / own.sum() * n
+            given = np.zeros(len(able))
             for _ in range(n):
-                self.new_plant(self.gencos[k % len(self.gencos)], r.tech, self.choose_zone(r.tech), r.mw / n,
+                j = int(np.argmax(quota - given))
+                given[j] += 1
+                self.new_plant(able[j], r.tech, self.choose_zone(r.tech), r.mw / n,
                                int(r.online), support="cfd", strike=float(r.strike_2012) * CPI_2012_TO_2024,
                                cfd_end=int(r.support_end), route="pipeline",
                                cfd_paid_negative=bool(getattr(r, "paid_negative", 0)))
-                k += 1
 
     def legacy_cfd_strikes(self):
         """Capacity-weighted strike (GBP/MWh, 2024 prices) of CfD contracts delivering by the start year."""
@@ -689,7 +725,7 @@ class GBMarketModel(ModelBase):
         bids, over_cap = [], {}
         for g in self.gencos:
             for tech in CFD_TECHS:
-                if tech in self.scenario.get("banned_techs", []):
+                if tech in self.scenario.get("banned_techs", []) or tech not in g.tech_preference:
                     continue
                 for _ in range(2):
                     s = g.cfd_bid(tech, price_fc)
@@ -789,7 +825,8 @@ class GBMarketModel(ModelBase):
         batt = []
         for g in self.gencos:
             for tech in ("ocgt", "battery", "ccgt", "h2_turbine", "gas_ccs"):
-                if tech in self.scenario.get("banned_techs", []) or TECHS[tech].lead_time > ahead:
+                if (tech in self.scenario.get("banned_techs", []) or TECHS[tech].lead_time > ahead
+                        or tech not in g.tech_preference):
                     continue
                 if tech == "battery":
                     batt += [(g, k) for k in range(n_chunks)]

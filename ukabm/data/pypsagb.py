@@ -323,6 +323,11 @@ class PyPSAGBData:
         t["share"] = t.mw / t.groupby("tech").mw.transform("sum")
         return t
 
+    def firms_table(self) -> pd.DataFrame | None:
+        """The model's firms: name, type and description (data/fleet/firms.csv)."""
+        f = FLEET / "firms.csv"
+        return pd.read_csv(f) if f.exists() else None
+
     def pipeline_table(self, year: int) -> pd.DataFrame | None:
         """Capacity contracted but not yet built at the start of *year* (data/fleet/pipeline_<year>.csv)."""
         f = FLEET / f"pipeline_{year}.csv"

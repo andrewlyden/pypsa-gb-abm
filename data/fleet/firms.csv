@@ -1,0 +1,13 @@
+firm,type,description
+RWE,utility,RWE: the largest GB generator; gas plant and offshore and onshore wind
+SSE,utility,"SSE: gas plant, hydro, onshore and offshore wind"
+EDF,utility,"EDF Energy: the nuclear fleet, wind and solar"
+Orsted,utility,Orsted: offshore wind
+ScottishPower,utility,ScottishPower (Iberdrola): onshore and offshore wind
+Uniper,generator,Uniper UK: gas plant
+Drax,generator,"Drax Group: biomass, pumped storage and hydro"
+IndependentThermal,generator,"Independent owners of gas plant (VPI, InterGen, EPH, Calon, ECP and others)"
+OtherUtilities,utility,"European utilities with smaller GB portfolios (Engie, Vattenfall, ESB, Statkraft and others)"
+InfrastructureFunds,fund,"Infrastructure and renewables funds and their asset managers (Greencoat, Equitix, Octopus, Foresight and others)"
+OilMajors,major,"Oil and gas companies' power businesses (BP and Lightsource bp, Equinor)"
+Independents,developer,"Independent developers, community and small-scale owners; all wind, solar and battery capacity not in the station list"

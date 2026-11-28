@@ -6,7 +6,7 @@ administrative strike price (the cap). The auction (``GBMarketModel.cfd_round``)
 bids pay-as-clear per pot within those limits, and the government observes the result before the next
 round. Volumes therefore come from the interaction of the government's settings and the firms' bids.
 
-Governments are selected by ``scenario["government"]`` (default ``"fixed"``):
+Governments are selected by ``scenario["government"]`` (default ``config.DEFAULTS``: ``"targets"``):
 
 * ``"fixed"`` reproduces the model's original rule: 6 GW a year split 60/20/20 (``Policy`` and the
   ``cfd_pots`` scenario key), the policy caps, no £ budget.
@@ -31,7 +31,7 @@ import numpy as np
 
 import pandas as pd
 
-from .config import (VRE_TECHS, CFD_TARGET_GW, GOVERNMENT_BILLS, GOVERNMENT_POLITICAL, GOVERNMENT_TARGETS,
+from .config import (DEFAULTS, VRE_TECHS, CFD_TARGET_GW, GOVERNMENT_BILLS, GOVERNMENT_POLITICAL, GOVERNMENT_TARGETS,
                      SYSTEM_OPERATOR, TECHS)
 
 CFD_TECHS = ("wind_offshore", "wind_onshore", "solar")
@@ -242,7 +242,7 @@ def register(name: str, cls: type[Government]) -> None:
 
 
 def make_government(model) -> Government:
-    spec = model.scenario.get("government", "fixed")
+    spec = model.scenario.get("government", DEFAULTS["government"])
     if isinstance(spec, type) and issubclass(spec, Government):
         return spec(model)
     if spec not in GOVERNMENTS:
@@ -254,7 +254,7 @@ def make_government(model) -> Government:
 class SystemOperator:
     """Sets the Capacity Market target (de-rated MW) for each auction. ``scenario["system_operator"]``:
 
-    * ``"formula"`` (default): the original rule, peak demand in the delivery year x (1 + reliability
+    * ``"formula"``: the original rule, peak demand in the delivery year x (1 + reliability
       margin) less the de-rated capacity of supported (CfD/RO) plant; T-4 only.
     * ``"standard"``: NESO-style reliability standard. Supported wind and solar enter through their
       hourly output in the delivery year (not a de-rating factor); the target is the de-rated capacity
@@ -267,7 +267,7 @@ class SystemOperator:
 
     def __init__(self, model):
         self.model = model
-        self.mode = model.scenario.get("system_operator", "formula")
+        self.mode = model.scenario.get("system_operator", DEFAULTS["system_operator"])
         if self.mode not in ("formula", "standard"):
             raise KeyError(f"unknown system operator {self.mode!r}; use 'formula' or 'standard'")
         self.params = {**SYSTEM_OPERATOR, **model.scenario.get("system_operator_params", {})}

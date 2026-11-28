@@ -44,6 +44,7 @@ SCENARIO_KEYS = {
     "reserve": "overrides of config.RESERVE; `scale` multiplies the requirement (0 = off)",
     "new_build_cf": "annual capacity factor of new wind and solar by online year (config.NEW_BUILD_CF)",
     "fleet": "starting fleet: table (default: data/fleet, real vintages and contracted pipeline) | random",
+    "firms": "firms: real (default: data/fleet/firms.csv, with their actual plants) | stylised (five firm types)",
 }
 _SUBTABLES = {
     "policy": {f.name for f in dataclasses.fields(Policy)},
