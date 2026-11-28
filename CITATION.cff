@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata from this file."
+title: "pypsa-gb-abm: an agent-based model of GB electricity investment and operation"
+abstract: >-
+  An agent-based model (Python package ukabm, built on Mesa and PyPSA) of investment and hourly
+  operation in the Great Britain electricity market, 2025-2050, with a government, a system operator,
+  generation companies and households as agents, compared with a least-cost capacity expansion plan
+  on the same inputs.
+type: software
+authors:
+  - family-names: Lyden
+    given-names: Andrew
+    affiliation: University of Edinburgh
+repository-code: "https://github.com/andrewlyden/pypsa-gb-abm"
+url: "https://github.com/andrewlyden/pypsa-gb-abm"
+license: MIT
+version: 0.1.0
+keywords:
+  - agent-based model
+  - electricity market
+  - Great Britain
+  - capacity expansion
+  - PyPSA
+  - Mesa
+preferred-citation:
+  type: software
+  title: "pypsa-gb-abm: an agent-based model of GB electricity investment and operation"
+  authors:
+    - family-names: Lyden
+      given-names: Andrew
+      affiliation: University of Edinburgh
+  repository-code: "https://github.com/andrewlyden/pypsa-gb-abm"
+  url: "https://github.com/andrewlyden/pypsa-gb-abm"
+  license: MIT
+  version: 0.1.0

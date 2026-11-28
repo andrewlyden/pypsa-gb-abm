@@ -33,7 +33,7 @@ SCENARIO_KEYS = {
     "cfd_targets_gw": "target-tracking governments: capacity target path per technology",
     "system_operator": "who sets the Capacity Market target: formula | standard",
     "system_operator_params": "overrides of config.SYSTEM_OPERATOR",
-    "scarcity_adder": "ORDC-style scarcity adder in market clearing (default true)",
+    "scarcity_adder": "scarcity mark-up in market clearing: true (default, the stepped curve) | 'ordc' | false",
     "max_merchant_decisions": "merchant investment decisions per year (default 6)",
     "merchant_order": "order of firms in merchant investment: redraw (default) | fixed",
     "cm_new_chunks": "new-build projects per firm and technology offered in a CM auction (default 4)",

@@ -1,6 +1,10 @@
 """Build the model's annual historical inputs from the sourced series in data/history/sources/.
 
-    python scripts/build_history.py     # -> data/history/annual_inputs.csv
+    python scripts/build_history.py     # -> data/history/annual_inputs.csv, data/history/gb_capacity.csv
+
+gb_capacity.csv: GB installed capacity (MW) at the end of each year by technology, from
+sources/capacity_by_year.csv (DESNZ, DUKES 2026 Table 5.12 for GB by network; Table 5.16 for UK
+grid-scale batteries; Table 5.13A for interconnectors).
 
 One row per year 2010-2025: wholesale gas (NBP day-ahead), coal (delivered to major power producers),
 the carbon price a GB generator paid (EU ETS allowance to 2020, UK ETS from 2021, plus Carbon Price
@@ -60,7 +64,27 @@ def build() -> pd.DataFrame:
     return out
 
 
+def build_capacity() -> pd.DataFrame:
+    c = pd.read_csv(SRC.with_name("capacity_by_year.csv"))
+    gb = c[(c.geography == "GB") & (c.connection == "all") & (c.capacity_basis == "installed (end December)")]
+    keep = {"wind_offshore": "wind_offshore", "wind_onshore": "wind_onshore", "solar": "solar", "ccgt": "ccgt",
+            "ocgt_other_gas": "ocgt", "coal": "coal", "oil": "oil", "biomass": "bioenergy_all", "hydro": "hydro",
+            "pumped_hydro": "pumped_hydro", "other_fuels_waste": "other_fuels"}
+    x = gb[gb.technology.isin(keep)].copy()
+    x["tech"] = x.technology.map(keep)
+    x = x.groupby(["year", "tech"], as_index=False).value.sum()
+    nuclear = gb[gb.technology == "nuclear"].groupby("year", as_index=False).value.sum().assign(tech="nuclear")
+    tb = c[(c.geography == "GB") & (c.connection == "transmission") & (c.technology == "biomass")
+           & (c.capacity_basis == "installed (end December)")][["year", "value"]].assign(tech="biomass_transmission")
+    battery = c[(c.technology == "battery") & (c.geography == "UK")][["year", "value"]].assign(tech="battery_uk")
+    ic = c[(c.technology == "interconnector") & c.source_category.str.contains("incl. Moyle")][["year", "value"]].assign(tech="interconnector")
+    out = pd.concat([x, nuclear, tb, battery, ic]).rename(columns={"value": "mw"}).sort_values(["tech", "year"])
+    out["mw"] = out.mw.round(1)
+    return out[["year", "tech", "mw"]]
+
+
 def main():
+    build_capacity().to_csv(OUT.with_name("gb_capacity.csv"), index=False)
     df = build()
     df.to_csv(OUT)
     pd.set_option("display.width", 200)

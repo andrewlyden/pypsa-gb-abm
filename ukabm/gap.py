@@ -16,8 +16,8 @@ The gap in year y is split into
 and summarised as a present value 2025-2054 at the social discount rate, each period year standing
 for the five years from it.
 
-`run_ladder` repeats Run 2 with agent traits idealised (scenarios.LADDER) to attribute the gap to its
-candidate sources. Each rung has its own planner run against its own demand, so every gap is like-for-like.
+`ladder_tasks` repeats Run 2 with agent traits idealised (scenarios.LADDER) to attribute the gap to
+its candidate sources. Each rung has its own planner run against its own demand, so every gap is like-for-like.
 """
 from __future__ import annotations
 

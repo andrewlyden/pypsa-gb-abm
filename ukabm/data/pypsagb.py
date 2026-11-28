@@ -217,7 +217,8 @@ class PyPSAGBData:
         self.links.to_csv(path / "zonal_links.csv", index=False)
         self.interconnectors.to_csv(path / "interconnectors.csv", index=False)
         self.zone_demand_share.rename("share").to_csv(path / "zone_demand_share.csv", index_label="zone")
-        self.profiles.round(4).to_csv(path / f"profiles_{self.profile_year}.csv", index=False)
+        if self.profile_source == "pypsagb":      # never write the open NESO/Elexon profile into the snapshot
+            self.profiles.round(4).to_csv(path / f"profiles_{self.profile_year}.csv", index=False)
         self.zone_tech_share.round(5).to_csv(path / "zone_tech_share.csv")
         self.cm_params.to_csv(path / "cm_auction_parameters.csv", index=False)
         self.cfd_strikes.to_csv(path / "cfd_strike_prices_by_round.csv", index=False)

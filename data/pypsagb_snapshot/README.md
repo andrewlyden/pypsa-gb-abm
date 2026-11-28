@@ -9,7 +9,7 @@ without the full 5 GB clone. Rebuild with `python scripts/extract_pypsagb_snapsh
 | interconnectors.csv | data/network/zonal/links_future.csv | interconnector capacity by year |
 | zone_demand_share.csv | data/network/zonal/zone_definitions.csv (population weights) | zonal demand split |
 | zone_tech_share.csv | data/generators/dukes_power_station_coordinates.csv (OSGB -> nearest zone) | plant siting |
-| profiles_2024.csv | data/demand/espeni.csv (2024, hourly mean) | demand shape, wind/solar CF shapes |
+| profiles_2024.csv | data/demand/espeni.csv (2024, hourly mean) | **no longer the default**: the model reads `data/profiles/` (NESO and Elexon open data). Used only with `PyPSAGBData(profiles="espeni")`. ESPENI's current versions are CC BY-NC 4.0; see the licence questions in docs/data.md |
 | cm_auction_parameters.csv | data/market/capacity_market/ | CM reference parameters |
 | cfd_strike_prices_by_round.csv | data/market/lccc/ | legacy CfD strikes |
 | emissions_intensity.csv | data/generators/emissions_intensity_by_types.csv | reference |

@@ -58,6 +58,22 @@ adopt far fewer heat pumps than the pathways assume.
 * **Ladder**: agent trait groups are idealised one at a time (`scenarios.IDEAL_TRAITS`): expectations (all agents adaptive, i.e. know the carbon path), capital (WACC = 3.5 %, no risk aversion, no budget limit), strategic (no mark-up). With all three idealised, what remains is the market and plan design (CfD pots and caps, CM target, VRE only through CfDs), the agents' decision procedure (t+3 price forecasts, lumpy projects, at most 6 merchant decisions a year) and path dependence. The ladder is cumulative in one order; other orders give other attributions (interactions), so the steps are indicative.
 * Limitations: one weather year; the planner sees the 2026–28 gas spike coming, the agents see it only through forecasts made 3 years ahead; foreign prices do not respond to GB exports, so large export volumes are valued at the exogenous continental price; no network in either run.
 
+## Known inconsistencies (found while writing the parameter register, 28 Nov 2026)
+Left as they are in this release because changing them changes results; to be settled together.
+
+* **Interconnector de-rating.** The Capacity Market auction, its T-1 target and the long-horizon
+  forecast count interconnectors at 0.45 of capacity (hard-coded); the scarcity mark-up uses
+  `config.INTERCONNECTOR_DERATING` = 0.6 (NESO's median for 2030-31).
+* **Hinkley Point C strike.** The model uses £92.50/MWh (2012 prices); the register in
+  `data/pypsagb_snapshot/` has £89.50 since Sizewell C's investment decision.
+* **Value of lost load in the network stage** is hard-coded at £6,000/MWh and does not follow
+  `Policy.voll`. `Policy.cm_net_cone` is defined and never used.
+* **`AR8_modelled` rows** in the snapshot's CfD strike table are PyPSA-GB model output, not auction
+  results; the model does not read them (it filters on awarded capacity).
+* **Nuclear new build.** The online years and unit sizes of Hinkley Point C and Sizewell C in
+  `model.NUCLEAR_UNITS` have no source in the code; `data/history/sources/closures_openings.csv` has
+  EDF's statements on Hinkley Point C.
+
 ## Assumptions challenged by the foundations review, and what was done (November 2026)
 The [foundations review](review_2026-11_foundations.md) found assumptions that were not written down
 here, or whose weight was understated. Finding numbers refer to it.

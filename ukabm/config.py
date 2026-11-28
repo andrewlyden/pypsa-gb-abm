@@ -128,7 +128,7 @@ HURDLE_RATE = {"wind_offshore": 0.089, "wind_onshore": 0.076, "solar": 0.076, "c
                "gas_ccs": 0.089, "h2_turbine": 0.089, "battery": 0.089, "nuclear": 0.076}
 HURDLE_DEFAULT = 0.089
 MERCHANT_UPLIFT = 0.015
-REFERENCE_WACC = 0.077       # mean WACC of the model's firm types (ukabm.model.GENCO_SPECS)
+REFERENCE_WACC = 0.077       # mean WACC of the five firm types (ukabm.model.FIRM_TYPES, GENCO_SPECS)
 
 
 def _load_cost_paths(path: Path = PARAMETERS / "cost_paths.csv") -> None:
@@ -261,7 +261,7 @@ def _load_table(path: Path, key: str) -> dict:
 
 
 # GB installed capacity at the end of each year 2011-2025 by technology (DUKES 2026 Tables 5.12, 5.16),
-# and annual fuel, carbon and power prices 2010-2025 (scripts/build_history.py).
+# and annual fuel, carbon and power prices 2010-2025; both built by scripts/build_history.py.
 GB_CAPACITY = _load_table(HISTORY_DIR / "gb_capacity.csv", "tech")
 HISTORY = _load_table(HISTORY_DIR / "annual_inputs.csv", "")
 
@@ -303,7 +303,7 @@ EXISTING_LIFE = {"ccgt": 40, "ocgt": 45}
 EXISTING_MIN_YEARS = 5
 # Existing-fleet performance that differs from new-build Tech values (calibration to 2025 outturn).
 # CCGT: GB fleet thermal efficiency ~50 % (GCV) — DUKES Table 5.10 (CCGT stations, 2023-24); the
-# 0.55 in TECHS is new-build. Initial-fleet CCGTs get an efficiency that falls linearly with age
+# 0.54 in TECHS is new-build. Initial-fleet CCGTs get an efficiency that falls linearly with age
 # from 0.54 (new) to 0.46 (end of life), fleet mean ~0.50, which gives the merit order a realistic
 # slope instead of one cost step. (newest, oldest) per tech:
 EXISTING_FLEET_EFFICIENCY = {"ccgt": (0.54, 0.46)}
@@ -318,8 +318,9 @@ NESO_CI_FACTORS = {"ccgt": 394.0, "ocgt": 651.0, "biomass": 120.0, "imports": 65
 
 
 
-# Capacity target path for the target-tracking government (ukabm.institutions, GW installed).
-# 2025: the model's starting fleet. 2030: lower ends of the Clean Power 2030 Action Plan ranges (DESNZ,
+# Capacity target path for the target-tracking government (ukabm.institutions, GW installed), used
+# only without a FES pathway (scenario fes_pathway "none"); with one, the targets are the pathway's
+# capacities (ukabm.drivers). 2025: the starting fleet as it was before November 2026. 2030: lower ends of the Clean Power 2030 Action Plan ranges (DESNZ,
 # Dec 2024: offshore 43-50 GW, onshore 27-29 GW, solar 45-47 GW). 2035 and 2050: indicative
 # (ASSUMPTION, FES-like; to be sourced from FES 2025). Linear between points, flat after 2050.
 CFD_TARGET_GW = {
@@ -356,8 +357,8 @@ SYSTEM_OPERATOR = dict(
 # CPI 2012 -> 2024 prices for CfD strikes: AR7 offshore GBP 65.45 (2012) = GBP 91.20 (2024), DESNZ 2025.
 CPI_2012_TO_2024 = 1.393
 # T-4 Capacity Market clearing prices (GBP/kW/yr, nominal) for delivery years auctioned before 2025:
-# 2024/25 18.00, 2025/26 30.59, 2026/27 63.00, 2027/28 65.00, 2028/29 60.00 (EMR Delivery Body T-4
-# results; ASSUMPTION to confirm against the published results). The model gives existing
+# 2024/25 18.00, 2025/26 30.59, 2026/27 63.00, 2027/28 65.00, 2028/29 60.00 (NESO Capacity Market
+# auction static data; data/history/sources/cm_auctions.csv). The model gives existing
 # dispatchable plant these one-year agreements for the delivery years before its own first T-4 auction.
 LEGACY_CM_PRICE = {2025: 30.59, 2026: 63.00, 2027: 65.00, 2028: 60.00}
 # Renewables Obligation: closed to new capacity in 2017, support for at most 20 years, scheme ends 2037.

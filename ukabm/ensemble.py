@@ -1,8 +1,9 @@
 """Multi-seed (Monte-Carlo) ensembles.
 
-ABM outcomes are path-dependent: the seed drives initial-fleet vintages and CfD/RO split, CfD bid noise,
-siting draws, the order in which GenCos take merchant decisions, and household-agent attributes and
-boiler-replacement draws. It does NOT vary weather/demand (one ESPENI year, fixed synthetic temperature),
+ABM outcomes are path-dependent: the seed drives CfD bid noise, siting draws, the order in which firms
+take merchant decisions, and household-agent attributes and boiler-replacement draws (and, with the
+earlier random fleet, vintages and the CfD/RO split). It does NOT vary weather/demand (one weather year,
+fixed synthetic temperature),
 fuel or carbon paths, or the network-stage sample hours. Ensembles therefore show agent/path uncertainty
 only, not weather or macro uncertainty.
 """

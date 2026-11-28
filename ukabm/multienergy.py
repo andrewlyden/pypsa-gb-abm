@@ -33,7 +33,7 @@ class HeatModule:
     """Household agents (each a cohort of homes) choosing heating at boiler replacement.
 
     Decision: lifecycle cost (capex - grant + 15y discounted running cost) plus a hassle cost that
-    falls with local adoption share (social influence / installer maturity). Logit choice.
+    falls with the national adoption share (social influence / installer maturity). Logit choice.
     """
 
     def __init__(self, model, n_agents=2000, homes=28e6, hp_homes_2025=0.6e6, rng=None):

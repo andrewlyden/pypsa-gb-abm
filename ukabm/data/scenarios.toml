@@ -26,10 +26,12 @@ gas_adder = 15.0            # central gas path + GBP 15/MWh_th in every year
 
 # Benchmarks are not policy scenarios: scripts/run_scenarios.py runs [scenarios] only.
 #
-# The model as it was before November 2026: rule-based firms (levelised-cost bids, one-year forecasts),
-# a fixed 6 GW a year of CfDs, the Capacity Market target from a margin formula, five stylised firms,
-# plants with random vintages and no contracted pipeline, and the ORDC scarcity formula. It still uses
-# today's data (profiles, costs, hurdle rates), so it isolates the decision rules and the fleet.
+# The structure of the model as it was before November 2026: rule-based firms (levelised-cost bids,
+# one-year forecasts), a fixed 6 GW a year of CfDs, the Capacity Market target from a margin formula,
+# five stylised firms, plants with random vintages and no contracted pipeline, the ORDC scarcity
+# formula, the earlier exogenous assumptions in place of a FES pathway, and no build-rate limits on
+# firms. It still uses today's data (profiles, costs, hurdle rates, offers by support terms), so it
+# is not a reproduction of the earlier results.
 [benchmarks.legacy_rules]
 decision_logic = "rules"
 government = "fixed"
@@ -38,6 +40,8 @@ firms = "stylised"
 fleet = "random"
 scarcity_adder = "ordc"
 merchant_order = "fixed"
+fes_pathway = "none"
+agent_build_limits = false
 #
 # Convergence test (README roadmap item 7): textbook conditions under which a competitive market
 # should reproduce the least-cost plan. Energy-only market (no CfD, no CM) with scarcity priced only by
